@@ -13,6 +13,7 @@ import { useDebounce } from '@hooks';
 import ActionButtons from './ActionButtons';
 import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
+import { useTranslation } from 'react-i18next';
 
 const { downloadCSVReport } = utils;
 const { formatDate } = utils;
@@ -25,6 +26,7 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
 };
 
 function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
+  const { t } = useTranslation('Dialog');
   const [viewportGrid, viewportGridService] = useViewportGrid();
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(
     Date.now().toString()
@@ -189,7 +191,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       showOverlay: true,
       content: Dialog,
       contentProps: {
-        title: 'Annotation',
+        title: t('Annotation'),
         noCloseButton: true,
         value: { label: measurement.label || '' },
         body: ({ value, setValue }) => {
@@ -205,7 +207,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           };
           return (
             <Input
-              label="Enter your annotation"
+              label={t('Enter your annotation')}
               labelClassName="text-white grow text-[14px] leading-[1.2]"
               autoFocus
               id="annotation"

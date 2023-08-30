@@ -1,5 +1,6 @@
 import React from 'react';
 import { Input, Dialog, ButtonEnums } from '@ohif/ui';
+import i18n from '@ohif/i18n';
 
 /**
  *
@@ -27,8 +28,8 @@ function callInputDialog(
       : data.label
     : '';
   const {
-    dialogTitle = 'Annotation',
-    inputLabel = 'Enter your annotation',
+    dialogTitle = i18n.t('Dialog:Annotation'),
+    inputLabel = i18n.t('Dialog:Enter your annotation'),
     validateFunc = value => true,
   } = dialogConfig;
 

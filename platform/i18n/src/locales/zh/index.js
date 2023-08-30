@@ -1,6 +1,7 @@
 import Buttons from './Buttons.json';
 import CineDialog from './CineDialog.json';
 import Common from './Common.json';
+import Dialog from './Dialog.json';
 import Header from './Header.json';
 import MeasurementTable from './MeasurementTable.json';
 import SidePanel from './SidePanel.json';
@@ -12,6 +13,7 @@ export default {
     Buttons,
     CineDialog,
     Common,
+    Dialog,
     Header,
     MeasurementTable,
     SidePanel,
