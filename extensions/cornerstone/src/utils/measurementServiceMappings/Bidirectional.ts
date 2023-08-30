@@ -182,8 +182,8 @@ function getDisplayText(mappedAnnotations, displaySet) {
     SOPInstanceUID,
     frameNumber,
   } = mappedAnnotations[0];
-  const roundedLength = utils.roundNumber(length, 2);
-  const roundedWidth = utils.roundNumber(width, 2);
+  const roundedLength = utils.roundNumber(length, 1);
+  const roundedWidth = utils.roundNumber(width, 1);
 
   const instance = displaySet.images.find(
     image => image.SOPInstanceUID === SOPInstanceUID
@@ -198,9 +198,10 @@ function getDisplayText(mappedAnnotations, displaySet) {
   const frameText = displaySet.isMultiFrame ? ` F: ${frameNumber}` : '';
 
   displayText.push(
-    `L: ${roundedLength} mm (S: ${SeriesNumber}${instanceText}${frameText})`
+    // `L: ${roundedLength} mm (S: ${SeriesNumber}${instanceText}${frameText})`
+    `${roundedLength} x ${roundedWidth}`
   );
-  displayText.push(`W: ${roundedWidth} mm`);
+  // displayText.push(`W: ${roundedWidth} mm`);
 
   return displayText;
 }
