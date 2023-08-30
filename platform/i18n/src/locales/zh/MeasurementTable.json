@@ -1,9 +1,13 @@
 {
+  "Create Report": "生成报告",
   "Criteria nonconformities": "不合标准",
   "Delete": "删除",
   "Description": "描述",
+  "Export": "导出测量(CSV)",
   "MAX": "最大",
+  "Measurements": "测量/报告",
   "NonTargets": "非靶向",
+  "No tracked measurements": "没有追踪目标",
   "Relabel": "重新标记",
   "Targets": "靶向"
 }

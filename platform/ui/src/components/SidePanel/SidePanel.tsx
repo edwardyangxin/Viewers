@@ -2,6 +2,7 @@ import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '@ohif/i18n';
 import SwiperCore, {
   A11y,
   Controller,
@@ -377,7 +378,7 @@ function _getMoreThanOneTabLayout(
                   />
                 </span>
                 <span className="text-[10px] select-none font-medium whitespace-nowrap mt-[5px]">
-                  {obj.label}
+                  {i18n.t('SidePanel:' + obj.label)}
                 </span>
               </div>
             </SwiperSlide>
