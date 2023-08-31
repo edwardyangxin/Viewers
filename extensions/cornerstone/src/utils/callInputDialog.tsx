@@ -62,8 +62,16 @@ function callInputDialog(
         noCloseButton: true,
         onClose: () => uiDialogService.dismiss({ id: dialogId }),
         actions: [
-          { id: 'cancel', text: 'Cancel', type: ButtonEnums.type.secondary },
-          { id: 'save', text: 'Save', type: ButtonEnums.type.primary },
+          {
+            id: 'cancel',
+            text: i18n.t('Dialog:Cancel'),
+            type: ButtonEnums.type.secondary,
+          },
+          {
+            id: 'save',
+            text: i18n.t('Dialog:Save'),
+            type: ButtonEnums.type.primary,
+          },
         ],
         onSubmit: onSubmitHandler,
         body: ({ value, setValue }) => {

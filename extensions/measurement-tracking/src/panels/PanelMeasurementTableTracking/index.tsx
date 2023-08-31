@@ -220,8 +220,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           );
         },
         actions: [
-          { id: 'cancel', text: 'Cancel', type: ButtonEnums.type.secondary },
-          { id: 'save', text: 'Save', type: ButtonEnums.type.primary },
+          { id: 'cancel', text: t('Cancel'), type: ButtonEnums.type.secondary },
+          { id: 'save', text: t('Save'), type: ButtonEnums.type.primary },
         ],
         onSubmit: onSubmitHandler,
       },
