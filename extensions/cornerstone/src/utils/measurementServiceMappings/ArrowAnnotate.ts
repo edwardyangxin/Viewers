@@ -61,6 +61,11 @@ const Length = {
 
     const displayText = getDisplayText(mappedAnnotations, displaySet);
 
+    // TODO: evibased, 重构？ 从这里获取到arrow tool（cornerstone3D）更新event的数据更新，更新编辑dialog信息刀measurement里。
+    const dialogValue = data.text;
+    const arrowText = dialogValue.hasOwnProperty('label')
+      ? dialogValue['label']
+      : dialogValue;
     return {
       uid: annotationUID,
       SOPInstanceUID,
@@ -72,10 +77,10 @@ const Length = {
       frameNumber: mappedAnnotations[0]?.frameNumber || 1,
       toolName: metadata.toolName,
       displaySetInstanceUID: displaySet.displaySetInstanceUID,
-      label: data.text,
-      text: data.text,
+      label: arrowText,
+      text: arrowText,
       displayText: displayText,
-      data: data.cachedStats,
+      data: dialogValue.hasOwnProperty('label') ? dialogValue : {},
       type: getValueTypeFromToolType(toolName),
       getReport: () => {
         throw new Error('Not implemented');

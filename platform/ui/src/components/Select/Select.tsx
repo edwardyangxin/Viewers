@@ -94,9 +94,13 @@ const Select = ({
       options={options}
       value={value && Array.isArray(value) ? selectedOptions : value}
       onChange={(selectedOptions, { action }) => {
-        const newSelection = !selectedOptions.length
-          ? selectedOptions
-          : selectedOptions.reduce((acc, curr) => acc.concat([curr.value]), []);
+        const newSelection =
+          !selectedOptions || !selectedOptions.length // evibased, fix selectedOptions=null bug
+            ? selectedOptions
+            : selectedOptions.reduce(
+                (acc, curr) => acc.concat([curr.value]),
+                []
+              );
         onChange(newSelection, action);
       }}
     />

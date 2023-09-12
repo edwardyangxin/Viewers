@@ -135,8 +135,11 @@ function commandsModule({
     },
 
     /**
+     * TODO: 注册新的编辑measurement command for IRC，保留原始command
      * Show the measurement labelling input dialog and update the label
      * on the measurement with a response if not cancelled.
+     *
+     * updated: set measurement data and label
      */
     setMeasurementLabel: ({ uid }) => {
       const measurement = measurementService.getMeasurement(uid);
@@ -145,21 +148,46 @@ function commandsModule({
         uiDialogService,
         measurement,
         (label, actionId) => {
+          /** label in form:
+            {dataImageId: {
+              length: 221.56495778786802,
+              unit: "mm",
+              target: {
+                value: "Target-CR",
+                label: "Target(CR)",
+              },
+              location: {
+                value: "Liver",
+                label: "Liver",
+              },
+            },
+            label: "Liver"}
+          */
           if (actionId === 'cancel') {
             return;
           }
 
-          const updatedMeasurement = Object.assign({}, measurement, {
-            label,
-          });
+          // copy measurement
+          const updatedMeasurement = { ...measurement };
+          if (updatedMeasurement['data'].hasOwnProperty('label')) {
+            // update arrow tool data
+            updatedMeasurement['data'] = label['dataImageId'];
+          } else {
+            // update measure tool data
+            updatedMeasurement['data'][Object.keys(updatedMeasurement)[0]] =
+              label['dataImageId'];
+          }
 
+          updatedMeasurement['label'] = label['label'];
+
+          // measurementService in platform core service module
           measurementService.update(
             updatedMeasurement.uid,
             updatedMeasurement,
-            true
+            true // notYetUpdatedAtSource = true
           );
         },
-        false
+        false // isArrowAnnotateInputDialog = false
       );
     },
 
@@ -242,6 +270,7 @@ function commandsModule({
       const viewportIndex = viewportInfo.getViewportIndex();
       viewportGridService.setActiveViewportIndex(viewportIndex);
     },
+    // TODO: evibased, 箭头标注，重构，独立的command
     arrowTextCallback: ({ callback, data }) => {
       callInputDialog(uiDialogService, data, callback);
     },
