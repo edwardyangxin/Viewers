@@ -27,7 +27,7 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
 
 function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   const { t } = useTranslation();
-  const [viewportGrid, viewportGridService] = useViewportGrid();
+  const [viewportGrid] = useViewportGrid();
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(
     Date.now().toString()
   );
@@ -159,7 +159,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   }
 
   const jumpToImage = ({ uid, isActive }) => {
-    measurementService.jumpToMeasurement(viewportGrid.activeViewportIndex, uid);
+    measurementService.jumpToMeasurement(viewportGrid.activeViewportId, uid);
 
     onMeasurementItemClickHandler({ uid, isActive });
   };
@@ -359,7 +359,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   return (
     <>
       <div
-        className="overflow-x-hidden overflow-y-auto invisible-scrollbar"
+        className="invisible-scrollbar overflow-y-auto overflow-x-hidden"
         ref={measurementsPanelRef}
         data-cy={'trackedMeasurements-panel'}
       >
@@ -392,7 +392,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           onExportClick={exportReport}
           onCreateReportClick={() => {
             sendTrackedMeasurementsEvent('SAVE_REPORT', {
-              viewportIndex: viewportGrid.activeViewportIndex,
+              viewportId: viewportGrid.activeViewportId,
               isBackupSave: true,
             });
           }}

@@ -18,6 +18,7 @@ import toggleStackImageSync from './utils/stackSync/toggleStackImageSync';
 import { getFirstAnnotationSelected } from './utils/measurementServiceMappings/utils/selection';
 import getActiveViewportEnabledElement from './utils/getActiveViewportEnabledElement';
 import { CornerstoneServices } from './types';
+import ImageOverlayViewerTool from './tools/ImageOverlayViewerTool';
 
 function commandsModule({
   servicesManager,
@@ -184,8 +185,8 @@ function commandsModule({
           measurementService.update(
             updatedMeasurement.uid,
             updatedMeasurement,
-            true // notYetUpdatedAtSource = true
-          );
+            true
+          ); // notYetUpdatedAtSource = true
         },
         false // isArrowAnnotateInputDialog = false
       );
@@ -267,8 +268,7 @@ function commandsModule({
         return;
       }
 
-      const viewportIndex = viewportInfo.getViewportIndex();
-      viewportGridService.setActiveViewportIndex(viewportIndex);
+      viewportGridService.setActiveViewportId(viewportId);
     },
     // TODO: evibased, 箭头标注，重构，独立的command
     arrowTextCallback: ({ callback, data }) => {
@@ -322,7 +322,7 @@ function commandsModule({
       toolbarService.recordInteraction(props);
     },
 
-    setToolActive: ({ toolName, toolGroupId = null }) => {
+    setToolActive: ({ toolName, toolGroupId = null, toggledState }) => {
       if (toolName === 'Crosshairs') {
         const activeViewportToolGroup = toolGroupService.getToolGroup(null);
 
@@ -339,9 +339,11 @@ function commandsModule({
         }
       }
 
-      const { viewports } = viewportGridService.getState() || {
-        viewports: [],
-      };
+      const { viewports } = viewportGridService.getState();
+
+      if (!viewports.size) {
+        return;
+      }
 
       const toolGroup = toolGroupService.getToolGroup(toolGroupId);
       const toolGroupViewportIds = toolGroup?.getViewportIds?.();
@@ -351,15 +353,11 @@ function commandsModule({
         return;
       }
 
-      const filteredViewports = viewports.filter(viewport => {
-        if (!viewport.viewportOptions) {
-          return false;
+      const filteredViewports = Array.from(viewports.values()).filter(
+        viewport => {
+          return toolGroupViewportIds.includes(viewport.viewportId);
         }
-
-        return toolGroupViewportIds.includes(
-          viewport.viewportOptions.viewportId
-        );
-      });
+      );
 
       if (!filteredViewports.length) {
         return;
@@ -387,6 +385,16 @@ function commandsModule({
           toolGroup.setToolPassive(activeToolName);
         }
       }
+
+      // If there is a toggle state, then simply set the enabled/disabled state without
+      // setting the tool active.
+      if (toggledState != null) {
+        toggledState
+          ? toolGroup.setToolEnabled(toolName)
+          : toolGroup.setToolDisabled(toolName);
+        return;
+      }
+
       // Set the new toolName to be active
       toolGroup.setToolActive(toolName, {
         bindings: [
@@ -397,12 +405,10 @@ function commandsModule({
       });
     },
     showDownloadViewportModal: () => {
-      const { activeViewportIndex } = viewportGridService.getState();
+      const { activeViewportId } = viewportGridService.getState();
 
       if (
-        !cornerstoneViewportService.getCornerstoneViewportByIndex(
-          activeViewportIndex
-        )
+        !cornerstoneViewportService.getCornerstoneViewport(activeViewportId)
       ) {
         // Cannot download a non-cornerstone viewport (image).
         uiNotificationService.show({
@@ -420,7 +426,7 @@ function commandsModule({
           content: CornerstoneViewportDownloadForm,
           title: 'Download High Quality Image',
           contentProps: {
-            activeViewportIndex,
+            activeViewportId,
             onClose: uiModalService.hide,
             cornerstoneViewportService,
           },
@@ -583,13 +589,13 @@ function commandsModule({
       cstUtils.scroll(viewport, options);
     },
     setViewportColormap: ({
-      viewportIndex,
+      viewportId,
       displaySetInstanceUID,
       colormap,
       immediate = false,
     }) => {
-      const viewport = cornerstoneViewportService.getCornerstoneViewportByIndex(
-        viewportIndex
+      const viewport = cornerstoneViewportService.getCornerstoneViewport(
+        viewportId
       );
 
       const actorEntries = viewport.getActors();
@@ -606,17 +612,17 @@ function commandsModule({
         viewport.render();
       }
     },
-    incrementActiveViewport: () => {
-      const { activeViewportIndex, viewports } = viewportGridService.getState();
-      const nextViewportIndex = (activeViewportIndex + 1) % viewports.length;
-      viewportGridService.setActiveViewportIndex(nextViewportIndex);
-    },
-    decrementActiveViewport: () => {
-      const { activeViewportIndex, viewports } = viewportGridService.getState();
+    changeActiveViewport: ({ direction = 1 }) => {
+      const { activeViewportId, viewports } = viewportGridService.getState();
+      const viewportIds = Array.from(viewports.keys());
+      const currentIndex = viewportIds.indexOf(activeViewportId);
       const nextViewportIndex =
-        (activeViewportIndex - 1 + viewports.length) % viewports.length;
-      viewportGridService.setActiveViewportIndex(nextViewportIndex);
+        (currentIndex + direction + viewportIds.length) % viewportIds.length;
+      viewportGridService.setActiveViewportId(
+        viewportIds[nextViewportIndex] as string
+      );
     },
+
     toggleStackImageSync: ({ toggledState }) => {
       toggleStackImageSync({
         getEnabledElement,
@@ -624,18 +630,14 @@ function commandsModule({
         toggledState,
       });
     },
-    toggleReferenceLines: ({ toggledState }) => {
-      const { activeViewportIndex } = viewportGridService.getState();
-      const viewportInfo = cornerstoneViewportService.getViewportInfoByIndex(
-        activeViewportIndex
+    setSourceViewportForReferenceLinesTool: ({ toggledState }) => {
+      const { activeViewportId } = viewportGridService.getState();
+      const viewportInfo = cornerstoneViewportService.getViewportInfo(
+        activeViewportId
       );
 
       const viewportId = viewportInfo.getViewportId();
       const toolGroup = toolGroupService.getToolGroupForViewport(viewportId);
-
-      if (!toggledState) {
-        toolGroup.setToolDisabled(ReferenceLinesTool.toolName);
-      }
 
       toolGroup.setToolConfiguration(
         ReferenceLinesTool.toolName,
@@ -644,36 +646,9 @@ function commandsModule({
         },
         true // overwrite
       );
-      toolGroup.setToolEnabled(ReferenceLinesTool.toolName);
     },
-    storePresentation: ({ viewportIndex }) => {
-      const presentation = cornerstoneViewportService.getPresentation(
-        viewportIndex
-      );
-      if (!presentation || !presentation.presentationIds) {
-        return;
-      }
-      const {
-        lutPresentationStore,
-        positionPresentationStore,
-      } = stateSyncService.getState();
-      const { presentationIds } = presentation;
-      const { lutPresentationId, positionPresentationId } =
-        presentationIds || {};
-      const storeState = {};
-      if (lutPresentationId) {
-        storeState.lutPresentationStore = {
-          ...lutPresentationStore,
-          [lutPresentationId]: presentation,
-        };
-      }
-      if (positionPresentationId) {
-        storeState.positionPresentationStore = {
-          ...positionPresentationStore,
-          [positionPresentationId]: presentation,
-        };
-      }
-      stateSyncService.store(storeState);
+    storePresentation: ({ viewportId }) => {
+      cornerstoneViewportService.storePresentation({ viewportId });
     },
   };
 
@@ -730,10 +705,11 @@ function commandsModule({
       options: { rotation: -90 },
     },
     incrementActiveViewport: {
-      commandFn: actions.incrementActiveViewport,
+      commandFn: actions.changeActiveViewport,
     },
     decrementActiveViewport: {
-      commandFn: actions.decrementActiveViewport,
+      commandFn: actions.changeActiveViewport,
+      options: { direction: -1 },
     },
     flipViewportHorizontal: {
       commandFn: actions.flipViewportHorizontal,
@@ -796,8 +772,8 @@ function commandsModule({
     toggleStackImageSync: {
       commandFn: actions.toggleStackImageSync,
     },
-    toggleReferenceLines: {
-      commandFn: actions.toggleReferenceLines,
+    setSourceViewportForReferenceLinesTool: {
+      commandFn: actions.setSourceViewportForReferenceLinesTool,
     },
     storePresentation: {
       commandFn: actions.storePresentation,

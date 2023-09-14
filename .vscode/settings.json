@@ -13,8 +13,8 @@
   // ===
   // Event Triggers
   // ===
-  "editor.formatOnSave": true,
-  "eslint.autoFixOnSave": true,
+  "editor.formatOnSave": false,
+  "eslint.autoFixOnSave": false,
   "eslint.run": "onSave",
   "eslint.validate": [
     {
