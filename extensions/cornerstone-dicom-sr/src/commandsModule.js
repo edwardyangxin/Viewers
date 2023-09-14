@@ -116,7 +116,7 @@ const commandsModule = ({}) => {
           throw new Error('Invalid report, no content');
         }
 
-        // To compliant with Orthanc PatientName
+        // evibased, To compliant with Orthanc PatientName
         naturalizedReport.PatientName = naturalizedReport.PatientName[0]
           ? naturalizedReport.PatientName[0].Alphabetic
           : naturalizedReport.PatientName;

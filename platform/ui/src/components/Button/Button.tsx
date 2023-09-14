@@ -6,6 +6,7 @@ import * as ButtonEnums from './ButtonEnums';
 const sizeClasses = {
   [ButtonEnums.size.small]: 'h-[26px] text-[13px]',
   [ButtonEnums.size.medium]: 'h-[32px] text-[14px]',
+  [ButtonEnums.size.large]: 'h-[38px] text-[15px]',
 };
 
 const layoutClasses =

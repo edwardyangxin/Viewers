@@ -7,6 +7,7 @@ import getSopClassHandlerModule from './getSopClassHandlerModule';
 import PanelSegmentation from './panels/PanelSegmentation';
 import getHangingProtocolModule from './getHangingProtocolModule';
 import hydrateSEGDisplaySet from './utils/_hydrateSEG';
+import i18n from '@ohif/i18n';
 
 const Component = React.lazy(() => {
   return import(
@@ -58,7 +59,7 @@ const extension = {
         name: 'panelSegmentation',
         iconName: 'tab-segmentation',
         iconLabel: 'Segmentation',
-        label: 'Segmentation',
+        label: i18n.t('SidePanel:Segmentation'),
         component: wrappedPanelSegmentation,
       },
     ];

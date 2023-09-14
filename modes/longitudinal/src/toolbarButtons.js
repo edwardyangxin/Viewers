@@ -85,28 +85,27 @@ const toolbarButtons = [
       isRadio: true, // ?
       // Switch?
       primary: _createToolButton(
-        'Length',
-        'tool-length',
-        'Length',
+        'Bidirectional',
+        'tool-bidirectional',
+        'Bidirectional',
         [
           {
             commandName: 'setToolActive',
             commandOptions: {
-              toolName: 'Length',
+              toolName: 'Bidirectional',
             },
             context: 'CORNERSTONE',
           },
           {
             commandName: 'setToolActive',
             commandOptions: {
-              toolName: 'SRLength',
+              toolName: 'SRBidirectional',
               toolGroupId: 'SRToolGroup',
             },
-            // we can use the setToolActive command for this from Cornerstone commandsModule
             context: 'CORNERSTONE',
           },
         ],
-        'Length'
+        'Bidirectional Tool'
       ),
       secondary: {
         icon: 'chevron-down',
@@ -115,30 +114,6 @@ const toolbarButtons = [
         tooltip: 'More Measure Tools',
       },
       items: [
-        _createToolButton(
-          'Length',
-          'tool-length',
-          'Length',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'Length',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SRLength',
-                toolGroupId: 'SRToolGroup',
-              },
-              // we can use the setToolActive command for this from Cornerstone commandsModule
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Length Tool'
-        ),
         _createToolButton(
           'Bidirectional',
           'tool-bidirectional',
@@ -184,6 +159,30 @@ const toolbarButtons = [
             },
           ],
           'Arrow Annotate'
+        ),
+        _createToolButton(
+          'Length',
+          'tool-length',
+          'Length',
+          [
+            {
+              commandName: 'setToolActive',
+              commandOptions: {
+                toolName: 'Length',
+              },
+              context: 'CORNERSTONE',
+            },
+            {
+              commandName: 'setToolActive',
+              commandOptions: {
+                toolName: 'SRLength',
+                toolGroupId: 'SRToolGroup',
+              },
+              // we can use the setToolActive command for this from Cornerstone commandsModule
+              context: 'CORNERSTONE',
+            },
+          ],
+          'Length Tool'
         ),
         _createToolButton(
           'EllipticalROI',
