@@ -130,7 +130,7 @@ Button.propTypes = {
   /** Callback to be called when the button is clicked  */
   onClick: PropTypes.func.isRequired,
   /** Button size  */
-  size: PropTypes.oneOf([ButtonEnums.size.medium, ButtonEnums.size.small]),
+  size: PropTypes.oneOf([ButtonEnums.size.large, ButtonEnums.size.medium, ButtonEnums.size.small]),
   /** Whether the button should be disabled  */
   disabled: PropTypes.bool,
   /** Button type  */

@@ -1,6 +1,9 @@
 {
   "Additional Findings": "其他发现",
+  "All": "所有访视",
   "Measurements": "测量/报告",
+  "Primary": "当前访视",
+  "Recent": "近期访视",
   "Segmentation": "图像分割",
   "Studies": "检查列表"
 }
