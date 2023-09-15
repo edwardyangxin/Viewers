@@ -37,10 +37,10 @@ function callInputDialog(
   }
 
   // label is for measurement title in measurement table
-  const label = data
+  const label = measurement
     ? isArrowAnnotateInputDialog
-      ? data.text
-      : data.label
+      ? measurement.text
+      : measurement.label
     : '';
 
   const valueDialog = {
