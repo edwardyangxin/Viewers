@@ -199,6 +199,7 @@ class MeasurementService extends PubSubService {
    * @return {MeasurementSource} Measurement source instance
    */
   createSource(name, version) {
+    console.log("measurement service createSource:", name, version)
     if (!name) {
       throw new Error('Source name not provided.');
     }
@@ -268,6 +269,7 @@ class MeasurementService extends PubSubService {
    * @return void
    */
   addMapping(source, annotationType, matchingCriteria, toAnnotationSchema, toMeasurementSchema) {
+    console.log("measurement service addMapping:", source, annotationType, matchingCriteria, toAnnotationSchema, toMeasurementSchema)
     if (!this._isValidSource(source)) {
       throw new Error('Invalid source.');
     }
@@ -340,6 +342,7 @@ class MeasurementService extends PubSubService {
   }
 
   update(measurementUID: string, measurement, notYetUpdatedAtSource = false) {
+    console.log("measurement service update:", measurementUID, measurement, notYetUpdatedAtSource)
     if (!this.measurements.has(measurementUID)) {
       return;
     }
@@ -372,6 +375,7 @@ class MeasurementService extends PubSubService {
    * @param {function} toMeasurementSchema A function to get the `data` into the same shape as the source annotationType.
    */
   addRawMeasurement(source, annotationType, data, toMeasurementSchema, dataSource = {}) {
+    console.log("measurement service addRawMeasurement:", source, annotationType, data, toMeasurementSchema, dataSource)
     if (!this._isValidSource(source)) {
       log.warn('Invalid source. Exiting early.');
       return;
@@ -455,6 +459,7 @@ class MeasurementService extends PubSubService {
    * @return {string} A measurement uid
    */
   annotationToMeasurement(source, annotationType, sourceAnnotationDetail, isUpdate = false) {
+    console.log("measurement service annotationToMeasurement:", source, annotationType, sourceAnnotationDetail, isUpdate)
     if (!this._isValidSource(source)) {
       throw new Error('Invalid source.');
     }

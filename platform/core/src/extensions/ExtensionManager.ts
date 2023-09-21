@@ -97,6 +97,7 @@ export default class ExtensionManager extends PubSubService {
   }
 
   public setActiveDataSource(dataSource: string): void {
+    console.log("setActiveDataSource:", dataSource)
     if (this.activeDataSource === dataSource) {
       return;
     }
@@ -217,6 +218,7 @@ export default class ExtensionManager extends PubSubService {
     configuration = {},
     dataSources = []
   ): Promise<void> => {
+    console.log("registerExtension:", extension, configuration, dataSources)
     if (!extension) {
       throw new Error('Attempting to register a null/undefined extension.');
     }
@@ -409,6 +411,7 @@ export default class ExtensionManager extends PubSubService {
    * @param activate flag to indicate if the added data source should be set to the active data source
    */
   addDataSource(dataSourceDef: DataSourceDefinition, options = { activate: false }) {
+    console.log("extension manager addDataSource:", dataSourceDef, options)
     const existingDataSource = this.getDataSources(dataSourceDef.sourceName);
     if (existingDataSource?.[0]) {
       // The data source already exists and cannot be added.
@@ -429,6 +432,7 @@ export default class ExtensionManager extends PubSubService {
    * @param dataSourceConfiguration the new configuration to update the data source with
    */
   updateDataSourceConfiguration(dataSourceName: string, dataSourceConfiguration: any) {
+    console.log("extension manager updateDataSourceConfiguration:", dataSourceName, dataSourceConfiguration)
     const existingDataSource = this.getDataSources(dataSourceName);
     if (!existingDataSource?.[0]) {
       // Cannot update a non existent data source.
@@ -453,6 +457,7 @@ export default class ExtensionManager extends PubSubService {
    * @returns
    */
   _createDataSourceInstance(dataSourceDef: DataSourceDefinition) {
+    console.log("extension manager _createDataSourceInstance:", dataSourceDef)
     const module = this.getModuleEntry(dataSourceDef.namespace);
 
     if (!module) {
@@ -475,6 +480,7 @@ export default class ExtensionManager extends PubSubService {
     extensionId,
     dataSources: Array<DataSourceDefinition> = []
   ): void {
+    console.log("extension manager _initDataSourcesModule:", extensionModule, extensionId, dataSources)
     extensionModule.forEach(element => {
       this.modulesMap[`${extensionId}.${MODULE_TYPES.DATA_SOURCE}.${element.name}`] = element;
     });
@@ -496,6 +502,7 @@ export default class ExtensionManager extends PubSubService {
    * @param {Object[]} commandDefinitions
    */
   _initCommandsModule = extensionModule => {
+    console.log("extension manager _initCommandsModule:", extensionModule)
     let { definitions, defaultContext } = extensionModule;
     if (!definitions || Object.keys(definitions).length === 0) {
       log.warn('Commands Module contains no command definitions');

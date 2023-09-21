@@ -149,7 +149,10 @@ export function ViewportGridProvider({ children, service }) {
           const displaySetOptions = updatedViewport.displaySetOptions || [];
           if (!displaySetOptions.length) {
             // Copy all the display set options, assuming a full set of displaySet UID's is provided.
-            displaySetOptions.push(...previousViewport.displaySetOptions);
+            // evibased, fix bug, previousViewport can be null
+            if (previousViewport) {
+              displaySetOptions.push(...previousViewport.displaySetOptions);
+            }
             if (!displaySetOptions.length) {
               displaySetOptions.push({});
             }
