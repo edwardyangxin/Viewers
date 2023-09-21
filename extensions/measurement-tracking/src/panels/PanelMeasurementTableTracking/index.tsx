@@ -25,6 +25,48 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
   description: '', // 'CHEST/ABD/PELVIS W CONTRAST',
 };
 
+// TODO: info mapping refactor to one location
+const target_info_mapping = {
+  'Target': 'Target',
+  'Target_CR': 'Target(CR)',
+  'Target_UN': 'Target(UN未知)',
+  'Non_Target': 'Non_Target',
+  'Other': 'Other',
+}
+const target_key_group = ['Target', 'Target_CR', 'Target_UN']
+const nontarget_key_group = ['Non_Target', 'Other']
+
+const location_info_mapping = {
+  'Abdomen_Chest_Wall': 'Abdomen/Chest Wall',
+  'Lung': 'Lung',
+  'Lymph_Node': 'Lymph Node',
+  'Liver': 'Liver',
+  'Mediastinum_Hilum': 'Mediastinum/Hilum',
+  'Pelvis': 'Pelvis',
+  'Petritoneum_Omentum': 'Petritoneum/Omentum',
+  'Retroperitoneum': 'Retroperitoneum',
+  'Adrenal': 'Adrenal',
+  'Bladder': 'Bladder',
+  'Bone': 'Bone',
+  'Braine': 'Braine',
+  'Breast': 'Breast',
+  'Colon': 'Colon',
+  'Esophagus': 'Esophagus',
+  'Extremities': 'Extremities',
+  'Gallbladder': 'Gallbladder',
+  'Kidney': 'Kidney',
+  'Muscle': 'Muscle',
+  'Neck': 'Neck',
+  'Other_Soft_Tissue': 'Other Soft Tissue',
+  'Ovary': 'Ovary',
+  'Pancreas': 'Pancreas',
+  'Prostate': 'Prostate',
+  'Small_Bowel': 'Small Bowel',
+  'Spleen': 'Spleen',
+  'Stomach': 'Stomach',
+  'Subcutaneous': 'Subcutaneous',
+}
+
 function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   const { t } = useTranslation();
   const [viewportGrid] = useViewportGrid();
@@ -169,42 +211,54 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     const measurement = measurementService.getMeasurement(uid);
     const dialogId = 'enter-annotation';
     jumpToImage({ uid, isActive });
-    // get data imageID info
-    const dataMeasurement = measurement ? measurement.data : null;
-    // TODO: 重构arrow和measure tool保存data的位置一致
-    let dataImageId = {};
-    if (dataMeasurement) {
-      if (dataMeasurement.hasOwnProperty('dataImageId')) {
-        // get arrow tool data
-        dataImageId = dataMeasurement['dataImageId'];
-      } else {
-        // get measure tool data
-        dataImageId = dataMeasurement[Object.keys(dataMeasurement)[0]];
-      }
+
+    // label for 保存尽量多的label信息，因为cornerstonejs只支持保存label到DicomSR中
+    let label = measurement ? measurement.label : 'target_info|location_info';
+    label = label.split("|")
+    if (label.length < 2) {
+      // label at least 2 infos
+      label.push('location_info')
     }
 
-    // label is for measurement title in measurement table
-    const label = measurement ? measurement.label : '';
+    // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
+    // if no measurementLabelInfo, get from label
+    const measurementLabelInfo = measurement && measurement['measurementLabelInfo'] ?
+      measurement['measurementLabelInfo'] : {}
 
     const valueDialog = {
-      dataImageId: dataImageId,
+      measurementLabelInfo: measurementLabelInfo,
       label: label,
     };
 
-    // for select
     // init targetValue, locationValue
     let targetValue = null;
-    if ('target' in dataImageId) {
-      targetValue = dataImageId['target'];
+    if ('target' in measurementLabelInfo) {
+      targetValue = measurementLabelInfo['target'];
     } else {
-      dataImageId['target'] = targetValue;
+      // no target in measurementLabelInfo, get from label
+      let labelTarget = label[0]
+      if (labelTarget in target_info_mapping) {
+        targetValue = {
+          'value': labelTarget,
+          'label': target_info_mapping[labelTarget]
+        }
+      }
+      measurementLabelInfo['target'] = targetValue;
     }
 
     let locationValue = null;
-    if ('location' in dataImageId) {
-      locationValue = dataImageId['location'];
+    if ('location' in measurementLabelInfo) {
+      locationValue = measurementLabelInfo['location'];
     } else {
-      dataImageId['location'] = locationValue;
+      // no target in measurementLabelInfo, get from label
+      let labelLocation = label[1]
+      if (labelLocation in location_info_mapping) {
+        locationValue = {
+          'value': labelLocation,
+          'label': location_info_mapping[labelLocation]
+        }
+      }
+      measurementLabelInfo['location'] = locationValue;
     }
 
     // for dialog sumbit button
@@ -213,9 +267,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
         case 'save': {
           // copy measurement
           const updatedMeasurement = { ...measurement };
-          updatedMeasurement['data'][Object.keys(updatedMeasurement)[0]] =
-            valueDialog['dataImageId'];
-          updatedMeasurement['label'] = valueDialog['label'];
+          updatedMeasurement['measurementLabelInfo'] = valueDialog['measurementLabelInfo'];
+          updatedMeasurement['label'] = valueDialog['label'].join('|');
 
           measurementService.update(uid, updatedMeasurement, true);
         }
@@ -251,16 +304,17 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
                   );
                   targetValue = newSelection;
                   setValue(value => {
-                    // update dataImage
-                    value['dataImageId']['target'] = targetValue;
+                    // update label info
+                    value['measurementLabelInfo']['target'] = targetValue;
+                    value['label'][0] = targetValue['value'];
                     return value;
                   });
                 }}
                 options={[
                   { value: 'Target', label: 'Target' },
-                  { value: 'Target-CR', label: 'Target(CR)' },
-                  { value: 'Target-UN', label: 'Target(UN未知)' },
-                  { value: 'Non-Target', label: 'Non-Target' },
+                  { value: 'Target_CR', label: 'Target(CR)' },
+                  { value: 'Target_UN', label: 'Target(UN未知)' },
+                  { value: 'Non_Target', label: 'Non_Target' },
                   { value: 'Other', label: 'Other' },
                 ]}
               />
@@ -277,10 +331,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
                   );
                   locationValue = newSelection;
                   setValue(value => {
-                    // update dataImage
-                    value['dataImageId']['location'] = locationValue;
-                    // update label
-                    value['label'] = locationValue['label'];
+                    // update label info
+                    value['measurementLabelInfo']['location'] = locationValue;
+                    value['label'][1] = locationValue['value'];
                     return value;
                   });
                 }}
@@ -349,12 +402,28 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     }
   };
 
-  const displayMeasurementsWithoutFindings = displayMeasurements.filter(
-    dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
-  );
-  const additionalFindings = displayMeasurements.filter(
-    dm => dm.measurementType === measurementService.VALUE_TYPES.POINT
-  );
+  // evibased 按照target&nonTarget分组显示
+  // const displayMeasurementsWithoutFindings = displayMeasurements.filter(
+  //   dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
+  // );
+  // const additionalFindings = displayMeasurements.filter(
+  //   dm => dm.measurementType === measurementService.VALUE_TYPES.POINT
+  // );
+
+  let targetFindings = []
+  let nonTargetFindings = []
+  for (let dm of displayMeasurements) {
+      // get target info
+      let targetInfo = dm.label.split('|')[0];
+      if (!(targetInfo in target_info_mapping)) {
+        // not in target_info_mapping, just show and allow edit
+        nonTargetFindings.push(dm)
+      } else if (target_key_group.includes(targetInfo)) {
+        targetFindings.push(dm)
+      } else {
+        nonTargetFindings.push(dm)
+      }
+  }
 
   return (
     <>
@@ -371,21 +440,19 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           />
         )}
         <MeasurementTable
-          title="Measurements"
-          data={displayMeasurementsWithoutFindings}
+          title={t('MeasurementTabel:Target Findings')}
+          data={targetFindings}
           servicesManager={servicesManager}
           onClick={jumpToImage}
           onEdit={onMeasurementItemEditHandler}
         />
-        {additionalFindings.length !== 0 && (
-          <MeasurementTable
-            title={t('SidePanel:Additional Findings')}
-            data={additionalFindings}
-            servicesManager={servicesManager}
-            onClick={jumpToImage}
-            onEdit={onMeasurementItemEditHandler}
-          />
-        )}
+        <MeasurementTable
+          title={t('MeasurementTabel:Non-Target Findings')}
+          data={nonTargetFindings}
+          servicesManager={servicesManager}
+          onClick={jumpToImage}
+          onEdit={onMeasurementItemEditHandler}
+        />
       </div>
       <div className="flex justify-center p-4">
         <ActionButtons
@@ -397,8 +464,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
             });
           }}
           disabled={
-            additionalFindings.length === 0 &&
-            displayMeasurementsWithoutFindings.length === 0
+            targetFindings.length === 0 &&
+            nonTargetFindings.length === 0
           }
         />
       </div>

@@ -5,6 +5,46 @@ import { useTranslation } from 'react-i18next';
 
 import MeasurementItem from './MeasurementItem';
 
+// TODO: info mapping refactor to one location
+const target_info_mapping = {
+  'Target': 'Target',
+  'Target_CR': 'Target(CR)',
+  'Target_UN': 'Target(UN未知)',
+  'Non_Target': 'Non_Target',
+  'Other': 'Other',
+}
+
+const location_info_mapping = {
+  'Abdomen_Chest_Wall': 'Abdomen/Chest Wall',
+  'Lung': 'Lung',
+  'Lymph_Node': 'Lymph Node',
+  'Liver': 'Liver',
+  'Mediastinum_Hilum': 'Mediastinum/Hilum',
+  'Pelvis': 'Pelvis',
+  'Petritoneum_Omentum': 'Petritoneum/Omentum',
+  'Retroperitoneum': 'Retroperitoneum',
+  'Adrenal': 'Adrenal',
+  'Bladder': 'Bladder',
+  'Bone': 'Bone',
+  'Braine': 'Braine',
+  'Breast': 'Breast',
+  'Colon': 'Colon',
+  'Esophagus': 'Esophagus',
+  'Extremities': 'Extremities',
+  'Gallbladder': 'Gallbladder',
+  'Kidney': 'Kidney',
+  'Muscle': 'Muscle',
+  'Neck': 'Neck',
+  'Other_Soft_Tissue': 'Other Soft Tissue',
+  'Ovary': 'Ovary',
+  'Pancreas': 'Pancreas',
+  'Prostate': 'Prostate',
+  'Small_Bowel': 'Small Bowel',
+  'Spleen': 'Spleen',
+  'Stomach': 'Stomach',
+  'Subcutaneous': 'Subcutaneous',
+}
+
 const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager }) => {
   servicesManager = servicesManager as ServicesManager;
   const { customizationService } = servicesManager.services;
@@ -30,7 +70,7 @@ const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager }) => 
               key={measurementItem.uid}
               uid={measurementItem.uid}
               index={index + 1}
-              label={measurementItem.label}
+              label={measurementItem.label.split('|')[1] in location_info_mapping ? location_info_mapping[measurementItem.label.split('|')[1]] : t('Edit Measurement')} // 获取label的第二位location信息
               isActive={measurementItem.isActive}
               displayText={measurementItem.displayText}
               item={measurementItem}

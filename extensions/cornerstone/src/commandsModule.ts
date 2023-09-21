@@ -150,7 +150,7 @@ function commandsModule({
         measurement,
         (label, actionId) => {
           /** label in form:
-            {dataImageId: {
+            {measurementLabelInfo: {
               length: 221.56495778786802,
               unit: "mm",
               target: {
@@ -162,7 +162,7 @@ function commandsModule({
                 label: "Liver",
               },
             },
-            label: "Liver"}
+            label: "Target|Liver"}
           */
           if (actionId === 'cancel') {
             return;
@@ -170,15 +170,8 @@ function commandsModule({
 
           // copy measurement
           const updatedMeasurement = { ...measurement };
-          if (updatedMeasurement['data'].hasOwnProperty('label')) {
-            // update arrow tool data
-            updatedMeasurement['data'] = label['dataImageId'];
-          } else {
-            // update measure tool data
-            updatedMeasurement['data'][Object.keys(updatedMeasurement)[0]] =
-              label['dataImageId'];
-          }
-
+          // update label data
+          updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
           updatedMeasurement['label'] = label['label'];
 
           // measurementService in platform core service module

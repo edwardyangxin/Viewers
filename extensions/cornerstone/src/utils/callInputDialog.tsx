@@ -2,6 +2,46 @@ import React from 'react';
 import { Input, Dialog, ButtonEnums, Select } from '@ohif/ui';
 import i18n from '@ohif/i18n';
 
+// TODO: info mapping refactor to one location
+const target_info_mapping = {
+  'Target': 'Target',
+  'Target_CR': 'Target(CR)',
+  'Target_UN': 'Target(UN未知)',
+  'Non_Target': 'Non_Target',
+  'Other': 'Other',
+}
+
+const location_info_mapping = {
+  'Abdomen_Chest_Wall': 'Abdomen/Chest Wall',
+  'Lung': 'Lung',
+  'Lymph_Node': 'Lymph Node',
+  'Liver': 'Liver',
+  'Mediastinum_Hilum': 'Mediastinum/Hilum',
+  'Pelvis': 'Pelvis',
+  'Petritoneum_Omentum': 'Petritoneum/Omentum',
+  'Retroperitoneum': 'Retroperitoneum',
+  'Adrenal': 'Adrenal',
+  'Bladder': 'Bladder',
+  'Bone': 'Bone',
+  'Braine': 'Braine',
+  'Breast': 'Breast',
+  'Colon': 'Colon',
+  'Esophagus': 'Esophagus',
+  'Extremities': 'Extremities',
+  'Gallbladder': 'Gallbladder',
+  'Kidney': 'Kidney',
+  'Muscle': 'Muscle',
+  'Neck': 'Neck',
+  'Other_Soft_Tissue': 'Other Soft Tissue',
+  'Ovary': 'Ovary',
+  'Pancreas': 'Pancreas',
+  'Prostate': 'Prostate',
+  'Small_Bowel': 'Small Bowel',
+  'Spleen': 'Spleen',
+  'Stomach': 'Stomach',
+  'Subcutaneous': 'Subcutaneous',
+}
+
 /**
  * TODO: evibased，使用统一的edit dialog，重构。保留原始的代码？
  * @param {*} data
@@ -22,29 +62,28 @@ function callInputDialog(
   dialogConfig: any = {}
 ) {
   const dialogId = 'dialog-enter-annotation';
-  // get data imageID info
-  const dataMeasurement = measurement ? measurement.data : null;
-  // TODO: 重构arrow和measure tool保存data的位置一致
-  let dataImageId = {};
-  if (dataMeasurement) {
-    if (dataMeasurement.hasOwnProperty('dataImageId')) {
-      // get arrow tool data
-      dataImageId = dataMeasurement['dataImageId'];
-    } else {
-      // get measure tool data
-      dataImageId = dataMeasurement[Object.keys(dataMeasurement)[0]];
-    }
-  }
 
-  // label is for measurement title in measurement table
-  const label = measurement
+  const noMeasurement = measurement ? false : true
+  // label for 保存尽量多的label信息，因为cornerstonejs只支持保存label到DicomSR中
+  let label = measurement
     ? isArrowAnnotateInputDialog
       ? measurement.text
       : measurement.label
-    : '';
+    : 'target_info|location_info';
+  label = label.split("|")
+  if (label.length < 2) {
+    // label at least 2 infos
+    label.push('location_info')
+  }
+
+  // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
+  // if no measurementLabelInfo, get from label
+  const measurementLabelInfo = measurement && measurement['measurementLabelInfo'] ?
+    measurement['measurementLabelInfo'] : {}
 
   const valueDialog = {
-    dataImageId: dataImageId,
+    noMeasurement: noMeasurement,
+    measurementLabelInfo: measurementLabelInfo,
     label: label,
   };
 
@@ -54,20 +93,35 @@ function callInputDialog(
     validateFunc = value => true, // validate submit value
   } = dialogConfig;
 
-  // for select
   // init targetValue, locationValue
   let targetValue = null;
-  if ('target' in dataImageId) {
-    targetValue = dataImageId['target'];
+  if ('target' in measurementLabelInfo) {
+    targetValue = measurementLabelInfo['target'];
   } else {
-    dataImageId['target'] = targetValue;
+    // no target in measurementLabelInfo, get from label
+    let labelTarget = label[0]
+    if (labelTarget in target_info_mapping) {
+      targetValue = {
+        'value': labelTarget,
+        'label': target_info_mapping[labelTarget]
+      }
+    }
+    measurementLabelInfo['target'] = targetValue;
   }
 
   let locationValue = null;
-  if ('location' in dataImageId) {
-    locationValue = dataImageId['location'];
+  if ('location' in measurementLabelInfo) {
+    locationValue = measurementLabelInfo['location'];
   } else {
-    dataImageId['location'] = locationValue;
+    // no target in measurementLabelInfo, get from label
+    let labelLocation = label[1]
+    if (labelLocation in location_info_mapping) {
+      locationValue = {
+        'value': labelLocation,
+        'label': location_info_mapping[labelLocation]
+      }
+    }
+    measurementLabelInfo['location'] = locationValue;
   }
 
   // for dialog sumbit button
@@ -78,7 +132,11 @@ function callInputDialog(
         // if (typeof validateFunc === 'function' && !validateFunc(value.label)) {
         //   return;
         // }
-        callback(value, action.id);
+        // join label list to 'xxx|xxx|xxx' format
+
+        // reformat label, if noMeasurement return only label to Cornerstone3D to create annontation
+        value['label'] = value['label'].join('|')
+        callback(value['noMeasurement'] ? value['label'] : value, action.id);
         break;
       case 'cancel':
         callback(null, action.id);
@@ -128,16 +186,17 @@ function callInputDialog(
                   );
                   targetValue = newSelection;
                   setValue(value => {
-                    // update dataImage
-                    value['dataImageId']['target'] = targetValue;
+                    // update label info
+                    value['measurementLabelInfo']['target'] = targetValue;
+                    value['label'][0] = targetValue['value'];
                     return value;
                   });
                 }}
                 options={[
                   { value: 'Target', label: 'Target' },
-                  { value: 'Target-CR', label: 'Target(CR)' },
-                  { value: 'Target-UN', label: 'Target(UN未知)' },
-                  { value: 'Non-Target', label: 'Non-Target' },
+                  { value: 'Target_CR', label: 'Target(CR)' },
+                  { value: 'Target_UN', label: 'Target(UN未知)' },
+                  { value: 'Non_Target', label: 'Non_Target' },
                   { value: 'Other', label: 'Other' },
                 ]}
               />
@@ -154,10 +213,9 @@ function callInputDialog(
                   );
                   locationValue = newSelection;
                   setValue(value => {
-                    // update dataImage
-                    value['dataImageId']['location'] = locationValue;
-                    // update label
-                    value['label'] = locationValue['label'];
+                    // update label info
+                    value['measurementLabelInfo']['location'] = locationValue;
+                    value['label'][1] = locationValue['value'];
                     return value;
                   });
                 }}

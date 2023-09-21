@@ -3,11 +3,14 @@
   "Criteria nonconformities": "不合标准",
   "Delete": "删除",
   "Description": "描述",
+  "Edit Measurement": "请编辑测量信息",
   "Export": "导出测量(CSV)",
   "MAX": "最大",
   "Measurements": "测量/报告",
   "NonTargets": "非靶向",
+  "Non-Target Findings": "Non-Target(非目标)发现",
   "No tracked measurements": "没有追踪目标",
   "Relabel": "重新标记",
-  "Targets": "靶向"
+  "Targets": "靶向",
+  "Target Findings": "Target(目标)发现"
 }
