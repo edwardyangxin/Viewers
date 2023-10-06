@@ -11,6 +11,11 @@
   "Non-Target Findings": "Non-Target(非目标)发现",
   "No tracked measurements": "没有追踪目标",
   "Relabel": "重新标记",
+  "Measurements": "测量",
   "Targets": "靶向",
-  "Target Findings": "Target(目标)发现"
+  "Target Findings": "Target(目标)发现",
+  "Export CSV": "导出CSV",
+  "No tracked measurements": "没有跟踪的测量值",
+  "Do you want to add this measurement to the existing report?": "将测量添加到报告中？",
+  "Track measurements for this series?": "要对个序列进行跟踪吗？"
 }
