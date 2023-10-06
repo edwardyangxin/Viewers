@@ -22,7 +22,6 @@ window.config = {
         qidoRoot: '/viewer-testdata',
         wadoRoot: '/viewer-testdata',
         qidoSupportsIncludeField: false,
-        supportsReject: false,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
         enableStudyLazyLoad: true,
