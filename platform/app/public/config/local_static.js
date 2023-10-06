@@ -1,8 +1,6 @@
 window.config = {
   routerBasename: '/',
-  customizationService: [
-    '@ohif/extension-default.customizationModule.helloPage',
-  ],
+  customizationService: ['@ohif/extension-default.customizationModule.helloPage'],
   extensions: [],
   modes: [],
   showStudyList: true,
@@ -24,7 +22,6 @@ window.config = {
         qidoRoot: '/viewer-testdata',
         wadoRoot: '/viewer-testdata',
         qidoSupportsIncludeField: false,
-        supportsReject: false,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
         enableStudyLazyLoad: true,

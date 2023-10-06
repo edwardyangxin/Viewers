@@ -1,4 +1,6 @@
 {
   "Measurements": "测量/报告",
-  "Studies": "检查列表"
+  "Measure": "测量",
+  "Studies": "检查列表",
+  "Segmentation": "分割"
 }
