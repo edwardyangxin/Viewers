@@ -1,5 +1,14 @@
 {
   "Name": "Orthanc inside Docker",
+  "PostgreSQL" : {
+    "EnableIndex" : true,
+    "EnableStorage" : true,
+    "Host" : "postgres",
+    "Port" : 5432,
+    "Database" : "orthanc",
+    "Username" : "postgres",
+    "Password" : "pgpassword"
+  },
   "StorageDirectory": "/var/lib/orthanc/db",
   "IndexDirectory": "/var/lib/orthanc/db",
   "StorageCompression": false,
