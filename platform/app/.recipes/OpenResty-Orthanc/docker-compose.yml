@@ -43,9 +43,9 @@ services:
       - ./config/orthanc.json:/etc/orthanc/orthanc.json:ro
       # Persist data
       - ./volumes/orthanc-db/:/var/lib/orthanc/db/
-    # ports:
+    ports:
     #   - '4242:4242' # SSL
-    #   - '8042:8042' # Web
+      - '8042:8042' # Web
     restart: unless-stopped
     environment:
       - POSTGRES_PORT=${POSTGRES_PORT:-5432}
