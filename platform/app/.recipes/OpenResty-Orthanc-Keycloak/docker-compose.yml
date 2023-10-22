@@ -43,9 +43,31 @@ services:
       - ./config/orthanc.json:/etc/orthanc/orthanc.json:ro
       # Persist data
       - ./volumes/orthanc-db/:/var/lib/orthanc/db/
+    # ports:
+    #   - '4242:4242' # SSL
+    #   - '8042:8042' # Web
     restart: unless-stopped
+    environment:
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pgpassword}
+      - PGDATA=${PGDATA:-/var/lib/postgresql/data}
+      - POSTGRES_DB=orthanc
 
-  # LINK: https://hub.docker.com/r/jboss/keycloak
+  postgres_orthanc:
+    image: postgres:12
+    container_name: postgres_orthanc
+  #  ports:
+  #    - ${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - postgresql_orthanc:${PGDATA:-/var/lib/postgresql/data}
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pgpassword}
+      - PGDATA=${PGDATA:-/var/lib/postgresql/data}
+      - POSTGRES_DB=orthanc
+
+  LINK: https://hub.docker.com/r/jboss/keycloak
   keycloak:
     image: jboss/keycloak:6.0.1
     hostname: keycloak
@@ -53,8 +75,8 @@ services:
     volumes:
       # Theme: https://www.keycloak.org/docs/latest/server_development/index.html#_themes
       - ./volumes/keycloak-themes/ohif:/opt/jboss/keycloak/themes/ohif
-      # Previous Realm Config
-      - ./config/ohif-keycloak-realm.json:/tmp/ohif-keycloak-realm.json
+      # Previous Realm Config, not working here for some reason
+      # - ./config/ohif-keycloak-realm.json:/tmp/ohif-keycloak-realm.json
     environment:
       # Database
       DB_VENDOR: postgres
@@ -73,23 +95,62 @@ services:
       # KEYCLOAK_HOSTNAME: (recommended in prod)
       # KEYCLOAK_LOGLEVEL: DEBUG
       PROXY_ADDRESS_FORWARDING: 'true'
+    # ports:
+    #   - '8080:8080' # Web
     depends_on:
-      - postgres
+      - postgres_keycloak
     restart: unless-stopped
 
   # LINK: https://hub.docker.com/_/postgres/
-  postgres:
+  postgres_keycloak:
     image: postgres:11.2
     hostname: postgres
     container_name: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgresql_keycloak:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: password
+    # ports:
+    #   - '5432:5432' # Web
     restart: unless-stopped
 
+
 volumes:
-  postgres_data:
+  postgresql_orthanc:
     driver: local
+  postgresql_keycloak:
+    driver: local
+
+
+  # TODO: add /auth root path to bitnami keycloak
+  # postgresql_keycloak:
+  #   image: docker.io/bitnami/postgresql:11
+  #   hostname: postgres
+  #   container_name: postgres
+  #   environment:
+  #     # ALLOW_EMPTY_PASSWORD is recommended only for development.
+  #     - ALLOW_EMPTY_PASSWORD=yes
+  #     - POSTGRESQL_USERNAME=bn_keycloak
+  #     - POSTGRESQL_DATABASE=bitnami_keycloak
+  #   volumes:
+  #     - 'postgresql_data:/bitnami/postgresql'
+  #   ports:
+  #     - '5432:5432'
+  #   restart: unless-stopped
+
+  # keycloak:
+  #   image: docker.io/bitnami/keycloak:22
+  #   hostname: keycloak
+  #   container_name: keycloak
+  #   volumes:
+  #     #       - './mynewtheme:/opt/bitnami/keycloak/themes/mynewtheme'
+  #     - ./volumes/keycloak-themes/ohif:/opt/bitnami/keycloak/themes/ohif
+  #     # Previous Realm Config
+  #     # - ./config/ohif-keycloak-realm.json:/tmp/ohif-keycloak-realm.json
+  #   depends_on:
+  #     - postgresql
+  #   ports:
+  #     - "8080:8080"
+  #   restart: unless-stopped
