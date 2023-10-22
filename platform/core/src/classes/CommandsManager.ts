@@ -34,6 +34,7 @@ export class CommandsManager {
    * @returns {undefined}
    */
   createContext(contextName) {
+    console.log("commands manager create context:", contextName)
     if (!contextName) {
       return;
     }
@@ -86,6 +87,7 @@ export class CommandsManager {
    * @param {CommandDefinition} definition - {@link CommandDefinition}
    */
   registerCommand(contextName, commandName, definition) {
+    console.log("register command:", contextName, commandName, definition)
     if (typeof definition !== 'object') {
       return;
     }
@@ -142,6 +144,7 @@ export class CommandsManager {
    * @param {String} [contextName]
    */
   public runCommand(commandName: string, options = {}, contextName?: string) {
+    console.log("run command:", commandName, options, contextName)
     const definition = this.getCommand(commandName, contextName);
     if (!definition) {
       log.warn(`Command "${commandName}" not found in current context`);

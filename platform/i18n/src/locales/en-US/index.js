@@ -4,6 +4,7 @@ import CineDialog from './CineDialog.json';
 import Common from './Common.json';
 import DataSourceConfiguration from './DataSourceConfiguration.json';
 import DatePicker from './DatePicker.json';
+import Dialog from './Dialog.json';
 import Header from './Header.json';
 import MeasurementTable from './MeasurementTable.json';
 import SidePanel from './SidePanel.json';
@@ -21,6 +22,7 @@ export default {
     Common,
     DataSourceConfiguration,
     DatePicker,
+    Dialog,
     Header,
     MeasurementTable,
     SidePanel,

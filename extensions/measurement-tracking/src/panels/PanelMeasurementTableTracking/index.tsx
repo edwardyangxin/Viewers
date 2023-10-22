@@ -4,7 +4,7 @@ import {
   StudySummary,
   MeasurementTable,
   Dialog,
-  Input,
+  Select,
   useViewportGrid,
   ButtonEnums,
 } from '@ohif/ui';
@@ -13,6 +13,7 @@ import { useDebounce } from '@hooks';
 import ActionButtons from './ActionButtons';
 import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
+import { useTranslation } from 'react-i18next';
 
 const { downloadCSVReport } = utils;
 const { formatDate } = utils;
@@ -24,12 +25,67 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
   description: '', // 'CHEST/ABD/PELVIS W CONTRAST',
 };
 
+// TODO: info mapping refactor to one location
+const target_info_mapping = {
+  'Target': 'Target',
+  'Target_CR': 'Target(CR)',
+  'Target_UN': 'Target(UN未知)',
+  'Non_Target': 'Non_Target',
+  'Other': 'Other',
+}
+const target_key_group = ['Target', 'Target_CR', 'Target_UN']
+const nontarget_key_group = ['Non_Target', 'Other']
+
+const location_info_mapping = {
+  'Abdomen_Chest_Wall': 'Abdomen/Chest Wall',
+  'Lung': 'Lung',
+  'Lymph_Node': 'Lymph Node',
+  'Liver': 'Liver',
+  'Mediastinum_Hilum': 'Mediastinum/Hilum',
+  'Pelvis': 'Pelvis',
+  'Petritoneum_Omentum': 'Petritoneum/Omentum',
+  'Retroperitoneum': 'Retroperitoneum',
+  'Adrenal': 'Adrenal',
+  'Bladder': 'Bladder',
+  'Bone': 'Bone',
+  'Braine': 'Braine',
+  'Breast': 'Breast',
+  'Colon': 'Colon',
+  'Esophagus': 'Esophagus',
+  'Extremities': 'Extremities',
+  'Gallbladder': 'Gallbladder',
+  'Kidney': 'Kidney',
+  'Muscle': 'Muscle',
+  'Neck': 'Neck',
+  'Other_Soft_Tissue': 'Other Soft Tissue',
+  'Ovary': 'Ovary',
+  'Pancreas': 'Pancreas',
+  'Prostate': 'Prostate',
+  'Small_Bowel': 'Small Bowel',
+  'Spleen': 'Spleen',
+  'Stomach': 'Stomach',
+  'Subcutaneous': 'Subcutaneous',
+}
+
 function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
+  const { t } = useTranslation();
   const [viewportGrid] = useViewportGrid();
-  const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(Date.now().toString());
-  const debouncedMeasurementChangeTimestamp = useDebounce(measurementChangeTimestamp, 200);
-  const { measurementService, uiDialogService, displaySetService } = servicesManager.services;
-  const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
+  const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(
+    Date.now().toString()
+  );
+  const debouncedMeasurementChangeTimestamp = useDebounce(
+    measurementChangeTimestamp,
+    200
+  );
+  const {
+    measurementService,
+    uiDialogService,
+    displaySetService,
+  } = servicesManager.services;
+  const [
+    trackedMeasurements,
+    sendTrackedMeasurementsEvent,
+  ] = useTrackedMeasurements();
   const { trackedStudy, trackedSeries } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
@@ -40,15 +96,26 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   useEffect(() => {
     const measurements = measurementService.getMeasurements();
     const filteredMeasurements = measurements.filter(
-      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
+      m =>
+        trackedStudy === m.referenceStudyUID &&
+        trackedSeries.includes(m.referenceSeriesUID)
     );
 
     const mappedMeasurements = filteredMeasurements.map(m =>
-      _mapMeasurementToDisplay(m, measurementService.VALUE_TYPES, displaySetService)
+      _mapMeasurementToDisplay(
+        m,
+        measurementService.VALUE_TYPES,
+        displaySetService
+      )
     );
     setDisplayMeasurements(mappedMeasurements);
     // eslint-ignore-next-line
-  }, [measurementService, trackedStudy, trackedSeries, debouncedMeasurementChangeTimestamp]);
+  }, [
+    measurementService,
+    trackedStudy,
+    trackedSeries,
+    debouncedMeasurementChangeTimestamp,
+  ]);
 
   const updateDisplayStudySummary = async () => {
     if (trackedMeasurements.matches('tracking')) {
@@ -81,7 +148,12 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   // ~~ DisplayStudySummary
   useEffect(() => {
     updateDisplayStudySummary();
-  }, [displayStudySummary.key, trackedMeasurements, trackedStudy, updateDisplayStudySummary]);
+  }, [
+    displayStudySummary.key,
+    trackedMeasurements,
+    trackedStudy,
+    updateDisplayStudySummary,
+  ]);
 
   // TODO: Better way to consolidated, debounce, check on change?
   // Are we exposing the right API for measurementService?
@@ -102,7 +174,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           setMeasurementsUpdated(Date.now().toString());
           if (evt === added) {
             debounce(() => {
-              measurementsPanelRef.current.scrollTop = measurementsPanelRef.current.scrollHeight;
+              measurementsPanelRef.current.scrollTop =
+                measurementsPanelRef.current.scrollHeight;
             }, 300)();
           }
         }).unsubscribe
@@ -119,7 +192,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   async function exportReport() {
     const measurements = measurementService.getMeasurements();
     const trackedMeasurements = measurements.filter(
-      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
+      m =>
+        trackedStudy === m.referenceStudyUID &&
+        trackedSeries.includes(m.referenceSeriesUID)
     );
 
     downloadCSVReport(trackedMeasurements, measurementService);
@@ -131,64 +206,185 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     onMeasurementItemClickHandler({ uid, isActive });
   };
 
+  // TODO: evibased, 重构，和extension cornerstone callInputDialog统一代码
   const onMeasurementItemEditHandler = ({ uid, isActive }) => {
     const measurement = measurementService.getMeasurement(uid);
+    const dialogId = 'enter-annotation';
     jumpToImage({ uid, isActive });
 
+    // label for 保存尽量多的label信息，因为cornerstonejs只支持保存label到DicomSR中
+    let label = measurement ? measurement.label : 'target_info|location_info';
+    label = label.split("|")
+    if (label.length < 2) {
+      // label at least 2 infos
+      label.push('location_info')
+    }
+
+    // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
+    // if no measurementLabelInfo, get from label
+    const measurementLabelInfo = measurement && measurement['measurementLabelInfo'] ?
+      measurement['measurementLabelInfo'] : {}
+
+    const valueDialog = {
+      measurementLabelInfo: measurementLabelInfo,
+      label: label,
+    };
+
+    // init targetValue, locationValue
+    let targetValue = null;
+    if ('target' in measurementLabelInfo) {
+      targetValue = measurementLabelInfo['target'];
+    } else {
+      // no target in measurementLabelInfo, get from label
+      let labelTarget = label[0]
+      if (labelTarget in target_info_mapping) {
+        targetValue = {
+          'value': labelTarget,
+          'label': target_info_mapping[labelTarget]
+        }
+      }
+      measurementLabelInfo['target'] = targetValue;
+    }
+
+    let locationValue = null;
+    if ('location' in measurementLabelInfo) {
+      locationValue = measurementLabelInfo['location'];
+    } else {
+      // no target in measurementLabelInfo, get from label
+      let labelLocation = label[1]
+      if (labelLocation in location_info_mapping) {
+        locationValue = {
+          'value': labelLocation,
+          'label': location_info_mapping[labelLocation]
+        }
+      }
+      measurementLabelInfo['location'] = locationValue;
+    }
+
+    // for dialog sumbit button
     const onSubmitHandler = ({ action, value }) => {
       switch (action.id) {
         case 'save': {
-          measurementService.update(
-            uid,
-            {
-              ...measurement,
-              ...value,
-            },
-            true
-          );
+          // copy measurement
+          const updatedMeasurement = { ...measurement };
+          updatedMeasurement['measurementLabelInfo'] = valueDialog['measurementLabelInfo'];
+          updatedMeasurement['label'] = valueDialog['label'].join('|');
+
+          measurementService.update(uid, updatedMeasurement, true);
         }
       }
-      uiDialogService.dismiss({ id: 'enter-annotation' });
+      uiDialogService.dismiss({ id: dialogId });
     };
 
     uiDialogService.create({
-      id: 'enter-annotation',
+      id: dialogId,
       centralize: true,
       isDraggable: false,
       showOverlay: true,
       content: Dialog,
       contentProps: {
-        title: 'Annotation',
+        title: t('Dialog:Annotation'),
         noCloseButton: true,
-        value: { label: measurement.label || '' },
-        body: ({ value, setValue }) => {
-          const onChangeHandler = event => {
-            event.persist();
-            setValue(value => ({ ...value, label: event.target.value }));
-          };
+        value: valueDialog,
+        onClose: () => uiDialogService.dismiss({ id: dialogId }),
 
-          const onKeyPressHandler = event => {
-            if (event.key === 'Enter') {
-              onSubmitHandler({ value, action: { id: 'save' } });
-            }
-          };
+        body: ({ value, setValue }) => {
           return (
-            <Input
-              label="Enter your annotation"
-              labelClassName="text-white grow text-[14px] leading-[1.2]"
-              autoFocus
-              id="annotation"
-              className="border-primary-main bg-black"
-              type="text"
-              value={value.label}
-              onChange={onChangeHandler}
-              onKeyPress={onKeyPressHandler}
-            />
+            <div>
+              <Select
+                id="target"
+                placeholder="选择目标"
+                value={targetValue ? [targetValue.value] : []} //select只能传入target value
+                onChange={(newSelection, action) => {
+                  console.info(
+                    'newSelection:',
+                    newSelection,
+                    'action:',
+                    action
+                  );
+                  targetValue = newSelection;
+                  setValue(value => {
+                    // update label info
+                    value['measurementLabelInfo']['target'] = targetValue;
+                    value['label'][0] = targetValue['value'];
+                    return value;
+                  });
+                }}
+                options={[
+                  { value: 'Target', label: 'Target' },
+                  { value: 'Target_CR', label: 'Target(CR)' },
+                  { value: 'Target_UN', label: 'Target(UN未知)' },
+                  { value: 'Non_Target', label: 'Non_Target' },
+                  { value: 'Other', label: 'Other' },
+                ]}
+              />
+              <Select
+                id="location"
+                placeholder="选择病灶位置"
+                value={locationValue ? [locationValue.value] : []}
+                onChange={(newSelection, action) => {
+                  console.info(
+                    'newSelection:',
+                    newSelection,
+                    'action:',
+                    action
+                  );
+                  locationValue = newSelection;
+                  setValue(value => {
+                    // update label info
+                    value['measurementLabelInfo']['location'] = locationValue;
+                    value['label'][1] = locationValue['value'];
+                    return value;
+                  });
+                }}
+                options={[
+                  { value: 'Abdomen_Chest_Wall', label: 'Abdomen/Chest Wall' },
+                  { value: 'Lung', label: 'Lung' },
+                  { value: 'Lymph_Node', label: 'Lymph Node' },
+                  { value: 'Liver', label: 'Liver' },
+                  { value: 'Mediastinum_Hilum', label: 'Mediastinum/Hilum' },
+                  { value: 'Pelvis', label: 'Pelvis' },
+                  {
+                    value: 'Petritoneum_Omentum',
+                    label: 'Petritoneum/Omentum',
+                  },
+                  { value: 'Retroperitoneum', label: 'Retroperitoneum' },
+                  { value: 'Adrenal', label: 'Adrenal' },
+                  { value: 'Bladder', label: 'Bladder' },
+                  { value: 'Bone', label: 'Bone' },
+                  { value: 'Braine', label: 'Braine' },
+                  { value: 'Breast', label: 'Breast' },
+                  { value: 'Colon', label: 'Colon' },
+                  { value: 'Esophagus', label: 'Esophagus' },
+                  { value: 'Extremities', label: 'Extremities' },
+                  { value: 'Gallbladder', label: 'Gallbladder' },
+                  { value: 'Kidney', label: 'Kidney' },
+                  { value: 'Muscle', label: 'Muscle' },
+                  { value: 'Neck', label: 'Neck' },
+                  { value: 'Other_Soft_Tissue', label: 'Other Soft Tissue' },
+                  { value: 'Ovary', label: 'Ovary' },
+                  { value: 'Pancreas', label: 'Pancreas' },
+                  { value: 'Prostate', label: 'Prostate' },
+                  { value: 'Small_Bowel', label: 'Small Bowel' },
+                  { value: 'Spleen', label: 'Spleen' },
+                  { value: 'Stomach', label: 'Stomach' },
+                  { value: 'Subcutaneous', label: 'Subcutaneous' },
+                ]}
+              />
+            </div>
           );
         },
         actions: [
-          { id: 'cancel', text: 'Cancel', type: ButtonEnums.type.secondary },
-          { id: 'save', text: 'Save', type: ButtonEnums.type.primary },
+          {
+            id: 'cancel',
+            text: t('Dialog:Cancel'),
+            type: ButtonEnums.type.secondary,
+          },
+          {
+            id: 'save',
+            text: t('Dialog:Save'),
+            type: ButtonEnums.type.primary,
+          },
         ],
         onSubmit: onSubmitHandler,
       },
@@ -206,12 +402,28 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     }
   };
 
-  const displayMeasurementsWithoutFindings = displayMeasurements.filter(
-    dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
-  );
-  const additionalFindings = displayMeasurements.filter(
-    dm => dm.measurementType === measurementService.VALUE_TYPES.POINT
-  );
+  // evibased 按照target&nonTarget分组显示
+  // const displayMeasurementsWithoutFindings = displayMeasurements.filter(
+  //   dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
+  // );
+  // const additionalFindings = displayMeasurements.filter(
+  //   dm => dm.measurementType === measurementService.VALUE_TYPES.POINT
+  // );
+
+  let targetFindings = []
+  let nonTargetFindings = []
+  for (let dm of displayMeasurements) {
+      // get target info
+      let targetInfo = dm.label.split('|')[0];
+      if (!(targetInfo in target_info_mapping)) {
+        // not in target_info_mapping, just show and allow edit
+        nonTargetFindings.push(dm)
+      } else if (target_key_group.includes(targetInfo)) {
+        targetFindings.push(dm)
+      } else {
+        nonTargetFindings.push(dm)
+      }
+  }
 
   return (
     <>
@@ -228,21 +440,19 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           />
         )}
         <MeasurementTable
-          title="Measurements"
-          data={displayMeasurementsWithoutFindings}
+          title={t('MeasurementTabel:Target Findings')}
+          data={targetFindings}
           servicesManager={servicesManager}
           onClick={jumpToImage}
           onEdit={onMeasurementItemEditHandler}
         />
-        {additionalFindings.length !== 0 && (
-          <MeasurementTable
-            title="Additional Findings"
-            data={additionalFindings}
-            servicesManager={servicesManager}
-            onClick={jumpToImage}
-            onEdit={onMeasurementItemEditHandler}
-          />
-        )}
+        <MeasurementTable
+          title={t('MeasurementTabel:Non-Target Findings')}
+          data={nonTargetFindings}
+          servicesManager={servicesManager}
+          onClick={jumpToImage}
+          onEdit={onMeasurementItemEditHandler}
+        />
       </div>
       <div className="flex justify-center p-4">
         <ActionButtons
@@ -254,7 +464,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
             });
           }}
           disabled={
-            additionalFindings.length === 0 && displayMeasurementsWithoutFindings.length === 0
+            targetFindings.length === 0 &&
+            nonTargetFindings.length === 0
           }
         />
       </div>
@@ -286,10 +497,14 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
     SOPInstanceUID
   );
 
-  const displaySets = displaySetService.getDisplaySetsForSeries(referenceSeriesUID);
+  const displaySets = displaySetService.getDisplaySetsForSeries(
+    referenceSeriesUID
+  );
 
   if (!displaySets[0] || !displaySets[0].images) {
-    throw new Error('The tracked measurements panel should only be tracking "stack" displaySets.');
+    throw new Error(
+      'The tracked measurements panel should only be tracking "stack" displaySets.'
+    );
   }
 
   const {

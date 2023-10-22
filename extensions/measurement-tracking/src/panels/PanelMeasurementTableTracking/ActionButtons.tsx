@@ -9,19 +9,20 @@ function ActionButtons({ onExportClick, onCreateReportClick, disabled }) {
 
   return (
     <React.Fragment>
-      <Button
+      {/* disable 导出CSV报告 */}
+      {/* <Button
         onClick={onExportClick}
         disabled={disabled}
         type={ButtonEnums.type.secondary}
         size={ButtonEnums.size.small}
       >
         {t('Export')}
-      </Button>
+      </Button> */}
       <Button
         className="ml-2"
         onClick={onCreateReportClick}
         type={ButtonEnums.type.secondary}
-        size={ButtonEnums.size.small}
+        size={ButtonEnums.size.large}
         disabled={disabled}
       >
         {t('Create Report')}

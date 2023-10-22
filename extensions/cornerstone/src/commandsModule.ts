@@ -125,8 +125,11 @@ function commandsModule({
     },
 
     /**
+     * TODO: 注册新的编辑measurement command for IRC，保留原始command
      * Show the measurement labelling input dialog and update the label
      * on the measurement with a response if not cancelled.
+     *
+     * updated: set measurement data and label
      */
     setMeasurementLabel: ({ uid }) => {
       const measurement = measurementService.getMeasurement(uid);
@@ -135,17 +138,35 @@ function commandsModule({
         uiDialogService,
         measurement,
         (label, actionId) => {
+          /** label in form:
+            {measurementLabelInfo: {
+              length: 221.56495778786802,
+              unit: "mm",
+              target: {
+                value: "Target-CR",
+                label: "Target(CR)",
+              },
+              location: {
+                value: "Liver",
+                label: "Liver",
+              },
+            },
+            label: "Target|Liver"}
+          */
           if (actionId === 'cancel') {
             return;
           }
 
-          const updatedMeasurement = Object.assign({}, measurement, {
-            label,
-          });
+          // copy measurement
+          const updatedMeasurement = { ...measurement };
+          // update label data
+          updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
+          updatedMeasurement['label'] = label['label'];
 
-          measurementService.update(updatedMeasurement.uid, updatedMeasurement, true);
+          // measurementService in platform core service module
+          measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
         },
-        false
+        false // isArrowAnnotateInputDialog = false
       );
     },
 
@@ -221,6 +242,7 @@ function commandsModule({
 
       viewportGridService.setActiveViewportId(viewportId);
     },
+    // TODO: evibased, 箭头标注，重构，独立的command
     arrowTextCallback: ({ callback, data }) => {
       callInputDialog(uiDialogService, data, callback);
     },
