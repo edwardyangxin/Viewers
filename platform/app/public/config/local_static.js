@@ -19,8 +19,8 @@ window.config = {
       configuration: {
         friendlyName: 'Static WADO Local Data',
         name: 'DCM4CHEE',
-        qidoRoot: '/dicomweb',
-        wadoRoot: '/dicomweb',
+        qidoRoot: '/viewer-testdata',
+        wadoRoot: '/viewer-testdata',
         qidoSupportsIncludeField: false,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
