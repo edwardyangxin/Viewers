@@ -200,6 +200,43 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     downloadCSVReport(trackedMeasurements, measurementService);
   }
 
+  // evibased, upload report to backend api
+  async function uploadReport() {
+    const measurements = measurementService.getMeasurements();
+    const trackedMeasurements = measurements.filter(
+      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
+    );
+
+    console.log('Authenticated user info: ', userAuthenticationService.getUser());
+    const user = userAuthenticationService.getUser();
+    let userName = 'unknown';
+    const authHeader = userAuthenticationService.getAuthorizationHeader();
+    const authHeaderKey = Object.keys(authHeader)[0];
+    if (user) {
+      userName = user.profile.preferred_username;
+    }
+    // get report api from config
+    const uploadReportUrl = _appConfig['evibased']['upload_api'];
+    const uploadReportBody = {
+      userName: userName,
+      trackedMeasurements: trackedMeasurements,
+    };
+    const uploadReportResponse = await fetch(uploadReportUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        authHeaderKey: authHeader[authHeaderKey],
+      },
+      body: JSON.stringify(uploadReportBody),
+    });
+    if (!uploadReportResponse.ok) {
+      console.log('uploadReportResponse:', uploadReportResponse);
+      throw new Error(`HTTP error! status: ${uploadReportResponse.status}`);
+    }
+    const uploadReportResult = await uploadReportResponse.json();
+    console.log('uploadReportResult:', uploadReportResult);
+  }
+
   const jumpToImage = ({ uid, isActive }) => {
     measurementService.jumpToMeasurement(viewportGrid.activeViewportId, uid);
 
@@ -413,16 +450,16 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   let targetFindings = []
   let nonTargetFindings = []
   for (let dm of displayMeasurements) {
-      // get target info
-      let targetInfo = dm.label.split('|')[0];
-      if (!(targetInfo in target_info_mapping)) {
-        // not in target_info_mapping, just show and allow edit
-        nonTargetFindings.push(dm)
-      } else if (target_key_group.includes(targetInfo)) {
-        targetFindings.push(dm)
-      } else {
-        nonTargetFindings.push(dm)
-      }
+    // get target info
+    let targetInfo = dm.label.split('|')[0];
+    if (!(targetInfo in target_info_mapping)) {
+      // not in target_info_mapping, just show and allow edit
+      nonTargetFindings.push(dm)
+    } else if (target_key_group.includes(targetInfo)) {
+      targetFindings.push(dm)
+    } else {
+      nonTargetFindings.push(dm)
+    }
   }
 
   return (
@@ -457,6 +494,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       <div className="flex justify-center p-4">
         <ActionButtons
           onExportClick={exportReport}
+          onUploadClick={uploadReport}
           onCreateReportClick={() => {
             sendTrackedMeasurementsEvent('SAVE_REPORT', {
               viewportId: viewportGrid.activeViewportId,

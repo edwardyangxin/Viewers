@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, ButtonEnums } from '@ohif/ui';
 
-function ActionButtons({ onExportClick, onCreateReportClick, disabled }) {
+function ActionButtons({ onExportClick, onUploadClick, onCreateReportClick, disabled }) {
   const { t } = useTranslation('MeasurementTable');
 
   return (
@@ -20,7 +20,7 @@ function ActionButtons({ onExportClick, onCreateReportClick, disabled }) {
       </Button> */}
       {/* upload report to backend */}
       <Button
-        onClick={onExportClick}
+        onClick={onUploadClick}
         disabled={disabled}
         type={ButtonEnums.type.secondary}
         size={ButtonEnums.size.small}
