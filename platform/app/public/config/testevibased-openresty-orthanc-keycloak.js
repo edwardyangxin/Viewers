@@ -50,4 +50,8 @@ window.config = {
       post_logout_redirect_uri: '/logout-redirect.html',
     },
   ],
+  // evibased, config
+  evibased: {
+    upload_api: 'http://localhost:3000/api/upload',
+  },
 };

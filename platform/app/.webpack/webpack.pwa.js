@@ -149,6 +149,15 @@ module.exports = (env, argv) => {
       },
       proxy: {
         '/dicomweb': 'http://localhost:5000',
+        '/auth': {
+          target: 'http://localhost:8080',
+          secure: false,
+          headers: {
+            'X-Forwarded-For': 'localhost',
+            'X-Real-IP': 'localhost',
+            'Host': 'localhost:3000',
+          }
+        },
       },
       static: [
         {
