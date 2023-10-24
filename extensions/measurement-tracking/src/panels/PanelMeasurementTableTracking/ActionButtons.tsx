@@ -10,14 +10,14 @@ function ActionButtons({ onExportClick, onUploadClick, onCreateReportClick, disa
   return (
     <React.Fragment>
       {/* evibased disable export CSV */}
-      {/* <Button
+      <Button
         onClick={onExportClick}
         disabled={disabled}
         type={ButtonEnums.type.secondary}
         size={ButtonEnums.size.small}
       >
         {t('Export')}
-      </Button> */}
+      </Button>
       {/* upload report to backend */}
       <Button
         onClick={onUploadClick}

@@ -71,6 +71,7 @@ function PanelStudyBrowserTracking({
   // ~~ studyDisplayList
   useEffect(() => {
     // Fetch all studies for the patient in each primary study
+    // evibased, 这里去search所有相关的study信息。当前的study和series信息在列表页获取并传进来了。
     async function fetchStudiesForPatient(StudyInstanceUID) {
       // current study qido
       const qidoForStudyUID = await dataSource.query.studies.search({
