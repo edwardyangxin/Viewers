@@ -142,7 +142,7 @@ module.exports = (env, argv) => {
       // compress: true,
       // http2: true,
       // https: true,
-      open: true,
+      open: false,
       port: 3000,
       client: {
         overlay: { errors: true, warnings: false },

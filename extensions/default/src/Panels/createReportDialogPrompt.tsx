@@ -10,6 +10,12 @@ export const CREATE_REPORT_DIALOG_RESPONSE = {
 export default function CreateReportDialogPrompt(uiDialogService, { extensionManager }) {
   return new Promise(function (resolve, reject) {
     let dialogId = undefined;
+    // evibased, get username, timestamp and comment for default report name
+    const { userAuthenticationService } = extensionManager._servicesManager.services;
+    const userInfo = userAuthenticationService.getUser();
+    let labelTemplate = userInfo ? userInfo.profile.preferred_username : 'unknown_user';
+    labelTemplate += '|' + new Date().toISOString().slice(0, 16).replace(/-/g, '');
+    labelTemplate += '|请在这里填写注释等信息';
 
     const _handleClose = () => {
       // Dismiss dialog
@@ -70,7 +76,7 @@ export default function CreateReportDialogPrompt(uiDialogService, { extensionMan
       contentProps: {
         title: 'Create Report',
         value: {
-          label: '',
+          label: labelTemplate,
           dataSourceName: extensionManager.activeDataSource,
         },
         noCloseButton: true,
