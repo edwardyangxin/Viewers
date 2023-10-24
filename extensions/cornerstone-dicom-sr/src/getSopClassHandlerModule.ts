@@ -195,7 +195,8 @@ function _checkIfCanAddMeasurementsToDisplaySet(srDisplaySet, newDisplaySet, dat
     return;
   }
 
-  if (!newDisplaySet instanceof ImageSet) {
+  // evibased, unsupported newDisplaySet causes bug 
+  if (!(newDisplaySet instanceof ImageSet) || newDisplaySet.unsupported) {
     // This also filters out _this_ displaySet, as it is not an ImageSet.
     return;
   }
