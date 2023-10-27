@@ -14,14 +14,20 @@ const { formatDate } = utils;
  * @param {*} param0
  */
 function PanelStudyBrowserTracking({
+  extensionManager,
   servicesManager,
   getImageSrc,
   getStudiesForPatientByMRN,
   requestDisplaySetCreationForStudy,
   dataSource,
 }) {
-  const { displaySetService, uiDialogService, hangingProtocolService, uiNotificationService } =
-    servicesManager.services;
+  const { _appConfig } = extensionManager;
+  const {
+    displaySetService,
+    uiDialogService,
+    hangingProtocolService,
+    uiNotificationService,
+  } = servicesManager.services;
   const navigate = useNavigate();
 
   const { t } = useTranslation('Common');
@@ -63,12 +69,22 @@ function PanelStudyBrowserTracking({
     viewportGridService.setDisplaySetsForViewports(updatedViewports);
   };
 
+  // evibased, double click report thumbnail
+  const onDoubleClickReportThumbnailHandler = reportData => {
+    console.log('double click report thumbnail: ', reportData);
+    sendTrackedMeasurementsEvent('UPDATE_BACKEND_REPORT', {
+      reportData: reportData,
+    });
+  };
+
   const activeViewportDisplaySetInstanceUIDs =
     viewports.get(activeViewportId)?.displaySetInstanceUIDs;
 
   const { trackedSeries } = trackedMeasurements.context;
 
   // ~~ studyDisplayList
+  // evibased 获取studyDisplayList，list of all related studies(current study and related studies)
+  // TODO: evibased，这里获取所有study的report信息，然后在study browser中显示
   useEffect(() => {
     // Fetch all studies for the patient in each primary study
     // evibased, 这里去search所有相关的study信息。当前的study和series信息在列表页获取并传进来了。
@@ -93,7 +109,10 @@ function PanelStudyBrowserTracking({
         console.warn(error);
       }
 
-      const mappedStudies = _mapDataSourceStudies(qidoStudiesForPatient);
+      let mappedStudies = _mapDataSourceStudies(qidoStudiesForPatient);
+      if (_appConfig.evibased['backend_flag']) {
+        mappedStudies = await _fetchReportsBackend(_appConfig, mappedStudies);
+      }
       const actuallyMappedStudies = mappedStudies.map(qidoStudy => {
         return {
           studyInstanceUid: qidoStudy.StudyInstanceUID,
@@ -101,6 +120,7 @@ function PanelStudyBrowserTracking({
           description: qidoStudy.StudyDescription,
           modalities: qidoStudy.ModalitiesInStudy,
           numInstances: qidoStudy.NumInstances,
+          reports: qidoStudy.reports,
         };
       });
 
@@ -120,6 +140,7 @@ function PanelStudyBrowserTracking({
   }, [StudyInstanceUIDs, getStudiesForPatientByMRN]);
 
   // ~~ Initial Thumbnails
+  // get thumbnail for each displaySet，这里理解为每个series的thumbnail
   useEffect(() => {
     const currentDisplaySets = displaySetService.activeDisplaySets;
 
@@ -146,7 +167,7 @@ function PanelStudyBrowserTracking({
     });
   }, [displaySetService, dataSource, getImageSrc]);
 
-  // ~~ displaySets
+  // ~~ displaySets，
   useEffect(() => {
     const currentDisplaySets = displaySetService.activeDisplaySets;
 
@@ -345,6 +366,7 @@ function PanelStudyBrowserTracking({
       }}
       onClickThumbnail={() => {}}
       onDoubleClickThumbnail={onDoubleClickThumbnailHandler}
+      onDoubleClickReportThumbnail={onDoubleClickReportThumbnailHandler}
       activeDisplaySetInstanceUIDs={activeViewportDisplaySetInstanceUIDs}
     />
   );
@@ -382,6 +404,137 @@ function _mapDataSourceStudies(studies) {
       StudyTime: study.time,
     };
   });
+}
+
+// TODO: evibased, fetch data from API backend
+async function _fetchReportsBackend(_appConfig, mappedStudies) {
+  console.log('fetching Backend reports for: ', mappedStudies);
+  const fetchUrl = _appConfig.evibased['fetch_api'];
+  // loop through all studies
+  for (let i = 0; i < mappedStudies.length; i++) {
+    const study = mappedStudies[i];
+    // get reports from fetchUrl by http request
+    // const reports = await fetch(`${fetchUrl}?studyInstanceUID=${study.StudyInstanceUID}`)
+    //   .then(res => res.json())
+    //   .then(data => data.data);
+
+    // demo data
+    const reports = [
+      {
+        report_name: 'report1',
+        timestamp: '2023-10-25T12:12:12',
+        username: 'test',
+        user_report_version: 1,
+        report_template: 'RESIST1.1',
+        report_template_version: 'v0.1',
+        measurements: [
+          {
+            Patient_ID: 'ISPY1_1001',
+            Patient_Name: '1001^6657^ISPY1',
+            StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
+            SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.210538707954985296677398591978',
+            SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.272165115864924771573341503410',
+            Label: 'Target|Lymph_Node',
+            AnnotationType: 'Cornerstone:Bidirectional',
+            Length: '51.253774533998936',
+            Width: '34.169183022665926',
+            Unit: 'mm',
+            FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
+            points:
+              '72.06351032056776 50.9972240042937 -42;24.450926452423076 69.97065968107313 -42;41.93273982756892 44.61308055330187 -42;54.58169694542188 76.35480313206496 -42',
+          },
+          {
+            Patient_ID: 'ISPY1_1001',
+            Patient_Name: '1001^6657^ISPY1',
+            StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
+            SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.226038001772760333157260976449',
+            SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.110476001967362934681049981213',
+            Label: 'Target_CR|Liver',
+            AnnotationType: 'Cornerstone:Bidirectional',
+            Length: '29.120219846099335',
+            Width: '19.413479897399586',
+            Unit: 'mm',
+            FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
+            points:
+              '-45.033142730819726 50.85046970719078 80;-71.62663747994458 62.71525967218496 80;-62.28482009371352 47.918366439979565 80;-54.37496011705079 65.64736293939619 80',
+          },
+          {
+            Patient_ID: 'ISPY1_1001',
+            Patient_Name: '1001^6657^ISPY1',
+            StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
+            SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.210538707954985296677398591978',
+            SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.333095478199353799429660404955',
+            Label: 'Target_UN|Mediastinum_Hilum',
+            AnnotationType: 'Cornerstone:Bidirectional',
+            Length: '91.13624282454762',
+            Width: '60.75749521636509',
+            Unit: 'mm',
+            FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
+            points:
+              '61.68181910119784 35.24569249904281 -24;-27.4575296444264 54.21912817582229 -24;10.787666169459257 15.019294088891108 -24;23.436623287312187 74.44552658597395 -24',
+          },
+        ],
+      },
+      {
+        report_name: 'report2',
+        timestamp: '2023-10-25T13:13:13',
+        username: 'test',
+        user_report_version: 2,
+        report_template: 'RESIST1.1',
+        report_template_version: 'v0.1',
+        measurements: [
+          {
+            Patient_ID: 'ISPY1_1001',
+            Patient_Name: '1001^6657^ISPY1',
+            StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
+            SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.210538707954985296677398591978',
+            SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.272165115864924771573341503410',
+            Label: 'Target|Lymph_Node',
+            AnnotationType: 'Cornerstone:Bidirectional',
+            Length: '51.253774533998936',
+            Width: '34.169183022665926',
+            Unit: 'mm',
+            FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
+            points:
+              '72.06351032056776 50.9972240042937 -42;24.450926452423076 69.97065968107313 -42;41.93273982756892 44.61308055330187 -42;54.58169694542188 76.35480313206496 -42',
+          },
+          {
+            Patient_ID: 'ISPY1_1001',
+            Patient_Name: '1001^6657^ISPY1',
+            StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
+            SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.226038001772760333157260976449',
+            SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.110476001967362934681049981213',
+            Label: 'Target_CR|Liver',
+            AnnotationType: 'Cornerstone:Bidirectional',
+            Length: '29.120219846099335',
+            Width: '19.413479897399586',
+            Unit: 'mm',
+            FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
+            points:
+              '-45.033142730819726 50.85046970719078 80;-71.62663747994458 62.71525967218496 80;-62.28482009371352 47.918366439979565 80;-54.37496011705079 65.64736293939619 80',
+          },
+          {
+            Patient_ID: 'ISPY1_1001',
+            Patient_Name: '1001^6657^ISPY1',
+            StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
+            SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.210538707954985296677398591978',
+            SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.333095478199353799429660404955',
+            Label: 'Target_UN|Mediastinum_Hilum',
+            AnnotationType: 'Cornerstone:Bidirectional',
+            Length: '91.13624282454762',
+            Width: '60.75749521636509',
+            Unit: 'mm',
+            FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
+            points:
+              '61.68181910119784 35.24569249904281 -24;-27.4575296444264 54.21912817582229 -24;10.787666169459257 15.019294088891108 -24;23.436623287312187 74.44552658597395 -24',
+          },
+        ],
+      },
+    ];
+    // add reports to study
+    study['reports'] = reports;
+  }
+  return mappedStudies;
 }
 
 function _mapDisplaySets(
@@ -529,6 +682,8 @@ function _getComponentType(ds) {
 
 /**
  *
+ * evibased, create tabs for study browser panel
+ *
  * @param {string[]} primaryStudyInstanceUIDs
  * @param {object[]} studyDisplayList
  * @param {string} studyDisplayList.studyInstanceUid
@@ -545,6 +700,7 @@ function _createStudyBrowserTabs(
   displaySets,
   hangingProtocolService
 ) {
+  // 3 tabs list
   const primaryStudies = [];
   const recentStudies = [];
   const allStudies = [];

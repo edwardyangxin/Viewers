@@ -59,6 +59,8 @@ window.config = {
   ],
   // evibased, config
   evibased: {
+    backend_flag: true,
+    fetch_api: 'http://localhost:3000/api/fetch',
     upload_api: 'http://localhost:3000/api/upload',
   },
 };

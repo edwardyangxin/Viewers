@@ -53,6 +53,9 @@ const machineConfiguration = {
             activeViewportId: (_, event) => event.activeViewportId,
           }),
         },
+        UPDATE_BACKEND_REPORT: {
+          target: 'updateBackendReport',
+        },
       },
     },
     promptBeginTracking: {
@@ -252,6 +255,24 @@ const machineConfiguration = {
         },
       },
     },
+    updateBackendReport: {
+      invoke: {
+        src: 'updateBackendReport',
+        onDone: [
+          {
+            target: 'tracking',
+            actions: [
+              'setTrackedStudyAndMultipleSeries',
+              'jumpToFirstMeasurementInActiveViewport',
+              'setIsDirtyToClean',
+            ],
+          }
+        ],
+        onError: {
+          target: 'idle',
+        },
+      },
+    },
   },
   strict: true,
 };
@@ -290,16 +311,20 @@ const defaultOptions = {
       prevIgnoredSeries: [],
     }),
     // Promise resolves w/ `evt.data.*`
-    setTrackedStudyAndSeries: assign((ctx, evt) => ({
-      prevTrackedStudy: ctx.trackedStudy,
-      prevTrackedSeries: ctx.trackedSeries.slice(),
-      prevIgnoredSeries: ctx.ignoredSeries.slice(),
-      //
-      trackedStudy: evt.data.StudyInstanceUID,
-      trackedSeries: [evt.data.SeriesInstanceUID],
-      ignoredSeries: [],
-    })),
+    setTrackedStudyAndSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(setTrackedStudyAndSeries): ", evt.type, evt);
+      return {
+        prevTrackedStudy: ctx.trackedStudy,
+        prevTrackedSeries: ctx.trackedSeries.slice(),
+        prevIgnoredSeries: ctx.ignoredSeries.slice(),
+        //
+        trackedStudy: evt.data.StudyInstanceUID,
+        trackedSeries: [evt.data.SeriesInstanceUID],
+        ignoredSeries: [],
+      };
+    }),
     setTrackedStudyAndMultipleSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(): ", evt.type, evt);
       const studyInstanceUID = evt.StudyInstanceUID || evt.data.StudyInstanceUID;
       const seriesInstanceUIDs = evt.SeriesInstanceUIDs || evt.data.SeriesInstanceUIDs;
 
@@ -313,30 +338,54 @@ const defaultOptions = {
         ignoredSeries: [],
       };
     }),
-    setIsDirtyToClean: assign((ctx, evt) => ({
-      isDirty: false,
-    })),
-    setIsDirty: assign((ctx, evt) => ({
-      isDirty: true,
-    })),
-    ignoreSeries: assign((ctx, evt) => ({
-      prevIgnoredSeries: [...ctx.ignoredSeries],
-      ignoredSeries: [...ctx.ignoredSeries, evt.data.SeriesInstanceUID],
-    })),
-    ignoreHydrationForSRSeries: assign((ctx, evt) => ({
-      ignoredSRSeriesForHydration: [
-        ...ctx.ignoredSRSeriesForHydration,
-        evt.data.srSeriesInstanceUID,
+    setIsDirtyToClean: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(setIsDirtyToClean): ", evt.type, evt);
+
+      return {
+        isDirty: false,
+      }
+    }),
+    setIsDirty: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(setIsDirty): ", evt.type, evt);
+
+      return {
+        isDirty: true,
+      }
+    }),
+    ignoreSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(ignoreSeries): ", evt.type, evt);
+
+      return {
+        prevIgnoredSeries: [...ctx.ignoredSeries],
+        ignoredSeries: [...ctx.ignoredSeries, evt.data.SeriesInstanceUID],
+      }
+    }),
+    ignoreHydrationForSRSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(ignoreHydrationForSRSeries): ", evt.type, evt);
+
+      return {
+        ignoredSRSeriesForHydration: [
+          ...ctx.ignoredSRSeriesForHydration,
+          evt.data.srSeriesInstanceUID,
       ],
-    })),
-    addTrackedSeries: assign((ctx, evt) => ({
-      prevTrackedSeries: [...ctx.trackedSeries],
-      trackedSeries: [...ctx.trackedSeries, evt.data.SeriesInstanceUID],
-    })),
-    removeTrackedSeries: assign((ctx, evt) => ({
-      prevTrackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
-      trackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
-    })),
+      }
+    }),
+    addTrackedSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(addTrackedSeries): ", evt.type, evt);
+
+      return {
+        prevTrackedSeries: [...ctx.trackedSeries],
+        trackedSeries: [...ctx.trackedSeries, evt.data.SeriesInstanceUID],
+      }
+    }),
+    removeTrackedSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(removeTrackedSeries): ", evt.type, evt);
+
+      return {
+        prevTrackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
+        trackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
+      }
+    }),
   },
   guards: {
     // We set dirty any time we performan an action that:

@@ -6,6 +6,7 @@ import StudyItem from '../StudyItem';
 import LegacyButtonGroup from '../LegacyButtonGroup';
 import LegacyButton from '../LegacyButton';
 import ThumbnailList from '../ThumbnailList';
+import ReportThumbnailList from '../ReportThumbnailList';
 import { StringNumber } from '../../types';
 
 const getTrackedSeries = displaySets => {
@@ -27,6 +28,7 @@ const StudyBrowser = ({
   onClickStudy,
   onClickThumbnail,
   onDoubleClickThumbnail,
+  onDoubleClickReportThumbnail,
   onClickUntrack,
   activeDisplaySetInstanceUIDs,
   servicesManager,
@@ -37,7 +39,7 @@ const StudyBrowser = ({
   const getTabContent = () => {
     const tabData = tabs.find(tab => tab.name === activeTabName);
     return tabData.studies.map(
-      ({ studyInstanceUid, date, description, numInstances, modalities, displaySets }) => {
+      ({ studyInstanceUid, date, description, numInstances, modalities, displaySets, reports }) => {
         const isExpanded = expandedStudyInstanceUIDs.includes(studyInstanceUid);
         return (
           <React.Fragment key={studyInstanceUid}>
@@ -53,6 +55,13 @@ const StudyBrowser = ({
               }}
               data-cy="thumbnail-list"
             />
+            {isExpanded && reports && (
+              <ReportThumbnailList
+                reportThumbnails={reports}
+                onReportThumbnailClick={onClickThumbnail} // no use
+                onReportThumbnailDoubleClick={onDoubleClickReportThumbnail}
+              />
+            )}
             {isExpanded && displaySets && (
               <ThumbnailList
                 thumbnails={displaySets}
@@ -122,6 +131,7 @@ StudyBrowser.propTypes = {
   onClickStudy: PropTypes.func,
   onClickThumbnail: PropTypes.func,
   onDoubleClickThumbnail: PropTypes.func,
+  onDoubleClickReportThumbnail: PropTypes.func,
   onClickUntrack: PropTypes.func,
   activeTabName: PropTypes.string.isRequired,
   expandedStudyInstanceUIDs: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -176,6 +186,7 @@ StudyBrowser.defaultProps = {
   onClickStudy: noop,
   onClickThumbnail: noop,
   onDoubleClickThumbnail: noop,
+  onDoubleClickReportThumbnail: noop,
   onClickUntrack: noop,
 };
 

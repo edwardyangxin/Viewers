@@ -10,6 +10,7 @@ import promptTrackNewStudy from './promptTrackNewStudy';
 import promptSaveReport from './promptSaveReport';
 import promptHydrateStructuredReport from './promptHydrateStructuredReport';
 import hydrateStructuredReport from './hydrateStructuredReport';
+import updateBackendReport from './updateBackendReport';
 import { useAppConfig } from '@state';
 
 const TrackedMeasurementsContext = React.createContext();
@@ -138,6 +139,11 @@ function TrackedMeasurementsContextProvider(
       appConfig,
     }),
     hydrateStructuredReport: hydrateStructuredReport.bind(null, {
+      servicesManager,
+      extensionManager,
+      appConfig,
+    }),
+    updateBackendReport: updateBackendReport.bind(null, {
       servicesManager,
       extensionManager,
       appConfig,
