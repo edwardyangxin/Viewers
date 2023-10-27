@@ -20,7 +20,7 @@ export default {
  * @return {Object} Observable object with actions
  */
 function subscribe(eventName, callback) {
-  console.log("sub service event:", eventName, callback)
+  // console.log("sub service event:", eventName, callback)
   if (this._isValidEvent(eventName)) {
     const listenerId = guid();
     const subscription = { id: listenerId, callback };
@@ -48,7 +48,7 @@ function subscribe(eventName, callback) {
  * @return void
  */
 function _unsubscribe(eventName, listenerId) {
-  console.log("unsubscribe service event:", eventName, listenerId)
+  // console.log("unsubscribe service event:", eventName, listenerId)
   if (!this.listeners[eventName]) {
     return;
   }
@@ -85,7 +85,7 @@ function _broadcastEvent(eventName, callbackProps) {
 
   if (hasListeners && hasCallbacks) {
     this.listeners[eventName].forEach(listener => {
-      console.log("service call listener:", eventName, listener, callbackProps)
+      // console.log("service call listener:", eventName, listener, callbackProps)
       listener.callback(callbackProps);
     });
   }
