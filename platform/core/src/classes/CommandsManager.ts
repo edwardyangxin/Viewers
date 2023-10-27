@@ -87,7 +87,7 @@ export class CommandsManager {
    * @param {CommandDefinition} definition - {@link CommandDefinition}
    */
   registerCommand(contextName, commandName, definition) {
-    console.log("register command:", contextName, commandName, definition)
+    // console.log("register command:", contextName, commandName, definition)
     if (typeof definition !== 'object') {
       return;
     }
