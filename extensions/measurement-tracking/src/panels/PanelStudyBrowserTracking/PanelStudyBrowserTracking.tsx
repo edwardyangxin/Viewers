@@ -84,7 +84,6 @@ function PanelStudyBrowserTracking({
 
   // ~~ studyDisplayList
   // evibased 获取studyDisplayList，list of all related studies(current study and related studies)
-  // TODO: evibased，这里获取所有study的report信息，然后在study browser中显示
   useEffect(() => {
     // Fetch all studies for the patient in each primary study
     // evibased, 这里去search所有相关的study信息。当前的study和series信息在列表页获取并传进来了。
