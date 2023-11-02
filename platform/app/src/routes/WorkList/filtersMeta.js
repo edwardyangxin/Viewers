@@ -1,7 +1,14 @@
 const filtersMeta = [
+  // {
+  //   name: 'patientName',
+  //   displayName: 'PatientName',
+  //   inputType: 'Text',
+  //   isSortable: true,
+  //   gridCol: 4,
+  // },
   {
-    name: 'patientName',
-    displayName: 'PatientName',
+    name: 'trialProtocolDescription',
+    displayName: 'TrialProtocolDescription',
     inputType: 'Text',
     isSortable: true,
     gridCol: 4,
@@ -12,6 +19,13 @@ const filtersMeta = [
     inputType: 'Text',
     isSortable: true,
     gridCol: 3,
+  },
+  {
+    name: 'trialTimepointDescription',
+    displayName: 'TrialTimepointDescription',
+    inputType: 'Text',
+    isSortable: true,
+    gridCol: 4,
   },
   {
     name: 'studyDate',
@@ -108,20 +122,20 @@ const filtersMeta = [
     isSortable: true,
     gridCol: 3,
   },
-  {
-    name: 'accession',
-    displayName: 'AccessionNumber',
-    inputType: 'Text',
-    isSortable: true,
-    gridCol: 3,
-  },
-  {
-    name: 'instances',
-    displayName: 'Instances',
-    inputType: 'None',
-    isSortable: false,
-    gridCol: 2,
-  },
+  // {
+  //   name: 'accession',
+  //   displayName: 'AccessionNumber',
+  //   inputType: 'Text',
+  //   isSortable: true,
+  //   gridCol: 3,
+  // },
+  // {
+  //   name: 'instances',
+  //   displayName: 'Instances',
+  //   inputType: 'None',
+  //   isSortable: false,
+  //   gridCol: 2,
+  // },
 ];
 
 export default filtersMeta;

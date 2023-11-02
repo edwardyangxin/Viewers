@@ -240,7 +240,15 @@ function WorkList({
       patientName,
       date,
       time,
+      trialTimePointId,
+      trialTimePointDescription,
+      trialSubjectId,
+      trialProtocolId,
+      trialProtocolDescription,
+      trialSiteId,
+      trialSiteDescription,
     } = study;
+    const trialTimePointInfo = i18n.t('StudyList:TimePoint') + trialTimePointId.slice(1);
     const studyDate =
       date &&
       moment(date, ['YYYYMMDD', 'YYYY.MM.DD'], true).isValid() &&
@@ -252,18 +260,28 @@ function WorkList({
 
     return {
       row: [
+        // {
+        //   key: 'patientName',
+        //   content: patientName ? (
+        //     <TooltipClipboard>{patientName}</TooltipClipboard>
+        //   ) : (
+        //     <span className="text-gray-700">(Empty)</span>
+        //   ),
+        //   gridCol: 4,
+        // },
         {
-          key: 'patientName',
-          content: patientName ? (
-            <TooltipClipboard>{patientName}</TooltipClipboard>
-          ) : (
-            <span className="text-gray-700">(Empty)</span>
-          ),
+          key: 'trialProtocolDescription',
+          content: <TooltipClipboard>{trialProtocolDescription}</TooltipClipboard>,
           gridCol: 4,
         },
         {
           key: 'mrn',
           content: <TooltipClipboard>{mrn}</TooltipClipboard>,
+          gridCol: 3,
+        },
+        {
+          key: 'trialTimePointInfo',
+          content: <TooltipClipboard>{trialTimePointInfo}</TooltipClipboard>,
           gridCol: 3,
         },
         {
@@ -288,28 +306,28 @@ function WorkList({
           title: modalities,
           gridCol: 3,
         },
-        {
-          key: 'accession',
-          content: <TooltipClipboard>{accession}</TooltipClipboard>,
-          gridCol: 3,
-        },
-        {
-          key: 'instances',
-          content: (
-            <>
-              <Icon
-                name="group-layers"
-                className={classnames('mr-2 inline-flex w-4', {
-                  'text-primary-active': isExpanded,
-                  'text-secondary-light': !isExpanded,
-                })}
-              />
-              {instances}
-            </>
-          ),
-          title: (instances || 0).toString(),
-          gridCol: 4,
-        },
+        // {
+        //   key: 'accession',
+        //   content: <TooltipClipboard>{accession}</TooltipClipboard>,
+        //   gridCol: 3,
+        // },
+        // {
+        //   key: 'instances',
+        //   content: (
+        //     <>
+        //       <Icon
+        //         name="group-layers"
+        //         className={classnames('mr-2 inline-flex w-4', {
+        //           'text-primary-active': isExpanded,
+        //           'text-secondary-light': !isExpanded,
+        //         })}
+        //       />
+        //       {instances}
+        //     </>
+        //   ),
+        //   title: (instances || 0).toString(),
+        //   gridCol: 2,
+        // },
       ],
       // Todo: This is actually running for all rows, even if they are
       // not clicked on.
