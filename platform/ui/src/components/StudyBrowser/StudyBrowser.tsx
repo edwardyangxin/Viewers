@@ -37,12 +37,13 @@ const StudyBrowser = ({
   const getTabContent = () => {
     const tabData = tabs.find(tab => tab.name === activeTabName);
     return tabData.studies.map(
-      ({ studyInstanceUid, date, description, numInstances, modalities, displaySets }) => {
+      ({ studyInstanceUid, date, description, numInstances, modalities, displaySets, trialTimePointId }) => {
         const isExpanded = expandedStudyInstanceUIDs.includes(studyInstanceUid);
+        const trialTimePointInfo = trialTimePointId ? ` ${t('Studies')+trialTimePointId.slice(1)}` : date;
         return (
           <React.Fragment key={studyInstanceUid}>
             <StudyItem
-              date={date}
+              date={trialTimePointInfo}
               description={description}
               numInstances={numInstances}
               modalities={modalities}

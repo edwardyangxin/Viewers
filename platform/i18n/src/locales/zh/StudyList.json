@@ -10,7 +10,7 @@
   "MRN": "病例号",
   "Description": "描述",
   "Clear filters": "清空条件",
-  "Studies": "",
+  "Studies": "访视",
   "Instances": "图像数",
   "Accession": "检查号",
   "Results per page": "每页条数",

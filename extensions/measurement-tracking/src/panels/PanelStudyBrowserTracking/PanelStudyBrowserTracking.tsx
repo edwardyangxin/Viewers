@@ -100,6 +100,7 @@ function PanelStudyBrowserTracking({
           description: qidoStudy.StudyDescription,
           modalities: qidoStudy.ModalitiesInStudy,
           numInstances: qidoStudy.NumInstances,
+          trialTimePointId: qidoStudy.TrialTimePointId, //evibased, trial info
         };
       });
 
@@ -379,6 +380,13 @@ function _mapDataSourceStudies(studies) {
       PatientName: study.patientName,
       StudyInstanceUID: study.studyInstanceUid,
       StudyTime: study.time,
+      // Trial info
+      TrialProtocolId: study.trialProtocolId,
+      TrialProtocolDescription: study.trialProtocolDescription,
+      TrialSiteId: study.trialSiteId,
+      TrialSubjectId: study.trialSubjectId,
+      TrialTimePointId: study.trialTimePointId,
+      TrialTimePointDescription: study.trialTimePointDescription
     };
   });
 }
