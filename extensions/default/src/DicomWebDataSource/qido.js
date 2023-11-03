@@ -55,6 +55,13 @@ function processResults(qidoStudies) {
       instances: Number(getString(qidoStudy['00201208'])) || 0, // number
       description: getString(qidoStudy['00081030']) || '',
       modalities: getString(getModalities(qidoStudy['00080060'], qidoStudy['00080061'])) || '',
+      trialTimePointId: getString(qidoStudy['00120050']),
+      trialTimePointDescription: getString(qidoStudy['00120051']),
+      trialProtocolId: getString(qidoStudy['00120020']),
+      trialProtocolDescription: getString(qidoStudy['00120021']),
+      trialSiteId: getString(qidoStudy['00120030']),
+      trialSiteDescription: getString(qidoStudy['00120031']),
+      trialSubjectId: getString(qidoStudy['00120040']),
     })
   );
 
@@ -152,6 +159,13 @@ function mapParams(params, options = {}) {
     '00081030', // Study Description
     '00080060', // Modality
     // Add more fields here if you want them in the result
+    '00120050', // Trial time point id
+    '00120051', // Trial time point description
+    '00120020', // Trial protocol id
+    '00120021', // Trial protocol description
+    '00120030', // Trial site id
+    '00120031', // Trial site description
+    '00120040', // Trial subject id
   ].join(',');
 
   const { supportsWildcard } = options;

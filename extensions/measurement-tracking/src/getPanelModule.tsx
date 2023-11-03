@@ -1,5 +1,6 @@
 import { Types } from '@ohif/core';
 import { PanelMeasurementTableTracking, PanelStudyBrowserTracking } from './panels';
+import i18n from '@ohif/i18n';
 
 // TODO:
 // - No loading UI exists yet
@@ -11,7 +12,7 @@ function getPanelModule({ commandsManager, extensionManager, servicesManager }):
       name: 'seriesList',
       iconName: 'tab-studies',
       iconLabel: 'Studies',
-      label: 'Studies',
+      label: i18n.t('StudyBrowser:Studies'),
       component: PanelStudyBrowserTracking.bind(null, {
         commandsManager,
         extensionManager,
