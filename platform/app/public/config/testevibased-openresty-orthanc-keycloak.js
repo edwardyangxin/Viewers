@@ -1,5 +1,23 @@
 window.config = {
   routerBasename: '/',
+  whiteLabeling: {
+    createLogoComponentFn: function(React) {
+      return React.createElement(
+        'a',
+        {
+          target: '_self',
+          rel: 'noopener noreferrer',
+          className: 'text-2xl text-common-light',
+          href: '/',
+        },
+        React.createElement('img', {
+          src: './xunzheng-logo.svg',
+          className: 'inline',
+        }),
+        React.createElement('a', {}, '浔正医疗 EVI-BASED')
+      );
+    },
+  },
   showStudyList: true,
   extensions: [],
   modes: [],
