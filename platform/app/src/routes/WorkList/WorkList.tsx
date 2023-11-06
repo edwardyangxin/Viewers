@@ -248,7 +248,8 @@ function WorkList({
       trialSiteId,
       trialSiteDescription,
     } = study;
-    const trialTimePointInfo = i18n.t('StudyList:TimePoint') + trialTimePointId.slice(1);
+    let trialTimePointInfo = trialTimePointId ? trialTimePointId.slice(1) : date;
+    trialTimePointInfo = i18n.t('StudyList:TimePoint') + trialTimePointInfo;
     const studyDate =
       date &&
       moment(date, ['YYYYMMDD', 'YYYY.MM.DD'], true).isValid() &&
