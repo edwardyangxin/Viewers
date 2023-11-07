@@ -25,5 +25,5 @@
   "NumOfStudiesHiggerThan100Message": "将访视列表过滤到100个或更少以使用排序功能",
   "TimePoint": "访视",
   "TrialProtocolDescription": "临床试验描述",
-  "TrialTimepointDescription": "访视"
+  "TrialTimePointInfo": "访视"
 }

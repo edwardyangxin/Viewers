@@ -183,6 +183,10 @@ function WorkList({
         }
       } else if (key === 'modalities' && currValue.length) {
         queryString.modalities = currValue.join(',');
+      } else if (key === 'trialTimePointInfo') {
+        // evibased, extract trialTimePointInfo number to 'TX'
+        const match = currValue.match(/\d+/);
+        queryString.trialTimePointId = match ? `T${match[0]}` : '';
       } else if (currValue !== defaultValue) {
         queryString[key] = currValue;
       }
@@ -571,6 +575,9 @@ WorkList.propTypes = {
 
 const defaultFilterValues = {
   patientName: '',
+  // evibased, add trial info
+  trialProtocolDescription: '',
+  trialTimePointInfo: '',
   mrn: '',
   studyDate: {
     startDate: null,

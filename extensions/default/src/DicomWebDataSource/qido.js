@@ -181,6 +181,9 @@ function mapParams(params, options = {}) {
     AccessionNumber: withWildcard(params.accessionNumber),
     StudyDescription: withWildcard(params.studyDescription),
     ModalitiesInStudy: params.modalitiesInStudy,
+    // evibased, trial info
+    '00120021': params.trialProtocolDescription ? '*' + withWildcard(params.trialProtocolDescription) + '*' : undefined, // trial protocol description
+    '00120050': withWildcard(params.trialTimePointId),
     // Other
     limit: params.limit || 101,
     offset: params.offset || 0,

@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 
 const filtersMeta = [
+  // evibased
   // {
   //   name: 'patientName',
   //   displayName: i18n.t('StudyList:PatientName'),
@@ -23,8 +24,8 @@ const filtersMeta = [
     gridCol: 3,
   },
   {
-    name: 'trialTimepointDescription',
-    displayName: i18n.t('StudyList:TrialTimepointDescription'),
+    name: 'trialTimePointInfo',
+    displayName: i18n.t('StudyList:TrialTimePointInfo'),
     inputType: 'Text',
     isSortable: true,
     gridCol: 4,
