@@ -2,6 +2,8 @@
   "Primary": "当前",
   "Recent": "最近",
   "All": "全部",
-  "Tracked Series": "跟踪序列",
+  "Currently Tracking": "当前审阅访视",
+  "Tracked Series": "个序列正在审阅",
+  "Series": "序列",
   "Studies": "访视"
 }
