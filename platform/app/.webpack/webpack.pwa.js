@@ -158,6 +158,11 @@ module.exports = (env, argv) => {
             'Host': 'localhost:3000',
           }
         },
+        '/api': {
+          target: 'https://api.evi-based.com',
+          pathRewrite: { '^/api': '' },
+          changeOrigin: true,
+        },
       },
       static: [
         {
