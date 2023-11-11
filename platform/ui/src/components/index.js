@@ -79,6 +79,7 @@ import PanelSection from './PanelSection';
 import AdvancedToolbox from './AdvancedToolbox';
 import InputDoubleRange from './InputDoubleRange';
 import LegacyButtonGroup from './LegacyButtonGroup';
+import TimePointSummary from './TimePointSummary';
 
 export {
   AboutModal,
@@ -163,4 +164,6 @@ export {
   ViewportPane,
   ViewportOverlay,
   WindowLevelMenuItem,
+  // evibased
+  TimePointSummary,
 };

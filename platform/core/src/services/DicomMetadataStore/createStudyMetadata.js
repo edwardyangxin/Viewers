@@ -7,6 +7,9 @@ function createStudyMetadata(StudyInstanceUID) {
     ModalitiesInStudy: [],
     isLoaded: false,
     series: [],
+    // evibased, trial info
+    ClincalTrialTimePointID: '',
+    ClinicalTrialTimePointDescription: '',
     /**
      * @param {object} instance
      */

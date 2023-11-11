@@ -42,6 +42,8 @@ function TrackedCornerstoneViewport(props) {
     SpacingBetweenSlices,
     StudyDate,
     ManufacturerModelName,
+    // evibased
+    ClinicalTrialTimePointID,
   } = displaySet.images[0];
 
   const updateIsTracked = useCallback(() => {
@@ -201,6 +203,8 @@ function TrackedCornerstoneViewport(props) {
     );
   };
 
+  // evibased, format ClinicalTrialTimePointID
+  const clinicalTrialTimePointID = ClinicalTrialTimePointID && '访视' + ClinicalTrialTimePointID.slice(1);
   return (
     <>
       <ViewportActionBar
@@ -213,7 +217,8 @@ function TrackedCornerstoneViewport(props) {
         getStatusComponent={() => _getStatusComponent(isTracked)}
         studyData={{
           label: viewportLabel,
-          studyDate: formatDate(SeriesDate) || formatDate(StudyDate) || t('NoStudyDate'),
+          // evibased, use ClinicalTrialTimePointID instead of SeriesDate
+          studyDate:  clinicalTrialTimePointID || formatDate(SeriesDate) || formatDate(StudyDate) || t('NoStudyDate'),
           currentSeries: SeriesNumber, // TODO - switch entire currentSeries to be UID based or actual position based
           seriesDescription: SeriesDescription,
           patientInformation: {
