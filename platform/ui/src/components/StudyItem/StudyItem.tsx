@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
+import i18n from '@ohif/i18n';
 
 import Icon from '../Icon';
 
@@ -57,7 +58,12 @@ const StudyItem = ({
               name="tracked"
               className="text-primary-light mr-2 w-4"
             />
-            {trackedSeries} Tracked Series
+            {i18n.t('StudyBrowser:Currently Tracking') +
+              '(' +
+              trackedSeries +
+              ' ' +
+              i18n.t('StudyBrowser:Series') +
+              ')'}
           </div>
         </div>
       )}
@@ -67,7 +73,7 @@ const StudyItem = ({
 
 StudyItem.propTypes = {
   date: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
+  description: PropTypes.string,
   modalities: PropTypes.string.isRequired,
   numInstances: PropTypes.number.isRequired,
   trackedSeries: PropTypes.number,

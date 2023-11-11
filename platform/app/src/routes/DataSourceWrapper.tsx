@@ -259,6 +259,9 @@ function _getQueryFilterValues(query, queryLimit) {
     // Offset...
     offset: Math.floor((pageNumber * resultsPerPage) / queryLimit) * (queryLimit - 1),
     config: query.get('configUrl'),
+    // evibased, trial info
+    trialProtocolDescription: query.get('trialProtocolDescription'),
+    trialTimePointId: query.get('trialTimePointId'),
   };
 
   // patientName: good

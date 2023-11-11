@@ -7,6 +7,7 @@ import {
   Select,
   useViewportGrid,
   ButtonEnums,
+  TimePointSummary,
 } from '@ohif/ui';
 import { DicomMetadataStore, utils } from '@ohif/core';
 import { useDebounce } from '@hooks';
@@ -122,7 +123,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       const StudyInstanceUID = trackedStudy;
       const studyMeta = DicomMetadataStore.getStudy(StudyInstanceUID);
       const instanceMeta = studyMeta.series[0].instances[0];
-      const { StudyDate, StudyDescription } = instanceMeta;
+      const { StudyDate, StudyDescription, ClinicalTrialTimePointID } = instanceMeta;
 
       const modalities = new Set();
       studyMeta.series.forEach(series => {
@@ -135,7 +136,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       if (displayStudySummary.key !== StudyInstanceUID) {
         setDisplayStudySummary({
           key: StudyInstanceUID,
-          date: StudyDate, // TODO: Format: '07-Sep-2010'
+          date: ClinicalTrialTimePointID,
           modality,
           description: StudyDescription,
         });
@@ -470,8 +471,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
         data-cy={'trackedMeasurements-panel'}
       >
         {displayStudySummary.key && (
-          <StudySummary
-            date={formatDate(displayStudySummary.date)}
+          <TimePointSummary
+            // evibased
+            timepoint={t('MeasurementTable:TimePoint') + displayStudySummary.date.slice(1)}
             modality={displayStudySummary.modality}
             description={displayStudySummary.description}
           />

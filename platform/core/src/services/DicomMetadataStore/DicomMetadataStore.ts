@@ -187,12 +187,20 @@ const BaseImplementation = {
     });
   },
   addSeriesMetadata(seriesSummaryMetadata, madeInClient = false) {
+    if (!seriesSummaryMetadata || !seriesSummaryMetadata.length || !seriesSummaryMetadata[0]) {
+      return;
+    }
+
     const { StudyInstanceUID } = seriesSummaryMetadata[0];
     let study = _getStudy(StudyInstanceUID);
     if (!study) {
       study = createStudyMetadata(StudyInstanceUID);
       // Will typically be undefined with a compliant DICOMweb server, reset later
       study.StudyDescription = seriesSummaryMetadata[0].StudyDescription;
+      // evibased, trial info
+      study.ClinicalTrialTimePointID = seriesSummaryMetadata[0].ClinicalTrialTimePointID;
+      study.ClinicalTrialTimePointDescription = seriesSummaryMetadata[0].ClinicalTrialTimePointDescription;
+      
       seriesSummaryMetadata.forEach(item => {
         if (study.ModalitiesInStudy.indexOf(item.Modality) === -1) {
           study.ModalitiesInStudy.push(item.Modality);

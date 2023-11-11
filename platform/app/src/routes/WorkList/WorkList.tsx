@@ -26,6 +26,7 @@ import {
   AboutModal,
   UserPreferences,
   LoadingIndicatorProgress,
+  useSessionStorage,
 } from '@ohif/ui';
 
 import i18n from '@ohif/i18n';
@@ -60,9 +61,17 @@ function WorkList({
   const navigate = useNavigate();
   const STUDIES_LIMIT = 101;
   const queryFilterValues = _getQueryFilterValues(searchParams);
+  const [sessionQueryFilterValues, updateSessionQueryFilterValues] = useSessionStorage({
+    key: 'queryFilterValues',
+    defaultValue: queryFilterValues,
+    // ToDo: useSessionStorage currently uses an unload listener to clear the filters from session storage
+    // so on systems that do not support unload events a user will NOT be able to alter any existing filter
+    // in the URL, load the page and have it apply.
+    clearOnUnload: true,
+  });
   const [filterValues, _setFilterValues] = useState({
     ...defaultFilterValues,
-    ...queryFilterValues,
+    ...sessionQueryFilterValues,
   });
 
   const debouncedFilterValues = useDebounce(filterValues, 200);
@@ -119,6 +128,7 @@ function WorkList({
       val.pageNumber = 1;
     }
     _setFilterValues(val);
+    updateSessionQueryFilterValues(val);
     setExpandedRows([]);
   };
 
@@ -173,6 +183,10 @@ function WorkList({
         }
       } else if (key === 'modalities' && currValue.length) {
         queryString.modalities = currValue.join(',');
+      } else if (key === 'trialTimePointInfo') {
+        // evibased, extract trialTimePointInfo number to 'TX'
+        const match = currValue.match(/\d+/);
+        queryString.trialTimePointId = match ? `T${match[0]}` : '';
       } else if (currValue !== defaultValue) {
         queryString[key] = currValue;
       }
@@ -253,13 +267,14 @@ function WorkList({
     const studyDate =
       date &&
       moment(date, ['YYYYMMDD', 'YYYY.MM.DD'], true).isValid() &&
-      moment(date, ['YYYYMMDD', 'YYYY.MM.DD']).format('MMM-DD-YYYY');
+      moment(date, ['YYYYMMDD', 'YYYY.MM.DD']).format(t('Common:localDateFormat','MMM-DD-YYYY'));
     const studyTime =
       time &&
       moment(time, ['HH', 'HHmm', 'HHmmss', 'HHmmss.SSS']).isValid() &&
-      moment(time, ['HH', 'HHmm', 'HHmmss', 'HHmmss.SSS']).format('hh:mm A');
+      moment(time, ['HH', 'HHmm', 'HHmmss', 'HHmmss.SSS']).format(t('Common:localTimeFormat', 'hh:mm A'));
 
     return {
+      dataCY: `studyRow-${studyInstanceUid}`,
       row: [
         // {
         //   key: 'patientName',
@@ -335,10 +350,10 @@ function WorkList({
       expandedContent: (
         <StudyListExpandedRow
           seriesTableColumns={{
-            description: 'Description',
-            seriesNumber: 'Series',
-            modality: 'Modality',
-            instances: 'Instances',
+            description: t('StudyList:Description'),
+            seriesNumber: t('StudyList:Series'),
+            modality: t('StudyList:Modality'),
+            instances: t('StudyList:Instances'),
           }}
           seriesTableDataSource={
             seriesInStudiesMap.has(studyInstanceUid)
@@ -396,6 +411,7 @@ function WorkList({
                       disabled={!isValidMode}
                       endIcon={<Icon name="launch-arrow" />} // launch-arrow | launch-info
                       onClick={() => {}}
+                      data-cy={`mode-${mode.routeName}-${studyInstanceUid}`}
                     >
                       {t(`Modes:${mode.displayName}`)}
                     </LegacyButton>
@@ -417,22 +433,23 @@ function WorkList({
   const commitHash = process.env.COMMIT_HASH;
 
   const menuOptions = [
-    {
-      title: t('Header:About'),
-      icon: 'info',
-      onClick: () =>
-        show({
-          content: AboutModal,
-          title: 'About OHIF Viewer',
-          contentProps: { versionNumber, commitHash },
-        }),
-    },
+    // evibased, add evibased about? or just remove it.
+    // {
+    //   title: t('Header:About'),
+    //   icon: 'info',
+    //   onClick: () =>
+    //     show({
+    //       content: AboutModal,
+    //       title: t('AboutModal:About OHIF Viewer'),
+    //       contentProps: { versionNumber, commitHash },
+    //     }),
+    // },
     {
       title: t('Header:Preferences'),
       icon: 'settings',
       onClick: () =>
         show({
-          title: t('UserPreferencesModal:User Preferences'),
+          title: t('UserPreferencesModal:User preferences'),
           content: UserPreferences,
           contentProps: {
             hotkeyDefaults: hotkeysManager.getValidHotkeyDefinitions(hotkeyDefaults),
@@ -559,6 +576,9 @@ WorkList.propTypes = {
 
 const defaultFilterValues = {
   patientName: '',
+  // evibased, add trial info
+  trialProtocolDescription: '',
+  trialTimePointInfo: '',
   mrn: '',
   studyDate: {
     startDate: null,

@@ -303,6 +303,11 @@ export function ViewportGridProvider({ children, service }) {
     return viewportGridState;
   }, [viewportGridState]);
 
+  const getActiveViewportOptionByKey = (key: string) => {
+    const { viewports, activeViewportId } = viewportGridState;
+    return viewports.get(activeViewportId)?.viewportOptions?.[key];
+  };
+
   const setActiveViewportId = useCallback(
     index => dispatch({ type: 'SET_ACTIVE_VIEWPORT_ID', payload: index }),
     [dispatch]
@@ -403,6 +408,7 @@ export function ViewportGridProvider({ children, service }) {
     reset: () => service.reset(),
     set: gridLayoutState => service.setState(gridLayoutState), // run it through the service itself since we want to publish events
     getNumViewportPanes,
+    getActiveViewportOptionByKey,
   };
 
   return (

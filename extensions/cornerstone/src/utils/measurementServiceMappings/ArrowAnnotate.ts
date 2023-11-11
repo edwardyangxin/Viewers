@@ -66,7 +66,7 @@ const Length = {
       toolName: metadata.toolName,
       displaySetInstanceUID: displaySet.displaySetInstanceUID,
       label: data.text,
-      text: data.text,
+      // text: data.text,  // text deprecated, cause validation error
       displayText: displayText,
       data: data.cachedStats,
       type: getValueTypeFromToolType(toolName),

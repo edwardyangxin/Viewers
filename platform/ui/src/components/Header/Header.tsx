@@ -43,6 +43,7 @@ function Header({
               isReturnEnabled && 'cursor-pointer'
             )}
             onClick={onClickReturn}
+            data-cy="return-to-work-list"
           >
             {isReturnEnabled && (
               <Icon
@@ -57,7 +58,7 @@ function Header({
         </div>
         <div className="flex items-center">{children}</div>
         <div className="flex items-center">
-          <span className="text-common-light mr-3 text-lg">{t('INVESTIGATIONAL USE ONLY')}</span>
+          <span className="text-common-light mr-3 text-lg">{t('Evibased Viewer System')}</span>
           <Dropdown
             id="options"
             showDropdownIcon={false}
