@@ -27,30 +27,34 @@ const ReportThumbnailList = ({
           // example: "24-Oct-2023", 显示report创建日期
           // seriesDate,
           report_name,
-          timestamp,
+          create_time,
           username,
           user_report_version,
           report_template,
           report_template_version,
           measurements,
         }) => {
-          const key = username + timestamp;
-          // TODO: evibased, dragData for drag data to viewport?
+          // Convert ISO time string to Date object
+          const dateObject = new Date(create_time);
+          // Format local date as 'yyyy-MM-DD'
+          const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+          const createDate = dateObject.toLocaleDateString('en-CA', options);
+          const key = username + createDate;
+          let reportName = report_name ? report_name: `${username}报告(${createDate})`
+          // evibased, dragData for drag data to viewport?
           const dragData = {
             type: 'displayset',
             displaySetInstanceUID: key,
             report: {
-              report_name: report_name,
-              timestamp: timestamp,
+              report_name: reportName,
+              create_time: create_time,
               username: username,
               user_report_version: user_report_version,
               report_template: report_template,
               report_template_version: report_template_version,
               measurements: measurements,
             },
-          }
-          // report default modality
-          const modality = 'SR';
+          };
           switch ('thumbnailNoImage') {
             case 'thumbnailNoImage':
               return (
@@ -59,11 +63,11 @@ const ReportThumbnailList = ({
                   key={key}
                   displaySetInstanceUID={key}
                   dragData={dragData}
-                  modality={modality}
-                  modalityTooltip={_getModalityTooltip(modality)}
+                  modality={'报告'}
+                  modalityTooltip={'已提交报告'}
                   messages={undefined}
-                  seriesDate={timestamp}
-                  description={report_name}
+                  seriesDate={createDate}
+                  description={reportName}
                   canReject={false}
                   onReject={undefined}
                   onClick={() => onReportThumbnailClick(key)}
@@ -112,19 +116,5 @@ const ReportThumbnailList = ({
 //   onReportThumbnailDoubleClick: PropTypes.func.isRequired,
 //   onClickUntrack: PropTypes.func.isRequired,
 // };
-
-function _getModalityTooltip(modality) {
-  if (_modalityTooltips.hasOwnProperty(modality)) {
-    return _modalityTooltips[modality];
-  }
-
-  return 'Unknown';
-}
-
-const _modalityTooltips = {
-  SR: 'Structured Report',
-  SEG: 'Segmentation',
-  RTSTRUCT: 'RT Structure Set',
-};
 
 export default ReportThumbnailList;

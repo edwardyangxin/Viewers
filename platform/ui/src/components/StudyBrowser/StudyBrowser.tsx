@@ -67,7 +67,7 @@ const StudyBrowser = ({
               }}
               data-cy="thumbnail-list"
             />
-            {isExpanded && reports && (
+            {isExpanded && reports && Array.isArray(reports) && reports.length > 0 && (
               <ReportThumbnailList
                 reportThumbnails={reports}
                 onReportThumbnailClick={onClickThumbnail} // no use
