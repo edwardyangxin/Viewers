@@ -78,7 +78,8 @@ window.config = {
   // evibased, config
   evibased: {
     backend_flag: true,
-    fetch_api: 'http://localhost:3000/api/fetch',
-    upload_api: 'http://localhost:3000/api/upload',
+    ping_url: 'http://localhost:3000/api/ping',
+    report_upload_url: 'http://localhost:3000/api/report',
+    report_fetch_url: 'http://localhost:3000/api/report',
   },
 };

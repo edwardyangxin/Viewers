@@ -82,7 +82,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     measurementService,
     uiDialogService,
     displaySetService,
+    userAuthenticationService,
   } = servicesManager.services;
+  const { _appConfig } = extensionManager;
   const [
     trackedMeasurements,
     sendTrackedMeasurementsEvent,
@@ -204,25 +206,35 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   // evibased, upload report to backend api
   async function uploadReport() {
     const measurements = measurementService.getMeasurements();
-    const trackedMeasurements = measurements.filter(
+    let trackedMeasurements = measurements.filter(
       m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
     );
+    if (trackedMeasurements.length === 0) {
+      // Prevent upload of report with no measurements.
+      return;
+    }
+    // convert to measurements
+    trackedMeasurements = _convertToReportMeasurements(trackedMeasurements)
 
     console.log('Authenticated user info: ', userAuthenticationService.getUser());
     const user = userAuthenticationService.getUser();
-    let userName = 'unknown';
+    let username = 'unknown';
     const authHeader = userAuthenticationService.getAuthorizationHeader();
     const authHeaderKey = Object.keys(authHeader)[0];
     if (user) {
-      userName = user.profile.preferred_username;
+      username = user.profile.preferred_username;
     }
     // get report api from config
-    const uploadReportUrl = _appConfig['evibased']['upload_api'];
+    const uploadReportUrl = _appConfig['evibased']['report_upload_url'];
     const uploadReportBody = {
-      userName: userName,
-      trackedMeasurements: trackedMeasurements,
+      StudyInstanceUID: trackedMeasurements[0]['StudyInstanceUID'],
+      username: username,
+      report_template: "RECIST1.1",
+      report_template_version: "v1",
+      report_comments: "",
+      measurements: trackedMeasurements,
     };
-    const uploadReportResponse = await fetch(uploadReportUrl, {
+    const response = await fetch(uploadReportUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -230,11 +242,12 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       },
       body: JSON.stringify(uploadReportBody),
     });
-    if (!uploadReportResponse.ok) {
-      console.log('uploadReportResponse:', uploadReportResponse);
-      throw new Error(`HTTP error! status: ${uploadReportResponse.status}`);
+    if (!response.ok) {
+      const body = await response.text();
+      console.log('uploadReportResponse:', body);
+      throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
     }
-    const uploadReportResult = await uploadReportResponse.json();
+    const uploadReportResult = await response.json();
     console.log('uploadReportResult:', uploadReportResult);
   }
 
@@ -584,6 +597,93 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
     finding,
     findingSites,
   };
+}
+
+// evibased, convert measurements, based on core>utils>dowanloadCSVReport.js
+function _convertToReportMeasurements(measurementData) {
+  const columns = [
+    'Patient ID',
+    'Patient Name',
+    'StudyInstanceUID',
+    'SeriesInstanceUID',
+    'SOPInstanceUID',
+    'Label',
+  ];
+
+  const reportMap = {};
+  measurementData.forEach(measurement => {
+    const { referenceStudyUID, referenceSeriesUID, getReport, uid } = measurement;
+
+    if (!getReport) {
+      console.warn('Measurement does not have a getReport function');
+      return;
+    }
+
+    const seriesMetadata = DicomMetadataStore.getSeries(referenceStudyUID, referenceSeriesUID);
+
+    const commonRowItems = _getCommonRowItems(measurement, seriesMetadata);
+    const report = getReport(measurement);
+
+    reportMap[uid] = {
+      report,
+      commonRowItems,
+    };
+  });
+
+  // get columns names inside the report from each measurement and
+  // add them to the rows array (this way we can add columns for any custom
+  // measurements that may be added in the future)
+  Object.keys(reportMap).forEach(id => {
+    const { report } = reportMap[id];
+    report.columns.forEach(column => {
+      if (!columns.includes(column)) {
+        columns.push(column);
+      }
+    });
+  });
+
+  const results = _mapReportsToMeasurements(reportMap, columns);
+  return results;
+}
+
+function _getCommonRowItems(measurement, seriesMetadata) {
+  const firstInstance = seriesMetadata.instances[0];
+
+  return {
+    'Patient ID': firstInstance.PatientID, // Patient ID
+    'Patient Name': firstInstance.PatientName?.Alphabetic || '', // Patient Name
+    StudyInstanceUID: measurement.referenceStudyUID, // StudyInstanceUID
+    SeriesInstanceUID: measurement.referenceSeriesUID, // SeriesInstanceUID
+    SOPInstanceUID: measurement.SOPInstanceUID, // SOPInstanceUID
+    Label: measurement.label || '', // Label
+  };
+}
+
+function _mapReportsToMeasurements(reportMap, columns) {
+  const results = [];
+  Object.keys(reportMap).forEach(id => {
+    const { report, commonRowItems } = reportMap[id];
+    const item = {};
+    // For commonRowItems, find the correct index and add the value to the
+    // correct row in the results array
+    Object.keys(commonRowItems).forEach(key => {
+      // const index = columns.indexOf(key);
+      const value = commonRowItems[key];
+      item[key] = value;
+    });
+
+    // For each annotation data, find the correct index and add the value to the
+    // correct row in the results array
+    report.columns.forEach((column, index) => {
+      // const colIndex = columns.indexOf(column);
+      const value = report.values[index];
+      item[column] = value;
+    });
+
+    results.push(item);
+  });
+
+  return results;
 }
 
 export default PanelMeasurementTableTracking;
