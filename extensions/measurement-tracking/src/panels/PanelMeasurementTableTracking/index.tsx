@@ -244,11 +244,36 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     });
     if (!response.ok) {
       const body = await response.text();
-      console.log('uploadReportResponse:', body);
       throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
     }
     const uploadReportResult = await response.json();
     console.log('uploadReportResult:', uploadReportResult);
+
+    // send audit log after success upload report
+    const auditLogUrl = _appConfig['evibased']['audit_log_url'];
+    const auditLogBody = {
+      level: "i",
+      msg: "upload report success",
+      username: username,
+      meta: {
+        taskType: '', // TODO: get task type from API
+        StudyInstanceUID: trackedMeasurements[0]['StudyInstanceUID'],
+        action: 'upload_report',
+        action_result: 'success',
+      },
+    };
+    const auditResponse = await fetch(auditLogUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        authHeaderKey: authHeader[authHeaderKey],
+      },
+      body: JSON.stringify(auditLogBody),
+    });
+    if (!auditResponse.ok) {
+      const body = await auditResponse.text();
+      throw new Error(`HTTP error! status: ${auditResponse.status} body: ${body}`);
+    }
   }
 
   const jumpToImage = ({ uid, isActive }) => {

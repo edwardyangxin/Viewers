@@ -79,6 +79,7 @@ window.config = {
   evibased: {
     backend_flag: true,
     ping_url: 'http://localhost:3000/api/ping',
+    audit_log_url: 'http://localhost:3000/api/log',
     report_upload_url: 'http://localhost:3000/api/report',
     report_fetch_url: 'http://localhost:3000/api/report',
   },
