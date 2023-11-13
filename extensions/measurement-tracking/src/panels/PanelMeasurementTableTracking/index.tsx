@@ -263,7 +263,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       },
     };
     const auditResponse = await fetch(auditLogUrl, {
-      method: 'PUT',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         authHeaderKey: authHeader[authHeaderKey],
