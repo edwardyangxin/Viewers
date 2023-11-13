@@ -170,6 +170,14 @@ function modeFactory({ modeConfiguration }) {
       //     },
       //   ]),
       // ];
+
+      // TODO: evibased, audit log
+      // get StudyInstanceUIDs from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
+      // get username
+      const { userAuthenticationService } = servicesManager.services;
+      console.log("entering viewer mode: ", userAuthenticationService.getUser(), StudyInstanceUIDs);
     },
     onModeExit: ({ servicesManager }) => {
       const {
@@ -187,6 +195,14 @@ function modeFactory({ modeConfiguration }) {
       syncGroupService.destroy();
       segmentationService.destroy();
       cornerstoneViewportService.destroy();
+
+      // TODO: evibased, audit log
+      // get StudyInstanceUIDs from URL is null here
+      // const urlParams = new URLSearchParams(window.location.search);
+      // const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
+      // get username
+      const { userAuthenticationService } = servicesManager.services;
+      console.log("leaving viewer mode: ", userAuthenticationService.getUser());
     },
     validationTags: {
       study: [],
