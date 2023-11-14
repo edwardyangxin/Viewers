@@ -1,9 +1,11 @@
-import { hotkeys } from '@ohif/core';
+import { hotkeys, utils } from '@ohif/core';
 import toolbarButtons from './toolbarButtons';
 import { id } from './id';
 import initToolGroups from './initToolGroups';
 import moreTools from './moreTools';
 import moreToolsMpr from './moreToolsMpr';
+
+const { performAuditLog } = utils;
 
 // Allow this mode by excluding non-imaging modalities such as SR, SEG
 // Also, SM is not a simple imaging modalities, so exclude it.
@@ -177,38 +179,14 @@ function modeFactory({ modeConfiguration }) {
       // get StudyInstanceUIDs from URL, assume only one study uids
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
-      // get username
-      const user = userAuthenticationService.getUser();
-      let username = 'unknown';
-      const authHeader = userAuthenticationService.getAuthorizationHeader();
-      const authHeaderKey = Object.keys(authHeader)[0];
-      if (user) {
-        username = user.profile.preferred_username;
-      }
-      console.log('entering viewer mode: ', userAuthenticationService.getUser(), StudyInstanceUIDs);
-      const auditLogUrl = _appConfig['evibased']['audit_log_url'];
-      const auditLogBody = {
-        level: 'i',
-        msg: 'entering viewer mode',
-        username: username,
-        meta: {
-          StudyInstanceUID: StudyInstanceUIDs,
-          action: 'entering viewer mode',
-          action_result: 'success',
-        },
+
+      const auditMsg = 'entering viewer mode';
+      const auditLogBodyMeta = {
+        StudyInstanceUID: StudyInstanceUIDs,
+        action: auditMsg,
+        action_result: 'success',
       };
-      const auditResponse = await fetch(auditLogUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          authHeaderKey: authHeader[authHeaderKey],
-        },
-        body: JSON.stringify(auditLogBody),
-      });
-      if (!auditResponse.ok) {
-        const body = await auditResponse.text();
-        throw new Error(`HTTP error! status: ${auditResponse.status} body: ${body}`);
-      }
+      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
     },
     onModeExit: async ({ servicesManager, extensionManager }) => {
       const {
@@ -233,38 +211,13 @@ function modeFactory({ modeConfiguration }) {
       // get StudyInstanceUIDs from URL, assume only one study uids
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
-      // get username
-      const user = userAuthenticationService.getUser();
-      let username = 'unknown';
-      const authHeader = userAuthenticationService.getAuthorizationHeader();
-      const authHeaderKey = Object.keys(authHeader)[0];
-      if (user) {
-        username = user.profile.preferred_username;
-      }
-      console.log('entering viewer mode: ', userAuthenticationService.getUser(), StudyInstanceUIDs);
-      const auditLogUrl = _appConfig['evibased']['audit_log_url'];
-      const auditLogBody = {
-        level: 'i',
-        msg: 'leave viewer mode',
-        username: username,
-        meta: {
-          StudyInstanceUID: StudyInstanceUIDs,
-          action: 'leave viewer mode',
-          action_result: 'success',
-        },
+      const auditMsg = 'leave viewer mode';
+      const auditLogBodyMeta = {
+        StudyInstanceUID: StudyInstanceUIDs,
+        action: auditMsg,
+        action_result: 'success',
       };
-      const auditResponse = await fetch(auditLogUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          authHeaderKey: authHeader[authHeaderKey],
-        },
-        body: JSON.stringify(auditLogBody),
-      });
-      if (!auditResponse.ok) {
-        const body = await auditResponse.text();
-        throw new Error(`HTTP error! status: ${auditResponse.status} body: ${body}`);
-      }
+      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
     },
     validationTags: {
       study: [],

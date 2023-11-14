@@ -7,7 +7,7 @@ import { StudyBrowser, useImageViewer, useViewportGrid, Dialog, ButtonEnums } fr
 import { useTrackedMeasurements } from '../../getContextModule';
 import i18n from '@ohif/i18n';
 
-const { formatDate } = utils;
+const { formatDate, performAuditLog } = utils;
 
 /**
  *
@@ -73,6 +73,16 @@ function PanelStudyBrowserTracking({
   // evibased, double click report thumbnail
   const onDoubleClickReportThumbnailHandler = reportData => {
     console.log('double click report thumbnail: ', reportData);
+
+    // audit log loading report data
+    const auditMsg = 'leave viewer mode';
+    const auditLogBodyMeta = {
+      StudyInstanceUID: StudyInstanceUIDs,
+      action: auditMsg,
+      action_result: 'success',
+    };
+    performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+
     sendTrackedMeasurementsEvent('UPDATE_BACKEND_REPORT', {
       reportData: reportData,
     });
@@ -110,7 +120,7 @@ function PanelStudyBrowserTracking({
       }
 
       let mappedStudies = _mapDataSourceStudies(qidoStudiesForPatient);
-      if (_appConfig.evibased['backend_flag']) {
+      if (_appConfig.evibased['use_report_api']) {
         mappedStudies = await _fetchReportsBackend(_appConfig, userAuthenticationService, mappedStudies);
       }
       const actuallyMappedStudies = mappedStudies.map(qidoStudy => {

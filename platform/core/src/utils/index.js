@@ -36,6 +36,8 @@ import {
 } from './sortStudy';
 import { subscribeToNextViewportGridChange } from './subscribeToNextViewportGridChange';
 import { splitComma, getSplitParam } from './splitComma';
+// evibased
+import performAuditLog from './auditLog';
 
 // Commented out unused functionality.
 // Need to implement new mechanism for derived displaySets using the displaySetManager.
@@ -78,6 +80,8 @@ const utils = {
   splitComma,
   getSplitParam,
   generateAcceptHeader,
+  // evibased
+  performAuditLog,
 };
 
 export {
@@ -110,6 +114,8 @@ export {
   splitComma,
   getSplitParam,
   generateAcceptHeader,
+  // evibased
+  performAuditLog,
 };
 
 export default utils;

@@ -16,8 +16,7 @@ import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { useTranslation } from 'react-i18next';
 
-const { downloadCSVReport } = utils;
-const { formatDate } = utils;
+const { downloadCSVReport, performAuditLog } = utils;
 
 const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
   key: undefined, //
@@ -249,31 +248,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     const uploadReportResult = await response.json();
     console.log('uploadReportResult:', uploadReportResult);
 
-    // send audit log after success upload report
-    const auditLogUrl = _appConfig['evibased']['audit_log_url'];
-    const auditLogBody = {
-      level: "i",
-      msg: "upload report success",
-      username: username,
-      meta: {
-        taskType: '', // TODO: get task type from API
-        StudyInstanceUID: trackedMeasurements[0]['StudyInstanceUID'],
-        action: 'upload_report',
-        action_result: 'success',
-      },
+    // audit log after upload report success
+    const auditMsg = "upload report success";
+    const auditLogBodyMeta = {
+      taskType: '', // TODO: get task type from API
+      StudyInstanceUID: trackedMeasurements[0]['StudyInstanceUID'],
+      action: 'upload_report',
+      action_result: 'success',
     };
-    const auditResponse = await fetch(auditLogUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        authHeaderKey: authHeader[authHeaderKey],
-      },
-      body: JSON.stringify(auditLogBody),
-    });
-    if (!auditResponse.ok) {
-      const body = await auditResponse.text();
-      throw new Error(`HTTP error! status: ${auditResponse.status} body: ${body}`);
-    }
+    performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
   }
 
   const jumpToImage = ({ uid, isActive }) => {
