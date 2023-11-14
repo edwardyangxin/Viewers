@@ -73,7 +73,7 @@ function modeFactory({ modeConfiguration }) {
     /**
      * Lifecycle hooks
      */
-    onModeEnter: ({ servicesManager, extensionManager, commandsManager }) => {
+    onModeEnter: async ({ servicesManager, extensionManager, commandsManager }) => {
       const {
         measurementService,
         toolbarService,
@@ -171,15 +171,46 @@ function modeFactory({ modeConfiguration }) {
       //   ]),
       // ];
 
-      // TODO: evibased, audit log
-      // get StudyInstanceUIDs from URL
+      // evibased, audit log
+      const { userAuthenticationService } = servicesManager.services;
+      const { _appConfig } = extensionManager;
+      // get StudyInstanceUIDs from URL, assume only one study uids
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
       // get username
-      const { userAuthenticationService } = servicesManager.services;
-      console.log("entering viewer mode: ", userAuthenticationService.getUser(), StudyInstanceUIDs);
+      const user = userAuthenticationService.getUser();
+      let username = 'unknown';
+      const authHeader = userAuthenticationService.getAuthorizationHeader();
+      const authHeaderKey = Object.keys(authHeader)[0];
+      if (user) {
+        username = user.profile.preferred_username;
+      }
+      console.log('entering viewer mode: ', userAuthenticationService.getUser(), StudyInstanceUIDs);
+      const auditLogUrl = _appConfig['evibased']['audit_log_url'];
+      const auditLogBody = {
+        level: 'i',
+        msg: 'entering viewer mode',
+        username: username,
+        meta: {
+          StudyInstanceUID: StudyInstanceUIDs,
+          action: 'entering viewer mode',
+          action_result: 'success',
+        },
+      };
+      const auditResponse = await fetch(auditLogUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authHeaderKey: authHeader[authHeaderKey],
+        },
+        body: JSON.stringify(auditLogBody),
+      });
+      if (!auditResponse.ok) {
+        const body = await auditResponse.text();
+        throw new Error(`HTTP error! status: ${auditResponse.status} body: ${body}`);
+      }
     },
-    onModeExit: ({ servicesManager }) => {
+    onModeExit: async ({ servicesManager, extensionManager }) => {
       const {
         toolGroupService,
         syncGroupService,
@@ -196,13 +227,44 @@ function modeFactory({ modeConfiguration }) {
       segmentationService.destroy();
       cornerstoneViewportService.destroy();
 
-      // TODO: evibased, audit log
-      // get StudyInstanceUIDs from URL is null here
-      // const urlParams = new URLSearchParams(window.location.search);
-      // const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
-      // get username
+      // evibased, audit log, no studyUID available
       const { userAuthenticationService } = servicesManager.services;
-      console.log("leaving viewer mode: ", userAuthenticationService.getUser());
+      const { _appConfig } = extensionManager;
+      // get StudyInstanceUIDs from URL, assume only one study uids
+      const urlParams = new URLSearchParams(window.location.search);
+      const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
+      // get username
+      const user = userAuthenticationService.getUser();
+      let username = 'unknown';
+      const authHeader = userAuthenticationService.getAuthorizationHeader();
+      const authHeaderKey = Object.keys(authHeader)[0];
+      if (user) {
+        username = user.profile.preferred_username;
+      }
+      console.log('entering viewer mode: ', userAuthenticationService.getUser(), StudyInstanceUIDs);
+      const auditLogUrl = _appConfig['evibased']['audit_log_url'];
+      const auditLogBody = {
+        level: 'i',
+        msg: 'leave viewer mode',
+        username: username,
+        meta: {
+          StudyInstanceUID: StudyInstanceUIDs,
+          action: 'leave viewer mode',
+          action_result: 'success',
+        },
+      };
+      const auditResponse = await fetch(auditLogUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authHeaderKey: authHeader[authHeaderKey],
+        },
+        body: JSON.stringify(auditLogBody),
+      });
+      if (!auditResponse.ok) {
+        const body = await auditResponse.text();
+        throw new Error(`HTTP error! status: ${auditResponse.status} body: ${body}`);
+      }
     },
     validationTags: {
       study: [],
