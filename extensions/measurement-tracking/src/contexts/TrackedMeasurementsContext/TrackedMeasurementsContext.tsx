@@ -7,7 +7,8 @@ import { machineConfiguration, defaultOptions } from './measurementTrackingMachi
 import promptBeginTracking from './promptBeginTracking';
 import promptTrackNewSeries from './promptTrackNewSeries';
 import promptTrackNewStudy from './promptTrackNewStudy';
-import promptSaveReport from './promptSaveReport';
+// import promptSaveReport from './promptSaveReport'; // evibased, use promptUploadSaveReport instead
+import promptSaveReport from './promptUploadSaveReport';
 import promptHydrateStructuredReport from './promptHydrateStructuredReport';
 import hydrateStructuredReport from './hydrateStructuredReport';
 import updateBackendReport from './updateBackendReport';

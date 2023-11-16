@@ -187,21 +187,28 @@ const machineConfiguration = {
       invoke: {
         src: 'promptSaveReport',
         onDone: [
+          // evibased, disable clear all measurements after save
           // "clicked the save button"
           // - should clear all measurements
           // - show DICOM SR
-          {
-            target: 'idle',
-            actions: ['clearAllMeasurements', 'showStructuredReportDisplaySetInActiveViewport'],
-            cond: 'shouldSaveAndContinueWithSameReport',
-          },
+          // {
+          //   target: 'idle',
+          //   actions: ['clearAllMeasurements', 'showStructuredReportDisplaySetInActiveViewport'],
+          //   cond: 'shouldSaveAndContinueWithSameReport',
+          // },
           // "starting a new report"
           // - remove "just saved" measurements
           // - start tracking a new study + report
+          // {
+          //   target: 'tracking',
+          //   actions: ['discardPreviouslyTrackedMeasurements', 'setTrackedStudyAndSeries'],
+          //   cond: 'shouldSaveAndStartNewReport',
+          // },
+          // update successSaveReport context variable
           {
             target: 'tracking',
-            actions: ['discardPreviouslyTrackedMeasurements', 'setTrackedStudyAndSeries'],
-            cond: 'shouldSaveAndStartNewReport',
+            actions: ['successSaveReport'],
+            // cond: 'shouldSaveAndStartNewReport',
           },
           // Cancel, back to tracking
           {
@@ -385,6 +392,14 @@ const defaultOptions = {
         prevTrackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
         trackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
       }
+    }),
+    // evibased, actions
+    successSaveReport: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(successSaveReport): ", evt.type, evt);
+
+      return {
+        successSaveReport: true,
+      };
     }),
   },
   guards: {

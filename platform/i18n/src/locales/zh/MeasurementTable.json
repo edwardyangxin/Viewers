@@ -1,4 +1,5 @@
 {
+  "Cancel": "取消",
   "Create Report": "生成报告",
   "Criteria nonconformities": "不合标准",
   "Delete": "删除",
@@ -7,7 +8,8 @@
   "Edit Measurement": "请编辑测量信息",
   "Export": "导出测量(CSV)",
   "MAX": "最大",
-  "Measurements": "测量/报告",
+  "measurement": "报告",
+  "Measurements": "报告",
   "NonTargets": "非靶向",
   "Non-Target Findings": "Non-Target(非目标)发现",
   "No tracked measurements": "没有追踪目标",
@@ -16,5 +18,8 @@
   "Target Findings": "Target(目标)发现",
   "Track measurements for this series?": "要对个序列进行跟踪吗？",
   "TimePoint": "访视",
-  "Upload": "保存"
+  "Upload": "保存",
+  "Save": "保存",
+  "saved successfully": "保存成功",
+  "Failed to store": "保存失败"
 }

@@ -88,7 +88,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     trackedMeasurements,
     sendTrackedMeasurementsEvent,
   ] = useTrackedMeasurements();
-  const { trackedStudy, trackedSeries } = trackedMeasurements.context;
+  const { trackedStudy, trackedSeries, successSaveReport } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
@@ -469,18 +469,18 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   //   dm => dm.measurementType === measurementService.VALUE_TYPES.POINT
   // );
 
-  let targetFindings = []
-  let nonTargetFindings = []
-  for (let dm of displayMeasurements) {
+  const targetFindings = [];
+  const nonTargetFindings = [];
+  for (const dm of displayMeasurements) {
     // get target info
-    let targetInfo = dm.label.split('|')[0];
+    const targetInfo = dm.label.split('|')[0];
     if (!(targetInfo in target_info_mapping)) {
       // not in target_info_mapping, just show and allow edit
-      nonTargetFindings.push(dm)
+      nonTargetFindings.push(dm);
     } else if (target_key_group.includes(targetInfo)) {
-      targetFindings.push(dm)
+      targetFindings.push(dm);
     } else {
-      nonTargetFindings.push(dm)
+      nonTargetFindings.push(dm);
     }
   }
 
@@ -525,8 +525,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
             });
           }}
           disabled={
-            targetFindings.length === 0 &&
-            nonTargetFindings.length === 0
+            (targetFindings.length === 0 &&
+            nonTargetFindings.length === 0) || successSaveReport
           }
         />
       </div>
