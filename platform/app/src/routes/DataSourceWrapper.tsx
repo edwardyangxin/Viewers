@@ -31,7 +31,9 @@ const areLocationsTheSame = (location0, location1) => {
  */
 function DataSourceWrapper(props) {
   const navigate = useNavigate();
-  const { children: LayoutTemplate, ...rest } = props;
+  const { children: LayoutTemplate, servicesManager, extensionManager, ...rest } = props;
+  const { userAuthenticationService } = servicesManager.services;
+  const { _appConfig } = extensionManager;
   const params = useParams();
   const location = useLocation();
   const lowerCaseSearchParams = useSearchParams({ lowerCaseKeys: true });
@@ -149,11 +151,54 @@ function DataSourceWrapper(props) {
     const queryFilterValues = _getQueryFilterValues(location.search, STUDIES_LIMIT);
 
     // 204: no content
+    // evibased, based on role from user.profile.realm_role, get task list and filter studies
     async function getData() {
       setIsLoading(true);
       log.time(TimingEnum.SEARCH_TO_LIST);
-      const studies = await dataSource.query.studies.search(queryFilterValues);
 
+      // get user role
+      const user = userAuthenticationService.getUser();
+      const realm_role = user?.profile?.realm_role;
+      // if role is doctor, filter studies by task list
+      if (realm_role.includes('doctor')) {
+        try {
+          // get task list by username and status
+          let username = 'unknown';
+          const authHeader = userAuthenticationService.getAuthorizationHeader();
+          if (user) {
+            username = user.profile.preferred_username;
+          }
+          const filterTaskStatus = 'create';
+
+          const getTaskUrl = _appConfig['evibased']['task_get_url'];
+          const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&status=${filterTaskStatus}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: authHeader.Authorization,
+            }
+          });
+          if (!getTaskResponse.ok) {
+            const body = await getTaskResponse.text();
+            throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+          }
+          let tasks = [];
+          if (getTaskResponse.status === 204) {
+            // no content
+          } else {
+            const body = await getTaskResponse.json();
+            tasks = Array.isArray(body) ? body : [body];
+          }
+
+          // get studyUIDs list and add to filter
+          const studyUIDs = tasks.map(task => task.timepoint.UID);
+          queryFilterValues.studyInstanceUid = studyUIDs;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      const studies = await dataSource.query.studies.search(queryFilterValues);
+      
       setData({
         studies: studies || [],
         total: studies.length,
@@ -211,6 +256,8 @@ function DataSourceWrapper(props) {
   return (
     <LayoutTemplate
       {...rest}
+      servicesManager={servicesManager}
+      extensionManager={extensionManager}
       data={data.studies}
       dataPath={dataSourcePath}
       dataTotal={data.total}

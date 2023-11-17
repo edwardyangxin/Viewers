@@ -212,7 +212,8 @@ function mapParams(params, options = {}) {
   if (params.studyInstanceUid) {
     let studyUids = params.studyInstanceUid;
     studyUids = Array.isArray(studyUids) ? studyUids.join() : studyUids;
-    studyUids = studyUids.replace(/[^0-9.]+/g, '\\');
+    // evibased, disable replace, just use ',' as separator
+    // studyUids = studyUids.replace(/[^0-9.]+/g, '\\');
     parameters.StudyInstanceUID = studyUids;
   }
 

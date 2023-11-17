@@ -434,7 +434,6 @@ async function _fetchReportsBackend(_appConfig, userAuthenticationService, mappe
     const user = userAuthenticationService.getUser();
     let username = 'unknown';
     const authHeader = userAuthenticationService.getAuthorizationHeader();
-    const authHeaderKey = Object.keys(authHeader)[0];
     if (user) {
       username = user.profile.preferred_username;
     }
@@ -446,7 +445,7 @@ async function _fetchReportsBackend(_appConfig, userAuthenticationService, mappe
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          authHeaderKey: authHeader[authHeaderKey],
+          Authorization: authHeader.Authorization,
         }
       });
       if (!response.ok) {

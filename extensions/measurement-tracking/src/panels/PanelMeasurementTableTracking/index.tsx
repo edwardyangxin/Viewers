@@ -219,7 +219,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     const user = userAuthenticationService.getUser();
     let username = 'unknown';
     const authHeader = userAuthenticationService.getAuthorizationHeader();
-    const authHeaderKey = Object.keys(authHeader)[0];
     if (user) {
       username = user.profile.preferred_username;
     }
@@ -237,7 +236,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authHeaderKey: authHeader[authHeaderKey],
+        Authorization: authHeader.Authorization,
       },
       body: JSON.stringify(uploadReportBody),
     });

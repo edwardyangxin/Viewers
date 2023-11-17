@@ -113,22 +113,24 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
     const user = userAuthenticationService.getUser();
     let username = 'unknown';
     const authHeader = userAuthenticationService.getAuthorizationHeader();
-    const authHeaderKey = Object.keys(authHeader)[0];
     if (user) {
       username = user.profile.preferred_username;
     }
     const StudyInstanceUID = trackedMeasurements[0]['StudyInstanceUID'];
-    
+
     // TODO: evibased, refactor api calls and task type check
     // get task api
     const getTaskUrl = _appConfig['evibased']['task_get_url'];
-    const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&StudyInstanceUID=${StudyInstanceUID}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        authHeaderKey: authHeader[authHeaderKey],
+    const getTaskResponse = await fetch(
+      `${getTaskUrl}?username=${username}&StudyInstanceUID=${StudyInstanceUID}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader.Authorization,
+        },
       }
-    });
+    );
     if (!getTaskResponse.ok) {
       const body = await getTaskResponse.text();
       throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
@@ -171,7 +173,7 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authHeaderKey: authHeader[authHeaderKey],
+        Authorization: authHeader.Authorization,
       },
       body: JSON.stringify(uploadReportBody),
     });
@@ -194,7 +196,7 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authHeaderKey: authHeader[authHeaderKey],
+        Authorization: authHeader.Authorization,
       },
       body: JSON.stringify(putTaskBody),
     });
