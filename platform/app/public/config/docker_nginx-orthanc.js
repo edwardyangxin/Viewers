@@ -82,7 +82,8 @@ window.config = {
     audit_log_url: 'http://localhost:3000/api/log',
     report_upload_url: 'http://localhost:3000/api/report',
     report_fetch_url: 'http://localhost:3000/api/report',
-    task_fetch_url: 'http://localhost:3000/api/task',
+    task_get_url: 'http://localhost:3000/api/task',
     task_update_url: 'http://localhost:3000/api/task',
+    task_post_url: 'http://localhost:3000/api/task',
   },
 };

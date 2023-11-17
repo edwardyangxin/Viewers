@@ -117,17 +117,57 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
     if (user) {
       username = user.profile.preferred_username;
     }
-    // get report api from config
+    const StudyInstanceUID = trackedMeasurements[0]['StudyInstanceUID'];
+    
+    // TODO: evibased, refactor api calls and task type check
+    // get task api
+    const getTaskUrl = _appConfig['evibased']['task_get_url'];
+    const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&StudyInstanceUID=${StudyInstanceUID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        authHeaderKey: authHeader[authHeaderKey],
+      }
+    });
+    if (!getTaskResponse.ok) {
+      const body = await getTaskResponse.text();
+      throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+    }
+    let tasks = [];
+    if (getTaskResponse.status === 204) {
+      // no content
+    } else {
+      const body = await getTaskResponse.json();
+      tasks = Array.isArray(body) ? body : [body];
+    }
+    if (tasks.length === 0) {
+      console.log('no tasks found', StudyInstanceUID, username);
+      throw new Error(`no tasks found, can't upload report`);
+    }
+
+    // loop tasks and get task type
+    let taskType = undefined;
+    tasks.forEach(task => {
+      if (['reading', 'arbitration'].includes(task.type) && ['create'].includes(task.status)) {
+        taskType = task.type;
+      }
+    });
+    if (!taskType) {
+      console.log('no suitable taskType found', StudyInstanceUID, username);
+      throw new Error(`no suitable taskType found, can't upload report`);
+    }
+
+    // post report api
     const uploadReportUrl = _appConfig['evibased']['report_upload_url'];
     const uploadReportBody = {
-      StudyInstanceUID: trackedMeasurements[0]['StudyInstanceUID'],
+      StudyInstanceUID: StudyInstanceUID,
       username: username,
       report_template: 'RECIST1.1',
       report_template_version: 'v1',
       report_comments: '',
       measurements: trackedMeasurements,
     };
-    const response = await fetch(uploadReportUrl, {
+    const reportResponse = await fetch(uploadReportUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,18 +175,41 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       },
       body: JSON.stringify(uploadReportBody),
     });
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
+    if (!reportResponse.ok) {
+      const body = await reportResponse.text();
+      throw new Error(`HTTP error! status: ${reportResponse.status} body: ${body}`);
     }
-    const uploadReportResult = await response.json();
+    const uploadReportResult = await reportResponse.json();
     console.log('uploadReportResult:', uploadReportResult);
+
+    // put task api
+    const putTaskUrl = _appConfig['evibased']['task_update_url'];
+    const putTaskBody = {
+      StudyInstanceUID: StudyInstanceUID,
+      username: username,
+      type: taskType,
+      status: 'done',
+    };
+    const putTaskResponse = await fetch(putTaskUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        authHeaderKey: authHeader[authHeaderKey],
+      },
+      body: JSON.stringify(putTaskBody),
+    });
+    if (!putTaskResponse.ok) {
+      const body = await putTaskResponse.text();
+      throw new Error(`HTTP error! status: ${putTaskResponse.status} body: ${body}`);
+    }
+    const putTaskResult = await putTaskResponse.json();
+    console.log('putTaskResult:', putTaskResult);
 
     // audit log after upload report success
     const auditMsg = 'upload report success';
     const auditLogBodyMeta = {
-      taskType: '', // TODO: get task type from API
-      StudyInstanceUID: trackedMeasurements[0]['StudyInstanceUID'],
+      taskType: taskType,
+      StudyInstanceUID: StudyInstanceUID,
       action: 'upload_report',
       action_result: 'success',
     };
