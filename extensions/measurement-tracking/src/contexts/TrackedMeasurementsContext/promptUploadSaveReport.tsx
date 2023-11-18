@@ -30,7 +30,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
       const _appConfig = extensionManager._appConfig;
       if (_appConfig.evibased['use_report_api']) {
         // post to report api
-        _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries);
+        await _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries);
       } else {
         // post to PACS dicomSR
         const dataSources = extensionManager.getDataSources();
@@ -118,8 +118,8 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
     }
     const StudyInstanceUID = trackedMeasurements[0]['StudyInstanceUID'];
 
-    // TODO: evibased, refactor api calls and task type check
-    // get task api
+    // TODO: evibased, refactor api calls and task type check. 在页面加载处获取taskid&type？
+    // get task api for current study
     const getTaskUrl = _appConfig['evibased']['task_get_url'];
     const getTaskResponse = await fetch(
       `${getTaskUrl}?username=${username}&StudyInstanceUID=${StudyInstanceUID}`,
@@ -147,14 +147,16 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       throw new Error(`no tasks found, can't upload report`);
     }
 
-    // loop tasks and get task type
+    // loop tasks and get task id&type
+    let taskId = undefined;
     let taskType = undefined;
     tasks.forEach(task => {
       if (['reading', 'arbitration'].includes(task.type) && ['create'].includes(task.status)) {
+        taskId = task._id;
         taskType = task.type;
       }
     });
-    if (!taskType) {
+    if (!taskId) {
       console.log('no suitable taskType found', StudyInstanceUID, username);
       throw new Error(`no suitable taskType found, can't upload report`);
     }
@@ -164,6 +166,7 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
     const uploadReportBody = {
       StudyInstanceUID: StudyInstanceUID,
       username: username,
+      task: taskId,
       report_template: 'RECIST1.1',
       report_template_version: 'v1',
       report_comments: '',

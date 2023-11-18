@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
-  StudySummary,
+  useImageViewer,
   MeasurementTable,
   Dialog,
   Select,
@@ -14,6 +14,7 @@ import { useDebounce } from '@hooks';
 import ActionButtons from './ActionButtons';
 import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const { downloadCSVReport, performAuditLog } = utils;
@@ -69,6 +70,7 @@ const location_info_mapping = {
 
 function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   const { t } = useTranslation();
+  const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(
     Date.now().toString()
@@ -88,12 +90,20 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     trackedMeasurements,
     sendTrackedMeasurementsEvent,
   ] = useTrackedMeasurements();
+  // evibased, successSaveReport is flag after save report
   const { trackedStudy, trackedSeries, successSaveReport } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
   const measurementsPanelRef = useRef(null);
+  // evibased, initial flag
+  const [initialFlag, setInitialFlag] = useState(true);
+  const [taskInfo, setTaskInfo] = useState({
+    nextTaskStudyUID: undefined,
+    totalTask: 0,
+    userTasks: [],
+  });
 
   useEffect(() => {
     const measurements = measurementService.getMeasurements();
@@ -137,7 +147,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       if (displayStudySummary.key !== StudyInstanceUID) {
         setDisplayStudySummary({
           key: StudyInstanceUID,
-          date: ClinicalTrialTimePointID,
+          date: ClinicalTrialTimePointID ? ClinicalTrialTimePointID : StudyDate,
           modality,
           description: StudyDescription,
         });
@@ -460,7 +470,82 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     }
   };
 
-  // evibased 按照target&nonTarget分组显示
+  // evibased, initial flag, get taskInfo
+  useEffect(() => {
+    if (initialFlag || successSaveReport) {
+      async function refreshTaskInfo() {
+        // get taskInfo
+        const userTasks = await _getUserTaskInfo();
+        if (userTasks.length > 0) {
+          // get next task study
+          let nextTaskStudyUID = undefined;
+          for (const task of userTasks) {
+            if (task.timepoint.UID !== StudyInstanceUIDs[0]) {
+              nextTaskStudyUID = task.timepoint.UID;
+              break;
+            }
+          }
+          setTaskInfo({
+            nextTaskStudyUID: nextTaskStudyUID,
+            totalTask: userTasks.length,
+            userTasks: userTasks,
+          });
+        } else {
+          setTaskInfo({
+            nextTaskStudyUID: undefined,
+            totalTask: 0,
+            userTasks: [],
+          });
+        }
+        setInitialFlag(false);
+      }
+      refreshTaskInfo();
+    }
+  }, [ successSaveReport ]);
+
+  // evibased, get next tsak study
+  async function _getUserTaskInfo() {
+    try {
+      const authHeader = userAuthenticationService.getAuthorizationHeader();
+      const username = userAuthenticationService.getUser().profile.preferred_username;
+      const getTaskUrl = _appConfig['evibased']['task_get_url'];
+      const taskStatus = 'create';
+
+      const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&status=${taskStatus}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader.Authorization,
+        },
+      });
+      if (!getTaskResponse.ok) {
+        const body = await getTaskResponse.text();
+        throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+      }
+
+      let tasks = [];
+      if (getTaskResponse.status === 204) {
+        // no content
+      } else {
+        const body = await getTaskResponse.json();
+        tasks = Array.isArray(body) ? body : [body];
+      }
+      
+      // loop tasks and filter
+      const filteredTasks = [];
+      for (const task of tasks) {
+        if (['reading', 'arbitration'].includes(task.type) && ['create'].includes(task.status)) {
+          filteredTasks.push(task);
+        }
+      }
+      return filteredTasks;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  // default 分组显示
   // const displayMeasurementsWithoutFindings = displayMeasurements.filter(
   //   dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
   // );
@@ -468,6 +553,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   //   dm => dm.measurementType === measurementService.VALUE_TYPES.POINT
   // );
 
+  // evibased 按照target&nonTarget分组显示
   const targetFindings = [];
   const nonTargetFindings = [];
   for (const dm of displayMeasurements) {
@@ -529,6 +615,28 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           }
         />
       </div>
+      {taskInfo.totalTask > 0 && (
+        <div className="flex justify-center p-4">
+          <span className="text-primary-light">
+            {t('MeasurementTabel:Total Task')}({taskInfo.totalTask})
+          </span>
+          {taskInfo.nextTaskStudyUID && (
+            <Link
+              className="text-primary-light"
+              to={`/viewer?StudyInstanceUIDs=${taskInfo.nextTaskStudyUID}`}
+            >
+              {t('MeasurementTabel:Next Task')}
+            </Link>
+          )}
+        </div>
+      )}
+      {taskInfo.totalTask === 0 && (
+        <div className="flex justify-center p-4">
+          <span className="text-primary-light">
+            {t('MeasurementTabel:All Task Done')}
+          </span>
+        </div>
+      )}
     </>
   );
 }
