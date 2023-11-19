@@ -75,6 +75,7 @@ function updateBackendReport({ servicesManager, extensionManager, appConfig }, c
       cachedStats: cachedStats,
       frameNumber: undefined,
       label: Label,
+      text: Label, // to support CornerstoneTools ArrowAnnotate
       finding: undefined,
       findingSites: undefined,
       site: undefined,
