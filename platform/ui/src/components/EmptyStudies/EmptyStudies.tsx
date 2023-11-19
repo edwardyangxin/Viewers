@@ -4,6 +4,7 @@ import classnames from 'classnames';
 
 import Icon from '../Icon';
 import Typography from '../Typography';
+import i18n from '@ohif/i18n';
 
 // TODO: Add loading spinner to OHIF + use it here.
 const EmptyStudies = ({ className }) => {
@@ -17,7 +18,7 @@ const EmptyStudies = ({ className }) => {
         className="text-primary-light"
         variant="h5"
       >
-        {'No studies available'}
+        {i18n.t('StudyList:No studies available')}
       </Typography>
     </div>
   );
