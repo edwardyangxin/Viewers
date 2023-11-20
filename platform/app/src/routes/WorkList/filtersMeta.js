@@ -37,11 +37,19 @@ const filtersMeta = [
     isSortable: true,
     gridCol: 5,
   },
+  // {
+  //   name: 'description',
+  //   displayName: i18n.t('StudyList:Description'),
+  //   inputType: 'Text',
+  //   isSortable: true,
+  //   gridCol: 4,
+  // },
+  // evibased, task info
   {
-    name: 'description',
-    displayName: i18n.t('StudyList:Description'),
-    inputType: 'Text',
-    isSortable: true,
+    name: 'taskInfo',
+    displayName: i18n.t('StudyList:TaskInfo'),
+    inputType: 'None',
+    isSortable: false,
     gridCol: 4,
   },
   {

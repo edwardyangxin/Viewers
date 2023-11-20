@@ -157,19 +157,19 @@ function DataSourceWrapper(props) {
       log.time(TimingEnum.SEARCH_TO_LIST);
 
       // get user role
+      let username = 'unknown';
       const user = userAuthenticationService.getUser();
+      if (user) {
+        username = user.profile.preferred_username;
+      }
       const realm_role = user?.profile?.realm_role;
-      // if role is doctor, filter studies by task list
-      if (realm_role.includes('doctor')) {
+      // evibased, if role is doctor, filter studies by task list
+      const ifDoctor = realm_role.includes('doctor');
+      if (ifDoctor) {
         try {
           // get task list by username and status
-          let username = 'unknown';
           const authHeader = userAuthenticationService.getAuthorizationHeader();
-          if (user) {
-            username = user.profile.preferred_username;
-          }
           const filterTaskStatus = 'create';
-
           const getTaskUrl = _appConfig['evibased']['task_get_url'];
           const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&status=${filterTaskStatus}`, {
             method: 'GET',
@@ -197,8 +197,52 @@ function DataSourceWrapper(props) {
           console.error(e);
         }
       }
-      const studies = await dataSource.query.studies.search(queryFilterValues);
-      
+
+      let studies = [];
+      if (!ifDoctor || 
+        (queryFilterValues.studyInstanceUid && queryFilterValues.studyInstanceUid.length > 0)) {
+        // if not doctor or studyUIDs list is not empty, get studies by studyUIDs list
+        studies = await dataSource.query.studies.search(queryFilterValues);
+      }
+
+      // evibased, get task info for each studies
+      for (const study of studies) {
+        try {
+          const StudyInstanceUID = study.studyInstanceUid;
+          const authHeader = userAuthenticationService.getAuthorizationHeader();
+          const getTaskUrl = _appConfig['evibased']['task_get_url'];
+          let fetchTaskUrl;
+          if (ifDoctor) {
+            // if doctor, fetch only doctor task info
+            fetchTaskUrl = `${getTaskUrl}?StudyInstanceUID=${StudyInstanceUID}&username=${username}`;
+          } else {
+            fetchTaskUrl = `${getTaskUrl}?StudyInstanceUID=${StudyInstanceUID}`;
+          }
+          const getTaskResponse = await fetch(fetchTaskUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: authHeader.Authorization,
+            },
+          });
+          if (!getTaskResponse.ok) {
+            study.tasks = [];
+            const body = await getTaskResponse.text();
+            throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+          }
+          let tasks = [];
+          if (getTaskResponse.status === 204) {
+            // no content
+          } else {
+            const body = await getTaskResponse.json();
+            tasks = Array.isArray(body) ? body : [body];
+          }
+          study.tasks = tasks;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
       setData({
         studies: studies || [],
         total: studies.length,

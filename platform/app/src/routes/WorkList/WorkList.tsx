@@ -37,6 +37,18 @@ const { availableLanguages, defaultLanguage, currentLanguage } = i18n;
 
 const seriesInStudiesMap = new Map();
 
+// evibased, task info mapping
+const taskTypeMap = {
+  reading: '判读',
+  arbitration: '仲裁',
+  QC: '质控',
+};
+
+const taskStatusMap = {
+  create: '待处理',
+  done: '已完成',
+};
+
 /**
  * TODO:
  * - debounce `setFilterValues` (150ms?)
@@ -261,9 +273,17 @@ function WorkList({
       trialProtocolDescription,
       trialSiteId,
       trialSiteDescription,
+      tasks,
     } = study;
+    // evibased, add trial info
     let trialTimePointInfo = trialTimePointId ? trialTimePointId.slice(1) : date;
     trialTimePointInfo = i18n.t('StudyList:TimePoint') + trialTimePointInfo;
+    // task info
+    let taskInfo = '';
+    for (const task of tasks) {
+      taskInfo += `${taskTypeMap[task.type]}(${task.username}): ${taskStatusMap[task.status]} <br>`;
+    }
+
     const studyDate =
       date &&
       moment(date, ['YYYYMMDD', 'YYYY.MM.DD'], true).isValid() &&
@@ -311,9 +331,14 @@ function WorkList({
           title: `${studyDate || ''} ${studyTime || ''}`,
           gridCol: 5,
         },
+        // {
+        //   key: 'description',
+        //   content: <TooltipClipboard>{description}</TooltipClipboard>,
+        //   gridCol: 4,
+        // },
         {
-          key: 'description',
-          content: <TooltipClipboard>{description}</TooltipClipboard>,
+          key: 'taskInfo',
+          content: <span dangerouslySetInnerHTML={{ __html: taskInfo }}></span>,
           gridCol: 4,
         },
         {
