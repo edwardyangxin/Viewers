@@ -632,9 +632,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       )}
       {taskInfo.totalTask === 0 && (
         <div className="flex justify-center p-4">
-          <span className="text-primary-light">
-            {t('MeasurementTabel:All Task Done')}
-          </span>
+          <span className="text-primary-light">{t('MeasurementTabel:All Task Done')}</span>
         </div>
       )}
     </>

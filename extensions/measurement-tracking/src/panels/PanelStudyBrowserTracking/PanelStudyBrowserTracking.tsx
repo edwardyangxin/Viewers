@@ -437,16 +437,27 @@ async function _fetchReportsBackend(_appConfig, userAuthenticationService, mappe
     if (user) {
       username = user.profile.preferred_username;
     }
+    const realm_role = user?.profile?.realm_role;
+    // evibased, if role is doctor, filter studies by task list
+    const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
     // loop through all studies
     for (let i = 0; i < mappedStudies.length; i++) {
       const study = mappedStudies[i];
       // get reports from reportFetchUrl by http request
-      const response = await fetch(`${reportFetchUrl}?username=${username}&StudyInstanceUID=${study.StudyInstanceUID}`, {
+      let fetchUrl;
+      if (ifDoctor) {
+        // doctor only see own reports
+        fetchUrl = `${reportFetchUrl}?username=${username}&StudyInstanceUID=${study.StudyInstanceUID}`;
+      } else {
+        // other see all reports
+        fetchUrl = `${reportFetchUrl}?StudyInstanceUID=${study.StudyInstanceUID}`;
+      }
+      const response = await fetch(fetchUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: authHeader.Authorization,
-        }
+        },
       });
       if (!response.ok) {
         const body = await response.text();
@@ -461,119 +472,7 @@ async function _fetchReportsBackend(_appConfig, userAuthenticationService, mappe
         const body = await response.json();
         reports = Array.isArray(body) ? body : [body];
       }
-      // demo data
-      // const reports = [
-      //   {
-      //     report_name: 'report1',
-      //     timestamp: '2023-10-25T12:12:12',
-      //     username: 'test',
-      //     user_report_version: 1,
-      //     report_template: 'RESIST1.1',
-      //     report_template_version: 'v0.1',
-      //     measurements: [
-      //       {
-      //         Patient_ID: 'ISPY1_1001',
-      //         Patient_Name: '1001^6657^ISPY1',
-      //         StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
-      //         SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.210538707954985296677398591978',
-      //         SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.272165115864924771573341503410',
-      //         Label: 'Target|Lymph_Node',
-      //         AnnotationType: 'Cornerstone:Bidirectional',
-      //         Length: '51.253774533998936',
-      //         Width: '34.169183022665926',
-      //         Unit: 'mm',
-      //         FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
-      //         points:
-      //           '72.06351032056776 50.9972240042937 -42;24.450926452423076 69.97065968107313 -42;41.93273982756892 44.61308055330187 -42;54.58169694542188 76.35480313206496 -42',
-      //       },
-      //       {
-      //         Patient_ID: 'ISPY1_1001',
-      //         Patient_Name: '1001^6657^ISPY1',
-      //         StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
-      //         SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.226038001772760333157260976449',
-      //         SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.110476001967362934681049981213',
-      //         Label: 'Target_CR|Liver',
-      //         AnnotationType: 'Cornerstone:Bidirectional',
-      //         Length: '29.120219846099335',
-      //         Width: '19.413479897399586',
-      //         Unit: 'mm',
-      //         FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
-      //         points:
-      //           '-45.033142730819726 50.85046970719078 80;-71.62663747994458 62.71525967218496 80;-62.28482009371352 47.918366439979565 80;-54.37496011705079 65.64736293939619 80',
-      //       },
-      //       {
-      //         Patient_ID: 'ISPY1_1001',
-      //         Patient_Name: '1001^6657^ISPY1',
-      //         StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
-      //         SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.210538707954985296677398591978',
-      //         SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.333095478199353799429660404955',
-      //         Label: 'Target_UN|Mediastinum_Hilum',
-      //         AnnotationType: 'Cornerstone:Bidirectional',
-      //         Length: '91.13624282454762',
-      //         Width: '60.75749521636509',
-      //         Unit: 'mm',
-      //         FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
-      //         points:
-      //           '61.68181910119784 35.24569249904281 -24;-27.4575296444264 54.21912817582229 -24;10.787666169459257 15.019294088891108 -24;23.436623287312187 74.44552658597395 -24',
-      //       },
-      //     ],
-      //   },
-      //   {
-      //     report_name: 'report2',
-      //     timestamp: '2023-10-25T13:13:13',
-      //     username: 'test',
-      //     user_report_version: 2,
-      //     report_template: 'RESIST1.1',
-      //     report_template_version: 'v0.1',
-      //     measurements: [
-      //       {
-      //         Patient_ID: 'ISPY1_1001',
-      //         Patient_Name: '1001^6657^ISPY1',
-      //         StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
-      //         SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.210538707954985296677398591978',
-      //         SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.272165115864924771573341503410',
-      //         Label: 'Target|Lymph_Node',
-      //         AnnotationType: 'Cornerstone:Bidirectional',
-      //         Length: '51.253774533998936',
-      //         Width: '34.169183022665926',
-      //         Unit: 'mm',
-      //         FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
-      //         points:
-      //           '72.06351032056776 50.9972240042937 -42;24.450926452423076 69.97065968107313 -42;41.93273982756892 44.61308055330187 -42;54.58169694542188 76.35480313206496 -42',
-      //       },
-      //       {
-      //         Patient_ID: 'ISPY1_1001',
-      //         Patient_Name: '1001^6657^ISPY1',
-      //         StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
-      //         SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.226038001772760333157260976449',
-      //         SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.110476001967362934681049981213',
-      //         Label: 'Target_CR|Liver',
-      //         AnnotationType: 'Cornerstone:Bidirectional',
-      //         Length: '29.120219846099335',
-      //         Width: '19.413479897399586',
-      //         Unit: 'mm',
-      //         FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
-      //         points:
-      //           '-45.033142730819726 50.85046970719078 80;-71.62663747994458 62.71525967218496 80;-62.28482009371352 47.918366439979565 80;-54.37496011705079 65.64736293939619 80',
-      //       },
-      //       {
-      //         Patient_ID: 'ISPY1_1001',
-      //         Patient_Name: '1001^6657^ISPY1',
-      //         StudyInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.118757564401397374205631727107',
-      //         SeriesInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.210538707954985296677398591978',
-      //         SOPInstanceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.333095478199353799429660404955',
-      //         Label: 'Target_UN|Mediastinum_Hilum',
-      //         AnnotationType: 'Cornerstone:Bidirectional',
-      //         Length: '91.13624282454762',
-      //         Width: '60.75749521636509',
-      //         Unit: 'mm',
-      //         FrameOfReferenceUID: '1.3.6.1.4.1.14519.5.2.1.7695.1700.172213940908213483760672928659',
-      //         points:
-      //           '61.68181910119784 35.24569249904281 -24;-27.4575296444264 54.21912817582229 -24;10.787666169459257 15.019294088891108 -24;23.436623287312187 74.44552658597395 -24',
-      //       },
-      //     ],
-      //   },
-      // ];
+
       // add reports to study
       study['reports'] = reports;
     }

@@ -164,7 +164,7 @@ function DataSourceWrapper(props) {
       }
       const realm_role = user?.profile?.realm_role;
       // evibased, if role is doctor, filter studies by task list
-      const ifDoctor = realm_role.includes('doctor');
+      const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
       if (ifDoctor) {
         try {
           // get task list by username and status
