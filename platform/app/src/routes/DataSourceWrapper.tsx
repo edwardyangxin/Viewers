@@ -7,8 +7,10 @@ import { extensionManager } from '../App.tsx';
 import { useParams, useLocation } from 'react-router';
 import { useNavigate } from 'react-router-dom';
 import useSearchParams from '../hooks/useSearchParams.ts';
+import { utils } from '@ohif/core';
 
 const { TimingEnum } = Types;
+const { performAuditLog } = utils;
 
 /**
  * Determines if two React Router location objects are the same.
@@ -127,6 +129,14 @@ function DataSourceWrapper(props) {
   }, [dataSource]);
 
   useEffect(() => {
+    // evibased, audit log, enter task list page
+    const auditMsg = 'enter task list page';
+    const auditLogBodyMeta = {
+      action: auditMsg,
+      action_result: 'success',
+    };
+    performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+
     const dataSourceChangedCallback = () => {
       setIsLoading(false);
       setIsDataSourceInitialized(false);
@@ -140,7 +150,16 @@ function DataSourceWrapper(props) {
       ExtensionManager.EVENTS.ACTIVE_DATA_SOURCE_CHANGED,
       dataSourceChangedCallback
     );
-    return () => sub.unsubscribe();
+    return () => {
+      // audit log leave task list page
+      const auditMsg = 'leave task list page';
+      const auditLogBodyMeta = {
+        action: auditMsg,
+        action_result: 'success',
+      };
+      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+      sub.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

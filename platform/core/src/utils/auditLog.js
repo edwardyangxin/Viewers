@@ -20,7 +20,7 @@ async function performAuditLog(
       level: auditLevel,
       msg: auditMsg,
       username: username,
-      meta: auditLogBodyMeta
+      meta: auditLogBodyMeta,
     };
     // fetch
     const auditResponse = await fetch(auditLogUrl, {
@@ -39,7 +39,6 @@ async function performAuditLog(
     // Do something with the successful audit response, if needed
     const responseData = await auditResponse.json();
     console.log('Audit response data:', responseData);
-
   } catch (error) {
     console.error('Error performing audit log:', error);
   }
