@@ -17,13 +17,15 @@ import debounce from 'lodash.debounce';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-const { downloadCSVReport, performAuditLog } = utils;
+const { downloadCSVReport } = utils;
 
+// evibased, 右边栏上部显示的信息
 const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
-  key: undefined, //
-  date: '', // '07-Sep-2010',
-  modality: '', // 'CT',
-  description: '', // 'CHEST/ABD/PELVIS W CONTRAST',
+  key: undefined,
+  timepoint: undefined,
+  modality: '', // 'deprecated',
+  description: '', // ''deprecated'',
+  taskInfo: undefined, // 
 };
 
 // TODO: info mapping refactor to one location
@@ -91,7 +93,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     sendTrackedMeasurementsEvent,
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
-  const { trackedStudy, trackedSeries, successSaveReport } = trackedMeasurements.context;
+  const { trackedStudy, trackedSeries, taskInfo, successSaveReport } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
@@ -99,11 +101,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   const measurementsPanelRef = useRef(null);
   // evibased, initial flag
   const [initialFlag, setInitialFlag] = useState(true);
-  const [taskInfo, setTaskInfo] = useState({
-    nextTaskStudyUID: undefined,
-    totalTask: 0,
-    userTasks: [],
-  });
 
   useEffect(() => {
     const measurements = measurementService.getMeasurements();
@@ -147,13 +144,20 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       if (displayStudySummary.key !== StudyInstanceUID) {
         setDisplayStudySummary({
           key: StudyInstanceUID,
-          date: ClinicalTrialTimePointID ? ClinicalTrialTimePointID : StudyDate,
+          timepoint: ClinicalTrialTimePointID ? ClinicalTrialTimePointID : StudyDate,
           modality,
           description: StudyDescription,
+          taskInfo: taskInfo,
         });
       }
     } else if (trackedStudy === '' || trackedStudy === undefined) {
-      setDisplayStudySummary(DISPLAY_STUDY_SUMMARY_INITIAL_VALUE);
+      setDisplayStudySummary( {
+        key: undefined, //
+        timepoint: undefined, // '07-Sep-2010',
+        modality: '', // 'CT',
+        description: '', // 'CHEST/ABD/PELVIS W CONTRAST',
+        taskInfo: taskInfo,
+      });
     }
   };
 
@@ -210,62 +214,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     );
 
     downloadCSVReport(trackedMeasurements, measurementService);
-  }
-
-  // evibased, upload report to backend api
-  async function uploadReport() {
-    const measurements = measurementService.getMeasurements();
-    let trackedMeasurements = measurements.filter(
-      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
-    );
-    if (trackedMeasurements.length === 0) {
-      // Prevent upload of report with no measurements.
-      return;
-    }
-    // convert to measurements
-    trackedMeasurements = _convertToReportMeasurements(trackedMeasurements)
-
-    console.log('Authenticated user info: ', userAuthenticationService.getUser());
-    const user = userAuthenticationService.getUser();
-    let username = 'unknown';
-    const authHeader = userAuthenticationService.getAuthorizationHeader();
-    if (user) {
-      username = user.profile.preferred_username;
-    }
-    // get report api from config
-    const uploadReportUrl = _appConfig['evibased']['report_upload_url'];
-    const uploadReportBody = {
-      StudyInstanceUID: trackedMeasurements[0]['StudyInstanceUID'],
-      username: username,
-      report_template: "RECIST1.1",
-      report_template_version: "v1",
-      report_comments: "",
-      measurements: trackedMeasurements,
-    };
-    const response = await fetch(uploadReportUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: authHeader.Authorization,
-      },
-      body: JSON.stringify(uploadReportBody),
-    });
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
-    }
-    const uploadReportResult = await response.json();
-    console.log('uploadReportResult:', uploadReportResult);
-
-    // audit log after upload report success
-    const auditMsg = "upload report success";
-    const auditLogBodyMeta = {
-      taskType: '', // TODO: get task type from API
-      StudyInstanceUID: trackedMeasurements[0]['StudyInstanceUID'],
-      action: 'upload_report',
-      action_result: 'success',
-    };
-    performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
   }
 
   const jumpToImage = ({ uid, isActive }) => {
@@ -485,16 +433,20 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
               break;
             }
           }
-          setTaskInfo({
-            nextTaskStudyUID: nextTaskStudyUID,
-            totalTask: userTasks.length,
-            userTasks: userTasks,
+          sendTrackedMeasurementsEvent('UPDATE_TASK_INFO', {
+            taskInfo: {
+              nextTaskStudyUID: nextTaskStudyUID,
+              totalTask: userTasks.length,
+              userTasks: userTasks,
+            },
           });
         } else {
-          setTaskInfo({
-            nextTaskStudyUID: undefined,
-            totalTask: 0,
-            userTasks: [],
+          sendTrackedMeasurementsEvent('UPDATE_TASK_INFO', {
+            taskInfo: {
+              nextTaskStudyUID: undefined,
+              totalTask: undefined,
+              userTasks: [],
+            },
           });
         }
         setInitialFlag(false);
@@ -576,10 +528,11 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
         ref={measurementsPanelRef}
         data-cy={'trackedMeasurements-panel'}
       >
-        {displayStudySummary.key && (
+        {displayStudySummary.taskInfo && (
           <TimePointSummary
             // evibased
-            timepoint={t('MeasurementTable:TimePoint') + displayStudySummary.date.slice(1)}
+            taskInfo={displayStudySummary.taskInfo}
+            timepoint={displayStudySummary.timepoint ? t('MeasurementTable:TimePoint') + displayStudySummary.timepoint.slice(1) : undefined}
             modality={displayStudySummary.modality}
             description={displayStudySummary.description}
           />
@@ -602,7 +555,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       <div className="flex justify-center p-4">
         <ActionButtons
           onExportClick={exportReport}
-          onUploadClick={uploadReport}
           onCreateReportClick={() => {
             sendTrackedMeasurementsEvent('SAVE_REPORT', {
               viewportId: viewportGrid.activeViewportId,
@@ -617,22 +569,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
       </div>
       {taskInfo.totalTask > 0 && (
         <div className="flex justify-center p-4">
-          <span className="text-primary-light">
-            {t('MeasurementTabel:Total Task')}({taskInfo.totalTask})
-          </span>
+          {/* <span className="text-primary-light">任务总数({taskInfo.totalTask})</span> */}
           {taskInfo.nextTaskStudyUID && (
             <Link
               className="text-primary-light"
               to={`/viewer?StudyInstanceUIDs=${taskInfo.nextTaskStudyUID}`}
             >
-              {t('MeasurementTabel:Next Task')}
+              下一任务
             </Link>
           )}
-        </div>
-      )}
-      {taskInfo.totalTask === 0 && (
-        <div className="flex justify-center p-4">
-          <span className="text-primary-light">{t('MeasurementTabel:All Task Done')}</span>
         </div>
       )}
     </>

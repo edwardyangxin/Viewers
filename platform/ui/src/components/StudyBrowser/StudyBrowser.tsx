@@ -48,10 +48,11 @@ const StudyBrowser = ({
         displaySets,
         trialTimePointId,
         reports,
+        ifPrimary,
       }) => {
         const isExpanded = expandedStudyInstanceUIDs.includes(studyInstanceUid);
         const trialTimePointInfo = trialTimePointId
-          ? ` ${t('Studies') + trialTimePointId.slice(1)}`
+          ? ` ${t('Studies') + trialTimePointId.slice(1)}` + (ifPrimary ? '(当前)' : '')
           : date;
         return (
           <React.Fragment key={studyInstanceUid}>

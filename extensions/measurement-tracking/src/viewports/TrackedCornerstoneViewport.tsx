@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import OHIF, { utils } from '@ohif/core';
 
-import { ViewportActionBar, Tooltip, Icon } from '@ohif/ui';
+import { ViewportActionBar, Tooltip, Icon, useImageViewer } from '@ohif/ui';
 
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +14,7 @@ const { formatDate } = utils;
 
 function TrackedCornerstoneViewport(props) {
   const { displaySets, viewportId, viewportLabel, servicesManager, extensionManager } = props;
+  const { StudyInstanceUIDs } = useImageViewer();
 
   const { t } = useTranslation('Common');
 
@@ -43,6 +44,7 @@ function TrackedCornerstoneViewport(props) {
     StudyDate,
     ManufacturerModelName,
     // evibased
+    StudyInstanceUID,
     ClinicalTrialTimePointID,
   } = displaySet.images[0];
 
@@ -204,7 +206,10 @@ function TrackedCornerstoneViewport(props) {
   };
 
   // evibased, format ClinicalTrialTimePointID
-  const clinicalTrialTimePointID = ClinicalTrialTimePointID && '访视' + ClinicalTrialTimePointID.slice(1);
+  const clinicalTrialTimePointID =
+    ClinicalTrialTimePointID &&
+    '访视' + ClinicalTrialTimePointID.slice(1) +
+      (StudyInstanceUIDs.includes(StudyInstanceUID) ? '(当前)' : '');
   return (
     <>
       <ViewportActionBar

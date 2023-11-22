@@ -26,6 +26,13 @@ const machineConfiguration = {
     //
     ignoredSRSeriesForHydration: [],
     isDirty: false,
+    // evibased
+    successSaveReport: false,
+    taskInfo: {
+      nextTaskStudyUID: undefined,
+      totalTask: undefined,
+      userTasks: [],
+    },
   },
   states: {
     off: {
@@ -53,8 +60,15 @@ const machineConfiguration = {
             activeViewportId: (_, event) => event.activeViewportId,
           }),
         },
+        // evibased
+        // load report to measurements
         UPDATE_BACKEND_REPORT: {
           target: 'updateBackendReport',
+        },
+        UPDATE_TASK_INFO: {
+          actions: assign({
+            taskInfo: (_, event) => event.taskInfo,
+          }),
         },
       },
     },
@@ -119,6 +133,12 @@ const machineConfiguration = {
             target: 'tracking',
           },
         ],
+        // evibased
+        UPDATE_TASK_INFO: {
+          actions: assign({
+            taskInfo: (_, event) => event.taskInfo,
+          }),
+        },
       },
     },
     promptTrackNewSeries: {
@@ -208,7 +228,7 @@ const machineConfiguration = {
           {
             target: 'tracking',
             actions: ['successSaveReport'],
-            // cond: 'shouldSaveAndStartNewReport',
+            cond: 'ifSuccessSaveReport',
           },
           // Cancel, back to tracking
           {
@@ -262,6 +282,8 @@ const machineConfiguration = {
         },
       },
     },
+    // evibased
+    // add update backend report
     updateBackendReport: {
       invoke: {
         src: 'updateBackendReport',
@@ -273,7 +295,7 @@ const machineConfiguration = {
               'jumpToFirstMeasurementInActiveViewport',
               'setIsDirtyToClean',
             ],
-          }
+          },
         ],
         onError: {
           target: 'idle',
@@ -458,6 +480,8 @@ const defaultOptions = {
     isNewSeries: (ctx, evt) =>
       !ctx.ignoredSeries.includes(evt.SeriesInstanceUID) &&
       !ctx.trackedSeries.includes(evt.SeriesInstanceUID),
+    // evibased, cond on success save report
+    ifSuccessSaveReport: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.CREATE_REPORT,
   },
 };
 

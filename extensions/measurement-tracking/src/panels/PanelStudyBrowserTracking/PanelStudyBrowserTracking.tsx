@@ -647,7 +647,7 @@ function _createStudyBrowserTabs(
 ) {
   // 3 tabs list
   const primaryStudies = [];
-  const recentStudies = [];
+  const pastStudies = [];
   const allStudies = [];
 
   // Iterate over each study...
@@ -675,17 +675,20 @@ function _createStudyBrowserTabs(
     */
 
     // Map the study to it's tab/view representation
-    const tabStudy = Object.assign({}, study, {
+    let tabStudy = Object.assign({}, study, {
       displaySets: displaySetsForStudy,
     });
 
     // Add the "tab study" to the 'primary', 'recent', and/or 'all' tab group(s)
     if (primaryStudyInstanceUIDs.includes(study.studyInstanceUid)) {
+      tabStudy['ifPrimary'] = true;
       primaryStudies.push(tabStudy);
       allStudies.push(tabStudy);
     } else {
       // TODO: Filter allStudies to dates within one year of current date
-      recentStudies.push(tabStudy);
+      // evibased, recent studies is all studies except primary studies for now
+      tabStudy['ifPrimary'] = false;
+      pastStudies.push(tabStudy);
       allStudies.push(tabStudy);
     }
   });
@@ -705,15 +708,15 @@ function _createStudyBrowserTabs(
       studies: primaryStudies.sort((studyA, studyB) => _byDate(studyA.date, studyB.date)),
     },
     {
-      name: 'recent',
-      label: i18n.t('SidePanel:Recent'),
-      studies: recentStudies.sort((studyA, studyB) => _byDate(studyA.date, studyB.date)),
+      name: 'past',
+      label: i18n.t('SidePanel:PastTimepoint'),
+      studies: pastStudies.sort((studyA, studyB) => _byDate(studyA.date, studyB.date)),
     },
-    {
-      name: 'all',
-      label: i18n.t('SidePanel:All'),
-      studies: allStudies.sort((studyA, studyB) => _byDate(studyA.date, studyB.date)),
-    },
+    // {
+    //   name: 'all',
+    //   label: i18n.t('SidePanel:All'),
+    //   studies: allStudies.sort((studyA, studyB) => _byDate(studyA.date, studyB.date)),
+    // },
   ];
 
   return tabs;
