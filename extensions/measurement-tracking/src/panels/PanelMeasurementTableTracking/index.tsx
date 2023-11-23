@@ -34,10 +34,13 @@ const target_info_mapping = {
   Target_CR: 'Target(CR)',
   Target_UN: 'Target(UN未知)',
   Non_Target: 'Non_Target',
+  Non_Target_Disappear: 'Non_Target(消失)',
+  Non_Target_Progress: 'Non_Target(发展Progress)',
+  Non_Target_New: 'Non_Target(新发New)',
   Other: 'Other',
 };
 const target_key_group = ['Target', 'Target_CR', 'Target_UN'];
-const nontarget_key_group = ['Non_Target', 'Other'];
+const nontarget_key_group = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New', 'Other'];
 
 const location_info_mapping = {
   Abdomen_Chest_Wall: 'Abdomen/Chest Wall',
@@ -304,6 +307,14 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
         onClose: () => uiDialogService.dismiss({ id: dialogId }),
 
         body: ({ value, setValue }) => {
+          let targetOptions = [];
+          for (const [key, value] of Object.entries(target_info_mapping)) {
+            targetOptions.push({ value: key, label: value });
+          }
+          let locationOptions = [];
+          for (const [key, value] of Object.entries(location_info_mapping)) {
+            locationOptions.push({ value: key, label: value });
+          }
           return (
             <div>
               <Select
@@ -325,13 +336,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
                     return value;
                   });
                 }}
-                options={[
-                  { value: 'Target', label: 'Target' },
-                  { value: 'Target_CR', label: 'Target(CR)' },
-                  { value: 'Target_UN', label: 'Target(UN未知)' },
-                  { value: 'Non_Target', label: 'Non_Target' },
-                  { value: 'Other', label: 'Other' },
-                ]}
+                options={targetOptions}
               />
               <Select
                 id="location"
@@ -352,39 +357,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
                     return value;
                   });
                 }}
-                options={[
-                  { value: 'Abdomen_Chest_Wall', label: 'Abdomen/Chest Wall' },
-                  { value: 'Lung', label: 'Lung' },
-                  { value: 'Lymph_Node', label: 'Lymph Node' },
-                  { value: 'Liver', label: 'Liver' },
-                  { value: 'Mediastinum_Hilum', label: 'Mediastinum/Hilum' },
-                  { value: 'Pelvis', label: 'Pelvis' },
-                  {
-                    value: 'Petritoneum_Omentum',
-                    label: 'Petritoneum/Omentum',
-                  },
-                  { value: 'Retroperitoneum', label: 'Retroperitoneum' },
-                  { value: 'Adrenal', label: 'Adrenal' },
-                  { value: 'Bladder', label: 'Bladder' },
-                  { value: 'Bone', label: 'Bone' },
-                  { value: 'Braine', label: 'Braine' },
-                  { value: 'Breast', label: 'Breast' },
-                  { value: 'Colon', label: 'Colon' },
-                  { value: 'Esophagus', label: 'Esophagus' },
-                  { value: 'Extremities', label: 'Extremities' },
-                  { value: 'Gallbladder', label: 'Gallbladder' },
-                  { value: 'Kidney', label: 'Kidney' },
-                  { value: 'Muscle', label: 'Muscle' },
-                  { value: 'Neck', label: 'Neck' },
-                  { value: 'Other_Soft_Tissue', label: 'Other Soft Tissue' },
-                  { value: 'Ovary', label: 'Ovary' },
-                  { value: 'Pancreas', label: 'Pancreas' },
-                  { value: 'Prostate', label: 'Prostate' },
-                  { value: 'Small_Bowel', label: 'Small Bowel' },
-                  { value: 'Spleen', label: 'Spleen' },
-                  { value: 'Stomach', label: 'Stomach' },
-                  { value: 'Subcutaneous', label: 'Subcutaneous' },
-                ]}
+                options={locationOptions}
               />
             </div>
           );
