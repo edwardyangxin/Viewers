@@ -481,7 +481,7 @@ const defaultOptions = {
       !ctx.ignoredSeries.includes(evt.SeriesInstanceUID) &&
       !ctx.trackedSeries.includes(evt.SeriesInstanceUID),
     // evibased, cond on success save report
-    ifSuccessSaveReport: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.CREATE_REPORT,
+    ifSuccessSaveReport: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.CREATE_REPORT && evt.data.successSaveReport,
   },
 };
 

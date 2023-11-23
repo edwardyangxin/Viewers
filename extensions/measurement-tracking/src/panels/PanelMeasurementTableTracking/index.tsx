@@ -14,7 +14,7 @@ import { useDebounce } from '@hooks';
 import ActionButtons from './ActionButtons';
 import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const { downloadCSVReport } = utils;
@@ -71,6 +71,7 @@ const location_info_mapping = {
 };
 
 function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
@@ -99,8 +100,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   );
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
   const measurementsPanelRef = useRef(null);
-  // evibased, initial flag
-  const [initialFlag, setInitialFlag] = useState(true);
 
   useEffect(() => {
     const measurements = measurementService.getMeasurements();
@@ -151,7 +150,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
         });
       }
     } else if (trackedStudy === '' || trackedStudy === undefined) {
-      setDisplayStudySummary( {
+      setDisplayStudySummary({
         key: undefined, //
         timepoint: undefined, // '07-Sep-2010',
         modality: '', // 'CT',
@@ -162,13 +161,13 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   };
 
   // ~~ DisplayStudySummary
+  // evibased, remove dependency on updateDisplayStudySummary function, it will cause infinite loop
   useEffect(() => {
     updateDisplayStudySummary();
   }, [
     displayStudySummary.key,
     trackedMeasurements,
     trackedStudy,
-    updateDisplayStudySummary,
   ]);
 
   // TODO: Better way to consolidated, debounce, check on change?
@@ -420,40 +419,55 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
 
   // evibased, initial flag, get taskInfo
   useEffect(() => {
-    if (initialFlag || successSaveReport) {
-      async function refreshTaskInfo() {
-        // get taskInfo
-        const userTasks = await _getUserTaskInfo();
-        if (userTasks.length > 0) {
-          // get next task study
-          let nextTaskStudyUID = undefined;
-          for (const task of userTasks) {
-            if (task.timepoint.UID !== StudyInstanceUIDs[0]) {
-              nextTaskStudyUID = task.timepoint.UID;
-              break;
-            }
-          }
-          sendTrackedMeasurementsEvent('UPDATE_TASK_INFO', {
-            taskInfo: {
-              nextTaskStudyUID: nextTaskStudyUID,
-              totalTask: userTasks.length,
-              userTasks: userTasks,
-            },
-          });
-        } else {
-          sendTrackedMeasurementsEvent('UPDATE_TASK_INFO', {
-            taskInfo: {
-              nextTaskStudyUID: undefined,
-              totalTask: undefined,
-              userTasks: [],
-            },
-          });
-        }
-        setInitialFlag(false);
-      }
-      refreshTaskInfo();
-    }
+    console.log('successSaveReport:', successSaveReport);
+    _refreshTaskInfo(successSaveReport);
   }, [ successSaveReport ]);
+
+  async function _refreshTaskInfo(navigateToNextTask = false) {
+    // get taskInfo
+    const userTasks = await _getUserTaskInfo();
+    let nextTaskStudyUID = undefined;
+    let taskInfo = {
+      nextTaskStudyUID: nextTaskStudyUID,
+      totalTask: undefined,
+      userTasks: [],
+    };
+    if (userTasks.length > 0) {
+      // get next task study
+      for (const task of userTasks) {
+        if (task.timepoint.UID !== StudyInstanceUIDs[0]) {
+          nextTaskStudyUID = task.timepoint.UID;
+          break;
+        }
+      }
+      taskInfo = {
+        nextTaskStudyUID: nextTaskStudyUID,
+        totalTask: userTasks.length,
+        userTasks: userTasks,
+      };
+    }
+
+    if (navigateToNextTask) {
+      // auto go to next task
+      _navigateToNextTask(nextTaskStudyUID);
+    } else {
+      // update taskInfo
+      sendTrackedMeasurementsEvent('UPDATE_TASK_INFO', {
+        taskInfo: taskInfo,
+      });
+    }
+
+    return taskInfo;
+  }
+
+  function _navigateToNextTask(nextTaskStudyUID) {
+    // auto go to next task
+    if (nextTaskStudyUID) {
+      navigate(`/viewer?StudyInstanceUIDs=${nextTaskStudyUID}`);
+    } else {
+      navigate('/');
+    }
+  }
 
   // evibased, get next tsak study
   async function _getUserTaskInfo() {
@@ -567,9 +581,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           }
         />
       </div>
-      {taskInfo.totalTask > 0 && (
+      {/* evibased, auto navigate to next job. so no next task link here */}
+      {/* {taskInfo.totalTask > 0 && (
         <div className="flex justify-center p-4">
-          {/* <span className="text-primary-light">任务总数({taskInfo.totalTask})</span> */}
           {taskInfo.nextTaskStudyUID && (
             <Link
               className="text-primary-light"
@@ -579,7 +593,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
             </Link>
           )}
         </div>
-      )}
+      )} */}
     </>
   );
 }

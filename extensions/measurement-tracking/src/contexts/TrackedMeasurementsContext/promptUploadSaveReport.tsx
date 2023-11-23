@@ -25,12 +25,13 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
       extensionManager,
     });
 
+    let successSaveReport = false;
     if (promptResult.action === RESPONSE.CREATE_REPORT) {
       // get api flag
       const _appConfig = extensionManager._appConfig;
       if (_appConfig.evibased['use_report_api']) {
         // post to report api
-        await _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries);
+        successSaveReport = await _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries);
       } else {
         // post to PACS dicomSR
         const dataSources = extensionManager.getDataSources();
@@ -67,6 +68,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
           servicesManager,
           getReport,
         });
+        successSaveReport = true;
       }
     } else if (promptResult.action === RESPONSE.CANCEL) {
       // Do nothing
@@ -79,6 +81,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
       SeriesInstanceUID,
       viewportId,
       isBackupSave,
+      successSaveReport,
     });
   });
 }
@@ -225,12 +228,14 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       message: `${reportTypeStr} ${i18n.t('MeasurementTable:saved successfully')}`,
       type: 'success',
     });
+    return true;
   } catch (error) {
     uiNotificationService.show({
       title: 'Create Report',
       message: error.message || `Failed to store ${reportTypeStr}`,
       type: 'error',
     });
+    return false;
   } finally {
     uiDialogService.dismiss({ id: loadingDialogId });
   }
