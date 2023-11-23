@@ -212,6 +212,11 @@ function DataSourceWrapper(props) {
           // get studyUIDs list and add to filter
           const studyUIDs = tasks.map(task => task.timepoint.UID);
           queryFilterValues.studyInstanceUid = studyUIDs;
+
+          // auto go to 1st task page, else go to page with empty task list
+          if (studyUIDs.length > 0) {
+            navigate(`/viewer?StudyInstanceUIDs=${studyUIDs[0]}`);
+          }
         } catch (e) {
           console.error(e);
         }
