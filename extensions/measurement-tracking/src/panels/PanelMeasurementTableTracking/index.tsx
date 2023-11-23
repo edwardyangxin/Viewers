@@ -40,7 +40,8 @@ const target_info_mapping = {
   Other: 'Other',
 };
 const target_key_group = ['Target', 'Target_CR', 'Target_UN'];
-const nontarget_key_group = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New', 'Other'];
+const nontarget_key_group = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
+const other_key_group = ['Other'];
 
 const location_info_mapping = {
   Abdomen_Chest_Wall: 'Abdomen/Chest Wall',
@@ -495,16 +496,19 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   // evibased 按照target&nonTarget分组显示
   const targetFindings = [];
   const nonTargetFindings = [];
+  const otherFindings = [];
   for (const dm of displayMeasurements) {
     // get target info
     const targetInfo = dm.label.split('|')[0];
     if (!(targetInfo in target_info_mapping)) {
-      // not in target_info_mapping, just show and allow edit
-      nonTargetFindings.push(dm);
+      // not in target_info_mapping, just show and allow edit in other group
+      otherFindings.push(dm);
     } else if (target_key_group.includes(targetInfo)) {
       targetFindings.push(dm);
-    } else {
+    } else if (nontarget_key_group.includes(targetInfo)) {
       nonTargetFindings.push(dm);
+    } else {
+      otherFindings.push(dm);
     }
   }
 
@@ -538,6 +542,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
           onClick={jumpToImage}
           onEdit={onMeasurementItemEditHandler}
         />
+        {otherFindings.length > 0 && (
+          <MeasurementTable
+            title={t('MeasurementTabel:Other Findings')}
+            data={otherFindings}
+            servicesManager={servicesManager}
+            onClick={jumpToImage}
+            onEdit={onMeasurementItemEditHandler}
+          />
+        )}
       </div>
       <div className="flex justify-center p-4">
         <ActionButtons
