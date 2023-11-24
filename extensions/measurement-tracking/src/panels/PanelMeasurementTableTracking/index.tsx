@@ -512,6 +512,41 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   nonTargetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
+  // evibased, auto calculate SOD
+  useEffect(() => {
+    // calculate SOD based on targetFindings
+    let culmulativeSOD = 0;
+    for (const dm of targetFindings) {
+      const location = dm.label.split('|')[2];
+      // get long and short axis from displayText
+      const displayText = dm.displayText[0];
+      let longAxis = 0.0;
+      let shortAxis = 0.0;
+      if (displayText.includes('x') && displayText.includes('mm')) {
+        try {
+          longAxis = parseFloat(displayText.split('x')[0]);
+          shortAxis = parseFloat(displayText.split('x')[1].split('mm')[0]);
+        } catch (error) {
+          console.log('failed to parse length', error);
+        }
+      } else {
+        // no axis info, just continue
+        continue;
+      }
+
+      // if location is Lymph_Node
+      if (location === 'Lymph_Node') {
+        // lymph node use short axis
+        culmulativeSOD += shortAxis;
+      } else {
+        // use long axis
+        culmulativeSOD += longAxis;
+      }
+
+      setInputSOD(culmulativeSOD.toFixed(2));
+    }
+  }, [ displayMeasurements ]);
+
   // SOD input
   const onInputChangeHandler = event => {
     event.persist();
