@@ -27,6 +27,7 @@ const ReportThumbnailList = ({
           // example: "24-Oct-2023", 显示report创建日期
           // seriesDate,
           report_name,
+          report_info,
           create_time,
           username,
           user_report_version,
@@ -47,6 +48,7 @@ const ReportThumbnailList = ({
             displaySetInstanceUID: key,
             report: {
               report_name: reportName,
+              report_info: report_info,
               create_time: create_time,
               username: username,
               user_report_version: user_report_version,

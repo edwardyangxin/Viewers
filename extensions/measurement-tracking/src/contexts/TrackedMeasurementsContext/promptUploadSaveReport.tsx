@@ -1,4 +1,5 @@
-import { createReportAsync, createReportDialogPrompt } from '@ohif/extension-default';
+import { createReportAsync } from '@ohif/extension-default';
+import createReportDialogPrompt from './createReportDialogPrompt';
 import getNextSRSeriesNumber from '../../_shared/getNextSRSeriesNumber';
 import RESPONSE from '../../_shared/PROMPT_RESPONSES';
 import { DicomMetadataStore, utils } from '@ohif/core';
@@ -12,6 +13,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const { uiDialogService, measurementService, displaySetService } = servicesManager.services;
   const viewportId = evt.viewportId === undefined ? evt.data.viewportId : evt.viewportId;
   const isBackupSave = evt.isBackupSave === undefined ? evt.data.isBackupSave : evt.isBackupSave;
+  const reportInfo = evt.reportInfo === undefined ? evt.data.reportInfo : evt.reportInfo;
   const StudyInstanceUID = evt?.data?.StudyInstanceUID;
   const SeriesInstanceUID = evt?.data?.SeriesInstanceUID;
 
@@ -22,7 +24,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   return new Promise(async function (resolve, reject) {
     // TODO: Fallback if (uiDialogService) {
     const promptResult = await createReportDialogPrompt(uiDialogService, {
-      extensionManager,
+      extensionManager, reportInfo
     });
 
     let successSaveReport = false;
@@ -31,8 +33,11 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
       const _appConfig = extensionManager._appConfig;
       if (_appConfig.evibased['use_report_api']) {
         // post to report api
-        successSaveReport = await _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries);
+        successSaveReport = await _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries, reportInfo);
       } else {
+        // deprecated, SR report has limited fields, use report api instead
+        // reportInfo not saved to PACS dicomSR
+        throw new Error(`deprecated, SR report has limited fields, use report api instead`);
         // post to PACS dicomSR
         const dataSources = extensionManager.getDataSources();
         const dataSource = dataSources[0];
@@ -87,7 +92,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
 }
 
 // evibased, upload report to backend api
-async function _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries) {
+async function _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries, reportInfo) {
   const { measurementService, userAuthenticationService, uiNotificationService, uiDialogService } =
     servicesManager.services;
   const _appConfig = extensionManager._appConfig;
@@ -173,6 +178,9 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       report_template: 'RECIST1.1',
       report_template_version: 'v1',
       report_comments: '',
+      SOD: reportInfo ? reportInfo.SOD: '',
+      response: reportInfo ? reportInfo.response: '',
+      report_info: reportInfo,
       measurements: trackedMeasurements,
     };
     const reportResponse = await fetch(uploadReportUrl, {

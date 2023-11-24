@@ -28,6 +28,7 @@ const machineConfiguration = {
     isDirty: false,
     // evibased
     successSaveReport: false,
+    currentReportInfo: undefined,
     taskInfo: {
       nextTaskStudyUID: undefined,
       totalTask: undefined,
@@ -292,6 +293,7 @@ const machineConfiguration = {
             target: 'tracking',
             actions: [
               'setTrackedStudyAndMultipleSeries',
+              'setCurrentReportInfo',
               'jumpToFirstMeasurementInActiveViewport',
               'setIsDirtyToClean',
             ],
@@ -413,9 +415,16 @@ const defaultOptions = {
       return {
         prevTrackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
         trackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
-      }
+      };
     }),
     // evibased, actions
+    setCurrentReportInfo: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(setCurrentReportInfo): ", evt.type, evt);
+
+      return {
+        currentReportInfo: evt.data.reportInfo,
+      };
+    }),
     successSaveReport: assign((ctx, evt) => {
       console.log("measurementTrackingMachine action(successSaveReport): ", evt.type, evt);
 

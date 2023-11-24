@@ -15,6 +15,7 @@ function updateBackendReport({ servicesManager, extensionManager, appConfig }, c
   const { viewportId } = evt;
   const reportData = evt.reportData;
 
+  const reportInfo = reportData.report_info;
   const measurements = reportData.measurements;
 
   // for tracking StudyInstanceUID, SeriesInstanceUID
@@ -115,12 +116,12 @@ function updateBackendReport({ servicesManager, extensionManager, appConfig }, c
   }
 
   return new Promise(async function (resolve, reject) {
-    console.log("resolve: ", resolve);
     resolve({
       userResponse: RESPONSE.HYDRATE_REPORT,
       viewportId,
       StudyInstanceUID: trackedStudyInstanceUID,
       SeriesInstanceUIDs: trackedSeriesInstanceUIDs,
+      reportInfo,
     });
   });
 }

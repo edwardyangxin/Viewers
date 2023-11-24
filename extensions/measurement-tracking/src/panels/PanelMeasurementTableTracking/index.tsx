@@ -2,13 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   useImageViewer,
-  MeasurementTable,
   Dialog,
   Select,
   useViewportGrid,
   ButtonEnums,
   TimePointSummary,
+  Input,
 } from '@ohif/ui';
+import MeasurementTable from '../../ui/MeasurementTable';
 import { DicomMetadataStore, utils } from '@ohif/core';
 import { useDebounce } from '@hooks';
 import ActionButtons from './ActionButtons';
@@ -16,6 +17,7 @@ import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { targetIndexMapping, targetInfoMapping, locationInfoMapping, responseOptions } from '../../utils/mappings';
 
 const { downloadCSVReport } = utils;
 
@@ -24,55 +26,13 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
   key: undefined,
   timepoint: undefined,
   modality: '', // 'deprecated',
-  description: '', // ''deprecated'',
-  taskInfo: undefined, // 
+  description: '', // 'deprecated',
+  taskInfo: undefined, // task info
 };
 
-// TODO: info mapping refactor to one location
-const target_info_mapping = {
-  Target: 'Target',
-  Target_CR: 'Target(CR)',
-  Target_UN: 'Target(UN未知)',
-  Non_Target: 'Non_Target',
-  Non_Target_Disappear: 'Non_Target(消失)',
-  Non_Target_Progress: 'Non_Target(发展Progress)',
-  Non_Target_New: 'Non_Target(新发New)',
-  Other: 'Other',
-};
-const target_key_group = ['Target', 'Target_CR', 'Target_UN'];
-const nontarget_key_group = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
-const other_key_group = ['Other'];
-
-const location_info_mapping = {
-  Abdomen_Chest_Wall: 'Abdomen/Chest Wall',
-  Lung: 'Lung',
-  Lymph_Node: 'Lymph Node',
-  Liver: 'Liver',
-  Mediastinum_Hilum: 'Mediastinum/Hilum',
-  Pelvis: 'Pelvis',
-  Petritoneum_Omentum: 'Petritoneum/Omentum',
-  Retroperitoneum: 'Retroperitoneum',
-  Adrenal: 'Adrenal',
-  Bladder: 'Bladder',
-  Bone: 'Bone',
-  Braine: 'Braine',
-  Breast: 'Breast',
-  Colon: 'Colon',
-  Esophagus: 'Esophagus',
-  Extremities: 'Extremities',
-  Gallbladder: 'Gallbladder',
-  Kidney: 'Kidney',
-  Muscle: 'Muscle',
-  Neck: 'Neck',
-  Other_Soft_Tissue: 'Other Soft Tissue',
-  Ovary: 'Ovary',
-  Pancreas: 'Pancreas',
-  Prostate: 'Prostate',
-  Small_Bowel: 'Small Bowel',
-  Spleen: 'Spleen',
-  Stomach: 'Stomach',
-  Subcutaneous: 'Subcutaneous',
-};
+const targetKeyGroup = ['Target', 'Target_CR', 'Target_UN'];
+const nontargetKeyGroup = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
+const otherKeyGroup = ['Other'];
 
 function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   const navigate = useNavigate();
@@ -98,12 +58,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     sendTrackedMeasurementsEvent,
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
-  const { trackedStudy, trackedSeries, taskInfo, successSaveReport } = trackedMeasurements.context;
+  const { trackedStudy, trackedSeries, 
+    taskInfo, successSaveReport, currentReportInfo } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
   const measurementsPanelRef = useRef(null);
+  const [inputSOD, setInputSOD] = useState('总测量值(mm)');
+  const [timepointResponse, setTimepointResponse] = useState('Baseline');
 
   useEffect(() => {
     const measurements = measurementService.getMeasurements();
@@ -232,11 +195,13 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     jumpToImage({ uid, isActive });
 
     // label for 保存尽量多的label信息，因为cornerstonejs只支持保存label到DicomSR中
-    let label = measurement ? measurement.label : 'target_info|location_info';
+    let label = measurement ? measurement.label : '1|target_info|location_info';
     label = label.split("|")
-    if (label.length < 2) {
-      // label at least 2 infos
-      label.push('location_info')
+    if (label.length === 1) {
+      label = [1, label[0], 'location_info']
+    } else if (label.length < 3) {
+      // label at least 3 infos
+      label.push('location_info');
     }
 
     // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
@@ -250,17 +215,30 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     };
 
     // init targetValue, locationValue
+    let targetIndex = null;
+    if ('targetIndex' in measurementLabelInfo) {
+      targetIndex = measurementLabelInfo['targetIndex'];
+    } else {
+      // no target in measurementLabelInfo, get from label
+      let labelIndex = parseInt(label[0], 10);
+      targetIndex = {
+        value: labelIndex,
+        label: labelIndex,
+      }
+      measurementLabelInfo['targetIndex'] = targetIndex;
+    }
+
     let targetValue = null;
     if ('target' in measurementLabelInfo) {
       targetValue = measurementLabelInfo['target'];
     } else {
       // no target in measurementLabelInfo, get from label
-      let labelTarget = label[0]
-      if (labelTarget in target_info_mapping) {
+      let labelTarget = label[1];
+      if (labelTarget in targetInfoMapping) {
         targetValue = {
-          'value': labelTarget,
-          'label': target_info_mapping[labelTarget]
-        }
+          value: labelTarget,
+          label: targetInfoMapping[labelTarget],
+        };
       }
       measurementLabelInfo['target'] = targetValue;
     }
@@ -271,10 +249,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     } else {
       // no target in measurementLabelInfo, get from label
       let labelLocation = label[1]
-      if (labelLocation in location_info_mapping) {
+      if (labelLocation in locationInfoMapping) {
         locationValue = {
           'value': labelLocation,
-          'label': location_info_mapping[labelLocation]
+          'label': locationInfoMapping[labelLocation]
         }
       }
       measurementLabelInfo['location'] = locationValue;
@@ -308,32 +286,47 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
         onClose: () => uiDialogService.dismiss({ id: dialogId }),
 
         body: ({ value, setValue }) => {
-          let targetOptions = [];
-          for (const [key, value] of Object.entries(target_info_mapping)) {
+          const targetIndexOptions = [];
+          for (const [key, value] of Object.entries(targetIndexMapping)) {
+            targetIndexOptions.push({ value: key, label: value });
+          }
+          const targetOptions = [];
+          for (const [key, value] of Object.entries(targetInfoMapping)) {
             targetOptions.push({ value: key, label: value });
           }
-          let locationOptions = [];
-          for (const [key, value] of Object.entries(location_info_mapping)) {
+          const locationOptions = [];
+          for (const [key, value] of Object.entries(locationInfoMapping)) {
             locationOptions.push({ value: key, label: value });
           }
           return (
             <div>
               <Select
+                id="targetIndex"
+                placeholder="选择目标编号"
+                value={targetIndex ? [targetIndex.value] : [1]} //select只能传入target value
+                onChange={(newSelection, action) => {
+                  console.info('newSelection:', newSelection, 'action:', action);
+                  targetIndex = newSelection;
+                  setValue(value => {
+                    // update label info
+                    value['measurementLabelInfo']['targetIndex'] = targetIndex;
+                    value['label'][0] = targetIndex['value'];
+                    return value;
+                  });
+                }}
+                options={targetIndexOptions}
+              />
+              <Select
                 id="target"
-                placeholder="选择目标"
+                placeholder="选择目标类型"
                 value={targetValue ? [targetValue.value] : []} //select只能传入target value
                 onChange={(newSelection, action) => {
-                  console.info(
-                    'newSelection:',
-                    newSelection,
-                    'action:',
-                    action
-                  );
+                  console.info('newSelection:', newSelection, 'action:', action);
                   targetValue = newSelection;
                   setValue(value => {
                     // update label info
                     value['measurementLabelInfo']['target'] = targetValue;
-                    value['label'][0] = targetValue['value'];
+                    value['label'][1] = targetValue['value'];
                     return value;
                   });
                 }}
@@ -344,17 +337,12 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
                 placeholder="选择病灶位置"
                 value={locationValue ? [locationValue.value] : []}
                 onChange={(newSelection, action) => {
-                  console.info(
-                    'newSelection:',
-                    newSelection,
-                    'action:',
-                    action
-                  );
+                  console.info('newSelection:', newSelection, 'action:', action);
                   locationValue = newSelection;
                   setValue(value => {
                     // update label info
                     value['measurementLabelInfo']['location'] = locationValue;
-                    value['label'][1] = locationValue['value'];
+                    value['label'][2] = locationValue['value'];
                     return value;
                   });
                 }}
@@ -485,6 +473,14 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     }
   }
 
+  useEffect(() => {
+    console.log('currentReportInfo:', currentReportInfo);
+    if (currentReportInfo) {
+      setInputSOD(currentReportInfo.SOD);
+      setTimepointResponse(currentReportInfo.response);
+    }
+  }, [ currentReportInfo ]);
+
   // default 分组显示
   // const displayMeasurementsWithoutFindings = displayMeasurements.filter(
   //   dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
@@ -499,23 +495,33 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   const otherFindings = [];
   for (const dm of displayMeasurements) {
     // get target info
-    const targetInfo = dm.label.split('|')[0];
-    if (!(targetInfo in target_info_mapping)) {
-      // not in target_info_mapping, just show and allow edit in other group
+    const targetInfo = dm.label.split('|')[1];
+    if (!(targetInfo in targetInfoMapping)) {
+      // not in targetInfoMapping, just show and allow edit in other group
       otherFindings.push(dm);
-    } else if (target_key_group.includes(targetInfo)) {
+    } else if (targetKeyGroup.includes(targetInfo)) {
       targetFindings.push(dm);
-    } else if (nontarget_key_group.includes(targetInfo)) {
+    } else if (nontargetKeyGroup.includes(targetInfo)) {
       nonTargetFindings.push(dm);
     } else {
       otherFindings.push(dm);
     }
   }
+  // sort by index, get index from label, TODO: get index from measurementLabelInfo
+  targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+  nonTargetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+  otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+
+  // SOD input
+  const onInputChangeHandler = event => {
+    event.persist();
+    setInputSOD(event.target.value);
+  };
 
   return (
     <>
       <div
-        className="invisible-scrollbar overflow-y-auto overflow-x-hidden"
+        className="invisible-scrollbar overflow-y-visible overflow-x-visible"
         ref={measurementsPanelRef}
         data-cy={'trackedMeasurements-panel'}
       >
@@ -551,6 +557,30 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
             onEdit={onMeasurementItemEditHandler}
           />
         )}
+        <div className="mt-3">
+          <Input
+            label="总测量值(SOD)"
+            labelClassName="text-white text-[14px] leading-[1.2]"
+            className="border-primary-main bg-black"
+            type="text"
+            value={inputSOD}
+            onChange={onInputChangeHandler}
+            // required
+          />
+        </div>
+        <div>
+          <label className="text-[14px] leading-[1.2] text-white">结论(Response)</label>
+          <Select
+            id="response"
+            placeholder="选择结论(Response)"
+            value={[timepointResponse]}
+            onChange={(newSelection, action) => {
+              // console.info('newSelection:', newSelection, 'action:', action);
+              setTimepointResponse(newSelection.value);
+            }}
+            options={responseOptions}
+          />
+        </div>
       </div>
       <div className="flex justify-center p-4">
         <ActionButtons
@@ -559,6 +589,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
             sendTrackedMeasurementsEvent('SAVE_REPORT', {
               viewportId: viewportGrid.activeViewportId,
               isBackupSave: true,
+              reportInfo: {
+                SOD: inputSOD,
+                response: timepointResponse,
+              },
             });
           }}
           disabled={

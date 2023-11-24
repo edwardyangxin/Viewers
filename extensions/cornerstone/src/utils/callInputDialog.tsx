@@ -2,7 +2,20 @@ import React from 'react';
 import { Input, Dialog, ButtonEnums, Select } from '@ohif/ui';
 import i18n from '@ohif/i18n';
 
-// TODO: info mapping refactor to one location
+// TODO: evibased, info mapping refactor to one location
+const targetIndexMapping = {
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+  6: 6,
+  7: 7,
+  8: 8,
+  9: 9,
+  10: 10,
+};
+
 const target_info_mapping = {
   Target: 'Target',
   Target_CR: 'Target(CR)',
@@ -72,11 +85,13 @@ function callInputDialog(
     ? isArrowAnnotateInputDialog
       ? measurement.text
       : measurement.label
-    : 'target_info|location_info';
+    : '1|target_info|location_info';
   label = label.split("|")
-  if (label.length < 2) {
-    // label at least 2 infos
-    label.push('location_info')
+  if (label.length === 1) {
+    label = [1, label[0], 'location_info']
+  } else if (label.length < 3) {
+    // label at least 3 infos
+    label.push('location_info');
   }
 
   // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
@@ -96,7 +111,20 @@ function callInputDialog(
     validateFunc = value => true, // validate submit value
   } = dialogConfig;
 
-  // init targetValue, locationValue
+  // init targetIndex, targetValue, locationValue
+  let targetIndex = null;
+  if ('targetIndex' in measurementLabelInfo) {
+    targetIndex = measurementLabelInfo['targetIndex'];
+  } else {
+    // no target in measurementLabelInfo, get from label
+    let labelIndex = parseInt(label[0], 10);
+    targetIndex = {
+      value: labelIndex,
+      label: labelIndex,
+    }
+    measurementLabelInfo['targetIndex'] = targetIndex;
+  }
+
   let targetValue = null;
   if ('target' in measurementLabelInfo) {
     targetValue = measurementLabelInfo['target'];
@@ -138,7 +166,7 @@ function callInputDialog(
         // join label list to 'xxx|xxx|xxx' format
 
         // reformat label, if noMeasurement return only label to Cornerstone3D to create annontation
-        value['label'] = value['label'].join('|')
+        value['label'] = value['label'].join('|');
         callback(value['noMeasurement'] ? value['label'] : value, action.id);
         break;
       case 'cancel':
@@ -174,6 +202,10 @@ function callInputDialog(
         ],
         onSubmit: onSubmitHandler,
         body: ({ value, setValue }) => {
+          const targetIndexOptions = [];
+          for (const [key, value] of Object.entries(targetIndexMapping)) {
+            targetIndexOptions.push({ value: key, label: value });
+          }
           let targetOptions = [];
           for (const [key, value] of Object.entries(target_info_mapping)) {
             targetOptions.push({ value: key, label: value });
@@ -185,21 +217,32 @@ function callInputDialog(
           return (
             <div>
               <Select
+                id="targetIndex"
+                placeholder="选择目标编号"
+                value={targetIndex ? [targetIndex.value] : [1]} //select只能传入target value
+                onChange={(newSelection, action) => {
+                  console.info('newSelection:', newSelection, 'action:', action);
+                  targetIndex = newSelection;
+                  setValue(value => {
+                    // update label info
+                    value['measurementLabelInfo']['targetIndex'] = targetIndex;
+                    value['label'][0] = targetIndex['value'];
+                    return value;
+                  });
+                }}
+                options={targetIndexOptions}
+              />
+              <Select
                 id="target"
-                placeholder="选择目标"
+                placeholder="选择目标类型"
                 value={targetValue ? [targetValue.value] : []} //select只能传入target value
                 onChange={(newSelection, action) => {
-                  console.info(
-                    'newSelection:',
-                    newSelection,
-                    'action:',
-                    action
-                  );
+                  console.info('newSelection:', newSelection, 'action:', action);
                   targetValue = newSelection;
                   setValue(value => {
                     // update label info
                     value['measurementLabelInfo']['target'] = targetValue;
-                    value['label'][0] = targetValue['value'];
+                    value['label'][1] = targetValue['value'];
                     return value;
                   });
                 }}
@@ -210,17 +253,12 @@ function callInputDialog(
                 placeholder="选择病灶位置"
                 value={locationValue ? [locationValue.value] : []}
                 onChange={(newSelection, action) => {
-                  console.info(
-                    'newSelection:',
-                    newSelection,
-                    'action:',
-                    action
-                  );
+                  console.info('newSelection:', newSelection, 'action:', action);
                   locationValue = newSelection;
                   setValue(value => {
                     // update label info
                     value['measurementLabelInfo']['location'] = locationValue;
-                    value['label'][1] = locationValue['value'];
+                    value['label'][2] = locationValue['value'];
                     return value;
                   });
                 }}
