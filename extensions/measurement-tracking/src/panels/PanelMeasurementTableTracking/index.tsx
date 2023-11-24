@@ -65,7 +65,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
   );
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
   const measurementsPanelRef = useRef(null);
-  const [inputSOD, setInputSOD] = useState('总测量值(mm)');
+  const [inputSOD, setInputSOD] = useState('0.0');
   const [timepointResponse, setTimepointResponse] = useState('Baseline');
 
   useEffect(() => {
@@ -553,6 +553,27 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
     setInputSOD(event.target.value);
   };
 
+  const onInputKeyUpHandler = event => {
+    event.persist();
+    if (event.key === 'Enter') {
+      const inputStr = event.target.value;
+      let result = inputStr;
+      // calculate SOD if input is equation
+      if (inputStr.includes('+') || inputStr.includes('-')) {
+        try {
+          // Using Function constructor
+          const calculateResult = new Function('return ' + inputStr);
+          // Call the function to get the result
+          result = calculateResult();
+          result = result.toFixed(2);
+        } catch (error) {
+          console.log('failed to calculate SOD', error);
+        }
+      }
+      setInputSOD(result);
+    }
+  };
+
   return (
     <>
       <div
@@ -594,13 +615,13 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
         )}
         <div className="mt-3">
           <Input
-            label="总测量值(SOD)"
+            label="总测量值SOD(回车计算公式,单位mm)"
             labelClassName="text-white text-[14px] leading-[1.2]"
             className="border-primary-main bg-black"
             type="text"
             value={inputSOD}
             onChange={onInputChangeHandler}
-            // required
+            onKeyUp={onInputKeyUpHandler}
           />
         </div>
         <div>
