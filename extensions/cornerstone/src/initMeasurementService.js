@@ -374,6 +374,7 @@ const connectMeasurementServiceToTools = (
           cachedStats: { ...data.annotation.data.cachedStats },
           label: data.annotation.data.label,
           frameNumber: frameNumber,
+          measurementLabelInfo: measurement.measurementLabelInfo,
         },
       });
     }

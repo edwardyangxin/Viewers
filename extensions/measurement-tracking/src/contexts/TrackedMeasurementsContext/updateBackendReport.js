@@ -37,6 +37,7 @@ function updateBackendReport({ servicesManager, extensionManager, appConfig }, c
       Unit,
       FrameOfReferenceUID,
       points,
+      label_info,
     } = measurement;
     // based on hydrateStructuredReport in cornerstone-dicom-sr extension
     // use measurementService.addRawMeasurement to add measurement
@@ -55,8 +56,9 @@ function updateBackendReport({ servicesManager, extensionManager, appConfig }, c
     const cachedStats = {
       [imageId]: {
         length: parseFloat(Length),
-        width: parseFloat(Width),}
-      }
+        width: parseFloat(Width),
+      },
+    };
     // turn points string to array [[x y z]]
     let handlesPoints = points.split(';');
     for (let i = 0; i < handlesPoints.length; i++) {
@@ -80,6 +82,7 @@ function updateBackendReport({ servicesManager, extensionManager, appConfig }, c
       finding: undefined,
       findingSites: undefined,
       site: undefined,
+      measurementLabelInfo: label_info,
     };
 
     const annotation = {
