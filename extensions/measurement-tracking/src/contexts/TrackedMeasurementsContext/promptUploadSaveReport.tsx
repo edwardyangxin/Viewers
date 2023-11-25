@@ -255,15 +255,6 @@ function Loading() {
 
 // convert measurements, based on core>utils>dowanloadCSVReport.js
 function _convertToReportMeasurements(measurementData) {
-  const columns = [
-    'Patient ID',
-    'Patient Name',
-    'StudyInstanceUID',
-    'SeriesInstanceUID',
-    'SOPInstanceUID',
-    'Label',
-  ];
-
   const reportMap = {};
   measurementData.forEach(measurement => {
     const { referenceStudyUID, referenceSeriesUID, getReport, uid } = measurement;
@@ -284,25 +275,14 @@ function _convertToReportMeasurements(measurementData) {
     };
   });
 
-  // get columns names inside the report from each measurement and
-  // add them to the rows array (this way we can add columns for any custom
-  // measurements that may be added in the future)
-  Object.keys(reportMap).forEach(id => {
-    const { report } = reportMap[id];
-    report.columns.forEach(column => {
-      if (!columns.includes(column)) {
-        columns.push(column);
-      }
-    });
-  });
-
-  const results = _mapReportsToMeasurements(reportMap, columns);
+  const results = _mapReportsToMeasurements(reportMap);
   return results;
 }
 
 function _getCommonRowItems(measurement, seriesMetadata) {
   const firstInstance = seriesMetadata.instances[0];
 
+  // put all tags need to be saved to report
   return {
     'Patient ID': firstInstance.PatientID, // Patient ID
     'Patient Name': firstInstance.PatientName?.Alphabetic || '', // Patient Name
@@ -310,10 +290,11 @@ function _getCommonRowItems(measurement, seriesMetadata) {
     SeriesInstanceUID: measurement.referenceSeriesUID, // SeriesInstanceUID
     SOPInstanceUID: measurement.SOPInstanceUID, // SOPInstanceUID
     Label: measurement.label || '', // Label
+    label_info: measurement.measurementLabelInfo || {}, // Info object save to DB
   };
 }
 
-function _mapReportsToMeasurements(reportMap, columns) {
+function _mapReportsToMeasurements(reportMap) {
   const results = [];
   Object.keys(reportMap).forEach(id => {
     const { report, commonRowItems } = reportMap[id];
@@ -321,7 +302,6 @@ function _mapReportsToMeasurements(reportMap, columns) {
     // For commonRowItems, find the correct index and add the value to the
     // correct row in the results array
     Object.keys(commonRowItems).forEach(key => {
-      // const index = columns.indexOf(key);
       const value = commonRowItems[key];
       item[key] = value;
     });
@@ -329,7 +309,6 @@ function _mapReportsToMeasurements(reportMap, columns) {
     // For each annotation data, find the correct index and add the value to the
     // correct row in the results array
     report.columns.forEach((column, index) => {
-      // const colIndex = columns.indexOf(column);
       const value = report.values[index];
       item[column] = value;
     });

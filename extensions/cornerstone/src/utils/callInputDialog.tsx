@@ -88,7 +88,7 @@ function callInputDialog(
     : '1|target_info|location_info';
   label = label.split("|")
   if (label.length === 1) {
-    label = [1, label[0], 'location_info']
+    label = [1, label[0], 'location_info'];
   } else if (label.length < 3) {
     // label at least 3 infos
     label.push('location_info');
@@ -97,7 +97,7 @@ function callInputDialog(
   // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
   // if no measurementLabelInfo, get from label
   const measurementLabelInfo = measurement && measurement['measurementLabelInfo'] ?
-    measurement['measurementLabelInfo'] : {}
+    measurement['measurementLabelInfo'] : {};
 
   const valueDialog = {
     noMeasurement: noMeasurement,
@@ -130,11 +130,11 @@ function callInputDialog(
     targetValue = measurementLabelInfo['target'];
   } else {
     // no target in measurementLabelInfo, get from label
-    let labelTarget = label[0]
+    let labelTarget = label[1];
     if (labelTarget in target_info_mapping) {
       targetValue = {
-        'value': labelTarget,
-        'label': target_info_mapping[labelTarget]
+        value: labelTarget,
+        label: target_info_mapping[labelTarget],
       }
     }
     measurementLabelInfo['target'] = targetValue;
@@ -145,11 +145,11 @@ function callInputDialog(
     locationValue = measurementLabelInfo['location'];
   } else {
     // no target in measurementLabelInfo, get from label
-    let labelLocation = label[1]
+    let labelLocation = label[2];
     if (labelLocation in location_info_mapping) {
       locationValue = {
-        'value': labelLocation,
-        'label': location_info_mapping[labelLocation]
+        value: labelLocation,
+        label: location_info_mapping[labelLocation],
       }
     }
     measurementLabelInfo['location'] = locationValue;
@@ -219,14 +219,14 @@ function callInputDialog(
               <Select
                 id="targetIndex"
                 placeholder="选择目标编号"
-                value={targetIndex ? [targetIndex.value] : [1]} //select只能传入target value
+                value={targetIndex ? [String(targetIndex.value)] : []} //选项必须是string
                 onChange={(newSelection, action) => {
                   console.info('newSelection:', newSelection, 'action:', action);
                   targetIndex = newSelection;
                   setValue(value => {
                     // update label info
                     value['measurementLabelInfo']['targetIndex'] = targetIndex;
-                    value['label'][0] = targetIndex['value'];
+                    value['label'][0] = targetIndex ? targetIndex['value'] : '';
                     return value;
                   });
                 }}
@@ -242,7 +242,7 @@ function callInputDialog(
                   setValue(value => {
                     // update label info
                     value['measurementLabelInfo']['target'] = targetValue;
-                    value['label'][1] = targetValue['value'];
+                    value['label'][1] = targetValue ? targetValue['value'] : '';
                     return value;
                   });
                 }}
@@ -258,7 +258,7 @@ function callInputDialog(
                   setValue(value => {
                     // update label info
                     value['measurementLabelInfo']['location'] = locationValue;
-                    value['label'][2] = locationValue['value'];
+                    value['label'][2] = locationValue ? locationValue['value'] : '';
                     return value;
                   });
                 }}
