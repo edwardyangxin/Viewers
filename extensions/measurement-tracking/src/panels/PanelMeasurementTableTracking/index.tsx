@@ -34,7 +34,7 @@ const targetKeyGroup = ['Target', 'Target_CR', 'Target_UN'];
 const nontargetKeyGroup = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
 const otherKeyGroup = ['Other'];
 
-function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
+function PanelMeasurementTableTracking({ servicesManager, extensionManager, commandsManager }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { StudyInstanceUIDs } = useImageViewer();
@@ -152,13 +152,19 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager }) {
 
     [added, addedRaw, updated, removed, cleared].forEach(evt => {
       subscriptions.push(
-        measurementService.subscribe(evt, () => {
+        measurementService.subscribe(evt, data => {
           setMeasurementsUpdated(Date.now().toString());
           if (evt === added) {
             debounce(() => {
-              measurementsPanelRef.current.scrollTop =
-                measurementsPanelRef.current.scrollHeight;
+              measurementsPanelRef.current.scrollTop = measurementsPanelRef.current.scrollHeight;
             }, 300)();
+
+            // evibased, call command setMeasurementLabel for newly added measurement(label is '')
+            if (data.measurement.label === '') {
+              commandsManager.runCommand('setMeasurementLabel', {
+                uid: data.measurement.uid,
+              });
+            }
           }
         }).unsubscribe
       );
