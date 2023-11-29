@@ -238,9 +238,12 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
     });
     return true;
   } catch (error) {
+    // console log error
+    console.error('upload report error: ', error);
+    // info user
     uiNotificationService.show({
-      title: 'Create Report',
-      message: error.message || `Failed to store ${reportTypeStr}`,
+      title: i18n.t('MeasurementTable:Create Report'),
+      message: `${reportTypeStr} 上传失败（或重复上传），请联系管理员`,
       type: 'error',
     });
     return false;
