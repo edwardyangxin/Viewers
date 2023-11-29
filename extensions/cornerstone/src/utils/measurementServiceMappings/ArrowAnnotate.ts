@@ -67,7 +67,6 @@ const Length = {
       toolName: metadata.toolName,
       displaySetInstanceUID: displaySet.displaySetInstanceUID,
       label: data.text ? data.text : data.label, // if no text, use label
-      // text: data.text,  // text deprecated, cause validation error
       displayText: displayText,
       data: data.cachedStats,
       type: getValueTypeFromToolType(toolName),
@@ -121,9 +120,9 @@ function _getReport(mappedAnnotations, points, FrameOfReferenceUID) {
 
   // text no need
   // mappedAnnotations.forEach(annotation => {
-    // const { text } = annotation;
-    // columns.push(`Text`);
-    // values.push(text);
+  // const { text } = annotation;
+  // columns.push(`Text`);
+  // values.push(text);
   // });
 
   if (FrameOfReferenceUID) {
