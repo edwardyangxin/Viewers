@@ -53,6 +53,11 @@ const locationInfoMapping = {
   Subcutaneous: 'Subcutaneous',
 };
 
+// 区分target
+const targetKeyGroup = ['Target', 'Target_CR', 'Target_UN'];
+const nontargetKeyGroup = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
+const otherKeyGroup = ['Other'];
+
 const responseOptions = [ 
   { value: 'Baseline', label: 'Baseline(No Response)' },
   { value: 'CR', label: 'CR' },
@@ -61,4 +66,5 @@ const responseOptions = [
   { value: 'PD', label: 'PD' },
 ];
 
-export { targetIndexMapping, targetInfoMapping, locationInfoMapping, responseOptions };
+export { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
+  targetKeyGroup, nontargetKeyGroup, otherKeyGroup, responseOptions };

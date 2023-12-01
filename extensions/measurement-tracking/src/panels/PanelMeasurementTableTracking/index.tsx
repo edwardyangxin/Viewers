@@ -6,9 +6,9 @@ import {
   Select,
   useViewportGrid,
   ButtonEnums,
-  TimePointSummary,
   Input,
 } from '@ohif/ui';
+import TimePointSummary from '../../ui/TimePointSummary';
 import MeasurementTable from '../../ui/MeasurementTable';
 import { DicomMetadataStore, utils } from '@ohif/core';
 import { useDebounce } from '@hooks';
@@ -17,7 +17,8 @@ import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { targetIndexMapping, targetInfoMapping, locationInfoMapping, responseOptions } from '../../utils/mappings';
+import { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
+  targetKeyGroup, nontargetKeyGroup, otherKeyGroup, responseOptions } from '../../utils/mappings';
 
 const { downloadCSVReport } = utils;
 
@@ -30,9 +31,6 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
   taskInfo: undefined, // task info
 };
 
-const targetKeyGroup = ['Target', 'Target_CR', 'Target_UN'];
-const nontargetKeyGroup = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
-const otherKeyGroup = ['Other'];
 
 function PanelMeasurementTableTracking({ servicesManager, extensionManager, commandsManager }) {
   const navigate = useNavigate();
@@ -59,7 +57,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
   const { trackedStudy, trackedSeries, 
-    taskInfo, successSaveReport, currentReportInfo } = trackedMeasurements.context;
+    taskInfo, successSaveReport, currentReportInfo, currentTimepoint, lastTimepoint } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
@@ -110,7 +108,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       if (displayStudySummary.key !== StudyInstanceUID) {
         setDisplayStudySummary({
           key: StudyInstanceUID,
-          timepoint: ClinicalTrialTimePointID ? ClinicalTrialTimePointID : StudyDate,
+          timepoint: currentTimepoint?.trialTimePointId,
           modality,
           description: StudyDescription,
           taskInfo: taskInfo,
@@ -119,7 +117,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     } else if (trackedStudy === '' || trackedStudy === undefined) {
       setDisplayStudySummary({
         key: undefined, //
-        timepoint: undefined, // '07-Sep-2010',
+        timepoint: currentTimepoint?.trialTimePointId,
         modality: '', // 'CT',
         description: '', // 'CHEST/ABD/PELVIS W CONTRAST',
         taskInfo: taskInfo,
@@ -135,6 +133,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     displayStudySummary.key,
     trackedMeasurements,
     trackedStudy,
+    currentTimepoint,
   ]);
 
   // TODO: Better way to consolidated, debounce, check on change?
@@ -591,7 +590,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           <TimePointSummary
             // evibased
             taskInfo={displayStudySummary.taskInfo}
-            timepoint={displayStudySummary.timepoint ? t('MeasurementTable:TimePoint') + displayStudySummary.timepoint.slice(1) : undefined}
+            timepoint={displayStudySummary.timepoint ? displayStudySummary.timepoint.slice(1) : undefined}
+            lastTimepointInfo={lastTimepoint}
             modality={displayStudySummary.modality}
             description={displayStudySummary.description}
           />

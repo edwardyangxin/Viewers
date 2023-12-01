@@ -28,6 +28,9 @@ const machineConfiguration = {
     isDirty: false,
     // evibased
     successSaveReport: false,
+    currentTimepoint: undefined,
+    baselineTimepoint: undefined,
+    lastTimepoint: undefined,
     currentReportInfo: undefined,
     taskInfo: {
       nextTaskStudyUID: undefined,
@@ -69,6 +72,21 @@ const machineConfiguration = {
         UPDATE_TASK_INFO: {
           actions: assign({
             taskInfo: (_, event) => event.taskInfo,
+          }),
+        },
+        UPDATE_CURRENT_TIMEPOINT_INFO: {
+          actions: assign({
+            currentTimepoint: (_, event) => event.currentTimepoint,
+          }),
+        },
+        UPDATE_BASELINE_TIMEPOINT: {
+          actions: assign({
+            baselineTimepoint: (_, event) => event.baselineTimepoint,
+          }),
+        },
+        UPDATE_LAST_TIMEPOINT: {
+          actions: assign({
+            lastTimepoint: (_, event) => event.lastTimepoint,
           }),
         },
       },

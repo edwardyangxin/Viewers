@@ -124,8 +124,11 @@ function PanelStudyBrowserTracking({
       if (_appConfig.evibased['use_report_api']) {
         mappedStudies = await _fetchReportsBackend(_appConfig, userAuthenticationService, mappedStudies);
       }
-      const actuallyMappedStudies = mappedStudies.map(qidoStudy => {
-        return {
+
+      let actuallyMappedStudies = [];
+      let currentTimepoint = null;
+      for (const qidoStudy of mappedStudies) {
+        const selectedStudyAttributes = {
           studyInstanceUid: qidoStudy.StudyInstanceUID,
           date: formatDate(qidoStudy.StudyDate) || t('NoStudyDate'),
           description: qidoStudy.StudyDescription,
@@ -133,7 +136,39 @@ function PanelStudyBrowserTracking({
           numInstances: qidoStudy.NumInstances,
           trialTimePointId: qidoStudy.TrialTimePointId, //evibased, trial info
           reports: qidoStudy.reports,
+          ifPrimary: StudyInstanceUIDs.includes(qidoStudy.StudyInstanceUID),
         };
+        actuallyMappedStudies.push(selectedStudyAttributes);
+        if (selectedStudyAttributes.ifPrimary) {
+          currentTimepoint = selectedStudyAttributes;
+        }
+      }
+
+      let lastTimepointStudy = undefined;
+      const lastTimepointId = parseInt(currentTimepoint.trialTimePointId.slice(1)) - 1;
+      let baselineStudy = undefined;
+      for (let study of actuallyMappedStudies) {
+        const timepointId = parseInt(study.trialTimePointId.slice(1));
+        if (timepointId === 0) {
+          study.ifBaseline = true;
+          baselineStudy = study;
+        }
+        if (timepointId === lastTimepointId) {
+          study.ifLastTimepoint = true;
+          lastTimepointStudy = study;
+        }
+      }
+
+      sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT_INFO', {
+        currentTimepoint: currentTimepoint,
+      });
+
+      sendTrackedMeasurementsEvent('UPDATE_BASELINE_TIMEPOINT', {
+        baselineTimepoint: baselineStudy,
+      });
+
+      sendTrackedMeasurementsEvent('UPDATE_LAST_TIMEPOINT', {
+        lastTimepoint: lastTimepointStudy,
       });
 
       setStudyDisplayList(prevArray => {
@@ -682,13 +717,11 @@ function _createStudyBrowserTabs(
 
     // Add the "tab study" to the 'primary', 'recent', and/or 'all' tab group(s)
     if (primaryStudyInstanceUIDs.includes(study.studyInstanceUid)) {
-      tabStudy['ifPrimary'] = true;
       primaryStudies.push(tabStudy);
       allStudies.push(tabStudy);
     } else {
       // TODO: Filter allStudies to dates within one year of current date
       // evibased, recent studies is all studies except primary studies for now
-      tabStudy['ifPrimary'] = false;
       pastStudies.push(tabStudy);
       allStudies.push(tabStudy);
     }
