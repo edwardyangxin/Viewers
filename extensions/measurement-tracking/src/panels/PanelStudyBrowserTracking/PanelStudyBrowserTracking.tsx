@@ -48,6 +48,7 @@ function PanelStudyBrowserTracking({
   const [displaySets, setDisplaySets] = useState([]);
   const [thumbnailImageSrcMap, setThumbnailImageSrcMap] = useState({});
   const [jumpToDisplaySet, setJumpToDisplaySet] = useState(null);
+  const [tabs, setTabs] = useState([]);
 
   const onDoubleClickThumbnailHandler = displaySetInstanceUID => {
     let updatedViewports = [];
@@ -94,7 +95,7 @@ function PanelStudyBrowserTracking({
 
   const { trackedSeries } = trackedMeasurements.context;
 
-  // ~~ studyDisplayList
+  // ~~ studyDisplayList update
   // evibased 获取studyDisplayList，list of all related studies(current study and related studies)
   useEffect(() => {
     // Fetch all studies for the patient in each primary study
@@ -122,10 +123,14 @@ function PanelStudyBrowserTracking({
 
       let mappedStudies = _mapDataSourceStudies(qidoStudiesForPatient);
       if (_appConfig.evibased['use_report_api']) {
-        mappedStudies = await _fetchReportsBackend(_appConfig, userAuthenticationService, mappedStudies);
+        mappedStudies = await _fetchReportsBackend(
+          _appConfig,
+          userAuthenticationService,
+          mappedStudies
+        );
       }
 
-      let actuallyMappedStudies = [];
+      const actuallyMappedStudies = [];
       let currentTimepoint = null;
       for (const qidoStudy of mappedStudies) {
         const selectedStudyAttributes = {
@@ -147,7 +152,7 @@ function PanelStudyBrowserTracking({
       let lastTimepointStudy = undefined;
       const lastTimepointId = parseInt(currentTimepoint.trialTimePointId.slice(1)) - 1;
       let baselineStudy = undefined;
-      for (let study of actuallyMappedStudies) {
+      for (const study of actuallyMappedStudies) {
         const timepointId = parseInt(study.trialTimePointId.slice(1));
         if (timepointId === 0) {
           study.ifBaseline = true;
@@ -182,9 +187,27 @@ function PanelStudyBrowserTracking({
       });
     }
 
+    // TODO: 对比followup时，如何避免第二个studyUID导致问题
     StudyInstanceUIDs.forEach(sid => fetchStudiesForPatient(sid));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [StudyInstanceUIDs, getStudiesForPatientByMRN]);
+
+  // left panel tabs data based on studyDisplayList
+  // set past timepoints
+  useEffect(() => {
+    const tabs = _createStudyBrowserTabs(
+      StudyInstanceUIDs,
+      studyDisplayList,
+      displaySets,
+      hangingProtocolService
+    );
+
+    sendTrackedMeasurementsEvent('UPDATE_PAST_TIMEPOINTS', {
+      pastTimepoints: tabs[1].studies,
+    });
+
+    setTabs(tabs);
+  }, [studyDisplayList]);
 
   // ~~ Initial Thumbnails
   // get thumbnail for each displaySet，这里理解为每个series的thumbnail
@@ -214,7 +237,7 @@ function PanelStudyBrowserTracking({
     });
   }, [displaySetService, dataSource, getImageSrc]);
 
-  // ~~ displaySets，
+  // ~~ displaySets，update displaySets = activeDisplaySets
   useEffect(() => {
     const currentDisplaySets = displaySetService.activeDisplaySets;
 
@@ -244,7 +267,7 @@ function PanelStudyBrowserTracking({
     thumbnailImageSrcMap,
   ]);
 
-  // ~~ subscriptions --> displaySets
+  // ~~ subscriptions --> displaySets (events DISPLAY_SETS_ADDED)
   useEffect(() => {
     // DISPLAY_SETS_ADDED returns an array of DisplaySets that were added
     const SubscriptionDisplaySetsAdded = displaySetService.subscribe(
@@ -287,6 +310,7 @@ function PanelStudyBrowserTracking({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displaySetService, dataSource, getImageSrc, thumbnailImageSrcMap, trackedSeries, viewports]);
 
+  // subscriptions --> displaySets (events DISPLAY_SETS_CHANGED, DISPLAY_SET_SERIES_METADATA_INVALIDATED)
   useEffect(() => {
     // TODO: Will this always hold _all_ the displaySets we care about?
     // DISPLAY_SETS_CHANGED returns `DisplaySerService.activeDisplaySets`
@@ -334,14 +358,8 @@ function PanelStudyBrowserTracking({
     };
   }, [thumbnailImageSrcMap, trackedSeries, viewports, dataSource, displaySetService]);
 
-  const tabs = _createStudyBrowserTabs(
-    StudyInstanceUIDs,
-    studyDisplayList,
-    displaySets,
-    hangingProtocolService
-  );
-
   // TODO: Should not fire this on "close"
+  // study click handler, fetch data on click study
   function _handleStudyClick(StudyInstanceUID) {
     const shouldCollapseStudy = expandedStudyInstanceUIDs.includes(StudyInstanceUID);
     const updatedExpandedStudyInstanceUIDs = shouldCollapseStudy
@@ -351,11 +369,13 @@ function PanelStudyBrowserTracking({
     setExpandedStudyInstanceUIDs(updatedExpandedStudyInstanceUIDs);
 
     if (!shouldCollapseStudy) {
+      // fetch data for study
       const madeInClient = true;
       requestDisplaySetCreationForStudy(displaySetService, StudyInstanceUID, madeInClient);
     }
   }
 
+  // jumpToDisplaySet
   useEffect(() => {
     if (jumpToDisplaySet) {
       // Get element by displaySetInstanceUID
@@ -371,6 +391,7 @@ function PanelStudyBrowserTracking({
     }
   }, [jumpToDisplaySet, expandedStudyInstanceUIDs, activeTabName]);
 
+  // jumpToDisplaySet
   useEffect(() => {
     if (!jumpToDisplaySet) {
       return;
@@ -455,7 +476,7 @@ function _mapDataSourceStudies(studies) {
       TrialSiteId: study.trialSiteId,
       TrialSubjectId: study.trialSubjectId,
       TrialTimePointId: study.trialTimePointId,
-      TrialTimePointDescription: study.trialTimePointDescription
+      TrialTimePointDescription: study.trialTimePointDescription,
     };
   });
 }
@@ -711,7 +732,7 @@ function _createStudyBrowserTabs(
     */
 
     // Map the study to it's tab/view representation
-    let tabStudy = Object.assign({}, study, {
+    const tabStudy = Object.assign({}, study, {
       displaySets: displaySetsForStudy,
     });
 

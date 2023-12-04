@@ -31,6 +31,7 @@ const machineConfiguration = {
     currentTimepoint: undefined,
     baselineTimepoint: undefined,
     lastTimepoint: undefined,
+    pastTimepoints: undefined,
     currentReportInfo: undefined,
     taskInfo: {
       nextTaskStudyUID: undefined,
@@ -87,6 +88,11 @@ const machineConfiguration = {
         UPDATE_LAST_TIMEPOINT: {
           actions: assign({
             lastTimepoint: (_, event) => event.lastTimepoint,
+          }),
+        },
+        UPDATE_PAST_TIMEPOINTS: {
+          actions: assign({
+            pastTimepoints: (_, event) => event.pastTimepoints,
           }),
         },
       },
