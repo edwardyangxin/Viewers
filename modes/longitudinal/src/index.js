@@ -22,6 +22,7 @@ const ohif = {
 
 const tracked = {
   measurements: '@ohif/extension-measurement-tracking.panelModule.trackedMeasurements',
+  pastReports: '@ohif/extension-measurement-tracking.panelModule.pastReports',
   thumbnailList: '@ohif/extension-measurement-tracking.panelModule.seriesList',
   viewport: '@ohif/extension-measurement-tracking.viewportModule.cornerstone-tracked',
 };
@@ -242,7 +243,8 @@ function modeFactory({ modeConfiguration }) {
             id: ohif.layout,
             props: {
               leftPanels: [tracked.thumbnailList],
-              rightPanels: [tracked.measurements, dicomSeg.panel],
+              // rightPanels: [tracked.measurements, dicomSeg.panel], // evibased, disable dicomSeg panel
+              rightPanels: [tracked.measurements, tracked.pastReports],
               rightPanelDefaultClosed: false,
               viewports: [
                 {
