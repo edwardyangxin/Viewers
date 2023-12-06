@@ -20,6 +20,8 @@ const getTrackedSeries = displaySets => {
 };
 
 const StudyBrowser = ({
+  currentStudyInstanceUID,
+  comparedStudyInstanceUID,
   tabs,
   activeTabName,
   expandedStudyInstanceUIDs,
@@ -50,8 +52,10 @@ const StudyBrowser = ({
         ifPrimary,
       }) => {
         const isExpanded = expandedStudyInstanceUIDs.includes(studyInstanceUid);
+        const ifCurrentTimePoint = studyInstanceUid === currentStudyInstanceUID;
+        const ifComparedTimePoint = studyInstanceUid === comparedStudyInstanceUID;
         const trialTimePointInfo = trialTimePointId
-          ? ` ${t('Studies') + trialTimePointId.slice(1)}` + (ifPrimary ? '(当前)' : '')
+          ? ` ${t('Studies') + trialTimePointId.slice(1)}` + (ifCurrentTimePoint ? '(当前)' : '') + (ifComparedTimePoint ? '(对比)' : '') 
           : date;
         return (
           <React.Fragment key={studyInstanceUid}>

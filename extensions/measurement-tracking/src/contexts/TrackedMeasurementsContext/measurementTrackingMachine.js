@@ -31,6 +31,7 @@ const machineConfiguration = {
     currentTimepoint: undefined,
     baselineTimepoint: undefined,
     lastTimepoint: undefined,
+    comparedTimepoint: undefined,
     pastTimepoints: undefined,
     currentReportInfo: undefined,
     taskInfo: {
@@ -88,6 +89,11 @@ const machineConfiguration = {
         UPDATE_LAST_TIMEPOINT: {
           actions: assign({
             lastTimepoint: (_, event) => event.lastTimepoint,
+          }),
+        },
+        UPDATE_COMPARED_TIMEPOINT_INFO: {
+          actions: assign({
+            comparedTimepoint: (_, event) => event.comparedTimepoint,
           }),
         },
         UPDATE_PAST_TIMEPOINTS: {

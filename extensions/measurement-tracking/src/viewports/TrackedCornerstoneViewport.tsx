@@ -206,10 +206,13 @@ function TrackedCornerstoneViewport(props) {
   };
 
   // evibased, format ClinicalTrialTimePointID
+  const currentStudyInstanceUID = StudyInstanceUIDs[0];
+  const comparedStudyInstanceUID = StudyInstanceUIDs.length > 1 ? StudyInstanceUIDs[1] : null;
   const clinicalTrialTimePointID =
     ClinicalTrialTimePointID &&
     '访视' + ClinicalTrialTimePointID.slice(1) +
-      (StudyInstanceUIDs.includes(StudyInstanceUID) ? '(当前)' : '');
+      (currentStudyInstanceUID === StudyInstanceUID ? '(当前)' : '') +
+      (comparedStudyInstanceUID === StudyInstanceUID ? '(对比)' : '');
   return (
     <>
       <ViewportActionBar

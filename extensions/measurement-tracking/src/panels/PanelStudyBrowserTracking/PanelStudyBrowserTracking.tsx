@@ -38,6 +38,9 @@ function PanelStudyBrowserTracking({
   // doesn't have to have such an intense shape. This works well enough for now.
   // Tabs --> Studies --> DisplaySets --> Thumbnails
   const { StudyInstanceUIDs } = useImageViewer();
+  // evibased, assume the 1st study for current timepoint study, and the 2nd study for compared study
+  const currentStudyInstanceUID = StudyInstanceUIDs[0];
+  const comparedStudyInstanceUID = StudyInstanceUIDs.length > 1 ? StudyInstanceUIDs[1] : null;
   const [{ activeViewportId, viewports }, viewportGridService] = useViewportGrid();
   const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   const [activeTabName, setActiveTabName] = useState('primary');
@@ -95,7 +98,7 @@ function PanelStudyBrowserTracking({
 
   const { trackedSeries } = trackedMeasurements.context;
 
-  // ~~ studyDisplayList update
+  // evibased, studyDisplayList update based on current timepoint study
   // evibased 获取studyDisplayList，list of all related studies(current study and related studies)
   useEffect(() => {
     // Fetch all studies for the patient in each primary study
@@ -132,6 +135,7 @@ function PanelStudyBrowserTracking({
 
       const actuallyMappedStudies = [];
       let currentTimepoint = null;
+      let comparedTimepoint = null;
       for (const qidoStudy of mappedStudies) {
         const selectedStudyAttributes = {
           studyInstanceUid: qidoStudy.StudyInstanceUID,
@@ -141,11 +145,13 @@ function PanelStudyBrowserTracking({
           numInstances: qidoStudy.NumInstances,
           trialTimePointId: qidoStudy.TrialTimePointId, //evibased, trial info
           reports: qidoStudy.reports,
-          ifPrimary: StudyInstanceUIDs.includes(qidoStudy.StudyInstanceUID),
+          ifPrimary: currentStudyInstanceUID === qidoStudy.StudyInstanceUID,
         };
         actuallyMappedStudies.push(selectedStudyAttributes);
         if (selectedStudyAttributes.ifPrimary) {
           currentTimepoint = selectedStudyAttributes;
+        } else if (comparedStudyInstanceUID === selectedStudyAttributes.studyInstanceUid) {
+          comparedTimepoint = selectedStudyAttributes;
         }
       }
 
@@ -176,6 +182,10 @@ function PanelStudyBrowserTracking({
         lastTimepoint: lastTimepointStudy,
       });
 
+      sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT_INFO', {
+        comparedTimepoint: comparedTimepoint,
+      });
+
       setStudyDisplayList(prevArray => {
         const ret = [...prevArray];
         for (const study of actuallyMappedStudies) {
@@ -187,8 +197,9 @@ function PanelStudyBrowserTracking({
       });
     }
 
-    // TODO: 对比followup时，如何避免第二个studyUID导致问题
-    StudyInstanceUIDs.forEach(sid => fetchStudiesForPatient(sid));
+    // evibase, only fetch data for current study
+    // StudyInstanceUIDs.forEach(sid => fetchStudiesForPatient(sid));
+    fetchStudiesForPatient(currentStudyInstanceUID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [StudyInstanceUIDs, getStudiesForPatientByMRN]);
 
