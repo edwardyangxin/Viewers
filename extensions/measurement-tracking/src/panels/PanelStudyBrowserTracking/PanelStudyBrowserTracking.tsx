@@ -427,6 +427,8 @@ function PanelStudyBrowserTracking({
 
   return (
     <StudyBrowser
+      currentStudyInstanceUID={currentStudyInstanceUID}
+      comparedStudyInstanceUID={comparedStudyInstanceUID}
       tabs={tabs}
       servicesManager={servicesManager}
       activeTabName={activeTabName}

@@ -19,6 +19,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
   targetKeyGroup, nontargetKeyGroup, otherKeyGroup, responseOptions } from '../../utils/mappings';
+import PastReportItem from '../../ui/PastReportItem';
 
 const { downloadCSVReport } = utils;
 
@@ -30,7 +31,6 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
   description: '', // 'deprecated',
   taskInfo: undefined, // task info
 };
-
 
 function PanelMeasurementTableTracking({ servicesManager, extensionManager, commandsManager }) {
   const navigate = useNavigate();
@@ -56,8 +56,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     sendTrackedMeasurementsEvent,
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
-  const { trackedStudy, trackedSeries, 
-    taskInfo, successSaveReport, currentReportInfo, currentTimepoint, lastTimepoint } = trackedMeasurements.context;
+  const { trackedStudy, trackedSeries, taskInfo, successSaveReport, currentReportInfo, 
+    currentTimepoint, lastTimepoint, comparedTimepoint } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
@@ -65,6 +65,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   const measurementsPanelRef = useRef(null);
   const [inputSOD, setInputSOD] = useState('0.0');
   const [timepointResponse, setTimepointResponse] = useState('Baseline');
+  const [extendedComparedReport, setExtentedComparedReport] = useState(true);
 
   useEffect(() => {
     const measurements = measurementService.getMeasurements();
@@ -579,6 +580,123 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     }
   };
 
+  function _mapComparedMeasurementToDisplay(measurement, index) {
+    const {
+      Width,
+      Length,
+      Unit,
+      StudyInstanceUID: studyInstanceUid,
+      Label: baseLabel,
+      AnnotationType: type,
+    } = measurement;
+
+    const label = baseLabel || '(empty)';
+    const displayText = Width && Length ? [`${Width.toFixed(2)} x ${Length.toFixed(2)} ${Unit}`] : ['无法测量'];
+
+    return {
+      uid: studyInstanceUid + '-' + index,
+      label,
+      baseLabel,
+      measurementType: type.split(':')[1],
+      displayText,
+      baseDisplayText: displayText,
+      isActive: false,
+      finding: undefined,
+      findingSites: undefined,
+    };
+  }
+
+  // evibased, get compared timepoint report
+  const getComparedTimepointReport = () => {
+    const {
+      studyInstanceUid,
+      date,
+      description,
+      numInstances,
+      modalities,
+      displaySets,
+      trialTimePointId,
+      reports,
+      ifPrimary,
+    } = comparedTimepoint;
+    const trialTimePointInfo = trialTimePointId ? `访视${trialTimePointId.slice(1)}` : '';
+    // TODO: 现在只取第一个report，后续看是否需要针对展现所有人的report
+    const report = reports?.[0];
+
+    const targetFindings = [];
+    const nonTargetFindings = [];
+    const otherFindings = [];
+    let SOD = undefined;
+    let response = undefined;
+    let username = undefined;
+    if (report) {
+      username = report.username;
+      SOD = report.SOD;
+      response = report.response;
+      const displayMeasurements = report.measurements.map((m, index) => _mapComparedMeasurementToDisplay(m, index));
+      for (const dm of displayMeasurements) {
+        // get target info
+        const targetInfo = dm.label.split('|')[1];
+        if (!(targetInfo in targetInfoMapping)) {
+          // not in targetInfoMapping, just show and allow edit in other group
+          otherFindings.push(dm);
+        } else if (targetKeyGroup.includes(targetInfo)) {
+          targetFindings.push(dm);
+        } else if (nontargetKeyGroup.includes(targetInfo)) {
+          nonTargetFindings.push(dm);
+        } else {
+          otherFindings.push(dm);
+        }
+      }
+    }
+    // sort by index, get index from label, TODO: get index from measurementlabelInfo
+    targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+    nonTargetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+    otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+
+    return (
+      <React.Fragment key={studyInstanceUid + '-pastReport'}>
+        <PastReportItem
+          studyInstanceUid={studyInstanceUid}
+          trialTimePointInfo={trialTimePointInfo}
+          username={username}
+          SOD={SOD}
+          response={response}
+          isActive={extendedComparedReport}
+          onClick={() => {
+            setExtentedComparedReport(!extendedComparedReport);
+          }}
+          data-cy="compared-report-list"
+        />
+        {extendedComparedReport && username && (
+          <>
+            <MeasurementTable
+              title={t('MeasurementTabel:Target Findings')}
+              data={targetFindings}
+              servicesManager={servicesManager}
+              onClick={() => {}}
+              onEdit={() => {}}
+            />
+            <MeasurementTable
+              title={t('MeasurementTabel:Non-Target Findings')}
+              data={nonTargetFindings}
+              servicesManager={servicesManager}
+              onClick={() => {}}
+              onEdit={() => {}}
+            />
+            <MeasurementTable
+              title={t('MeasurementTabel:Other Findings')}
+              data={otherFindings}
+              servicesManager={servicesManager}
+              onClick={() => {}}
+              onEdit={() => {}}
+            />
+          </>
+        )}
+      </React.Fragment>
+    );
+  };
+
   return (
     <>
       <div
@@ -663,19 +781,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           }
         />
       </div>
-      {/* evibased, auto navigate to next job. so no next task link here */}
-      {/* {taskInfo.totalTask > 0 && (
-        <div className="flex justify-center p-4">
-          {taskInfo.nextTaskStudyUID && (
-            <Link
-              className="text-primary-light"
-              to={`/viewer?StudyInstanceUIDs=${taskInfo.nextTaskStudyUID}`}
-            >
-              下一任务
-            </Link>
-          )}
-        </div>
-      )} */}
+      {comparedTimepoint && (
+        getComparedTimepointReport()
+      )}
     </>
   );
 }
