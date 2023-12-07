@@ -481,6 +481,7 @@ const defaultOptions = {
     updateComparedTimepointInfo: assign((ctx, evt) => {
       console.log("measurementTrackingMachine action(updateComparedTimepointInfo): ", evt.type, evt);
       const measurementService = evt.measurementService;
+      const comparedViewportId = evt.comparedViewportId ? evt.comparedViewportId : 'default';
       // check comparedTimepoint studyInstanceUid
       if (!evt.comparedTimepoint || ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid) {
         // no comparedTimepoint or same studyInstanceUid
@@ -500,10 +501,10 @@ const defaultOptions = {
         };
       }
       
-      const reportInfo = reportData.report_info;
+      // const reportInfo = reportData.report_info;
       let measurements = reportData.measurements;
 
-      // loop through all measurements
+      // loop through all measurements, and create readonly measurements and annotations
       for (let i = 0; i < measurements.length; i++) {
         let measurement = measurements[i];
         const {
@@ -596,6 +597,10 @@ const defaultOptions = {
         // do we need to get measurement?
         // const NewReadmonlyMeasurement = measurementService.getReadonlyMeasurement(newReadonlyMeasurementUID);
       }
+
+      // auto jump to first measurement in compared viewport
+      const firstMeasurementUid = measurements[0].uid;
+      measurementService.jumpToReadonlyMeasurement(comparedViewportId, firstMeasurementUid);
 
       return {
         comparedTimepoint: evt.comparedTimepoint,

@@ -52,7 +52,7 @@ const StudyItem = ({
           {ifPrimary && (<div className="pr-5 text-xl text-blue-300">{modalities}</div>)}
           {!ifPrimary && (
             <>
-              {/* <LegacyButton
+              <LegacyButton
                 key={studyInstanceUid + '-compare-button'}
                 className={'min-w-18 p-2 text-base text-white'}
                 size="initial"
@@ -61,8 +61,9 @@ const StudyItem = ({
                 onClick={onCompareClick}
               >
                 {'加入对比'}
-              </LegacyButton> */}
-              <LegacyButton
+              </LegacyButton>
+              {/* disable open, 过往访视可以加入对比 */}
+              {/* <LegacyButton
                 key={studyInstanceUid + '-open-button'}
                 className={'min-w-18 p-2 text-base text-white'}
                 size="initial"
@@ -71,7 +72,7 @@ const StudyItem = ({
                 onClick={navigateToURLNewTab}
               >
                 {'打开访视'}
-              </LegacyButton>
+              </LegacyButton> */}
             </>
           )}
           {/* <div className="truncate-2-lines break-words text-base text-blue-300">{description}</div> */}

@@ -30,7 +30,7 @@ function TrackedCornerstoneViewport(props) {
   const [trackedMeasurementUID, setTrackedMeasurementUID] = useState(null);
   const [viewportElem, setViewportElem] = useState(null);
 
-  const { trackedSeries, currentTimepoint } = trackedMeasurements.context;
+  const { trackedSeries, currentTimepoint, comparedTimepoint } = trackedMeasurements.context;
 
   const { SeriesDate, SeriesDescription, SeriesInstanceUID, SeriesNumber } = displaySet;
 
@@ -216,7 +216,7 @@ function TrackedCornerstoneViewport(props) {
 
   // evibased, format ClinicalTrialTimePointID
   const currentStudyInstanceUID = StudyInstanceUIDs[0];
-  const comparedStudyInstanceUID = StudyInstanceUIDs.length > 1 ? StudyInstanceUIDs[1] : null;
+  const comparedStudyInstanceUID = comparedTimepoint ? comparedTimepoint.studyInstanceUid : null;
   const clinicalTrialTimePointID =
     ClinicalTrialTimePointID &&
     '访视' + ClinicalTrialTimePointID.slice(1) +

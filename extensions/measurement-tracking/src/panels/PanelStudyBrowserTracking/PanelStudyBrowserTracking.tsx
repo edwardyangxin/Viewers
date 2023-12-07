@@ -7,6 +7,7 @@ import { useImageViewer, useViewportGrid, Dialog, ButtonEnums } from '@ohif/ui';
 import StudyBrowser from '../../ui/StudyBrowser';
 import { useTrackedMeasurements } from '../../getContextModule';
 import i18n from '@ohif/i18n';
+import { getViewportId } from '../../utils/utils';
 
 const { formatDate, performAuditLog } = utils;
 
@@ -40,8 +41,6 @@ function PanelStudyBrowserTracking({
   // Tabs --> Studies --> DisplaySets --> Thumbnails
   const { StudyInstanceUIDs } = useImageViewer();
   // evibased, assume the 1st study for current timepoint study, and the 2nd study for compared study
-  const currentStudyInstanceUID = StudyInstanceUIDs[0];
-  const comparedStudyInstanceUID = StudyInstanceUIDs.length > 1 ? StudyInstanceUIDs[1] : null;
   const [{ activeViewportId, viewports }, viewportGridService] = useViewportGrid();
   const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   const [activeTabName, setActiveTabName] = useState('primary');
@@ -53,6 +52,8 @@ function PanelStudyBrowserTracking({
   const [thumbnailImageSrcMap, setThumbnailImageSrcMap] = useState({});
   const [jumpToDisplaySet, setJumpToDisplaySet] = useState(null);
   const [tabs, setTabs] = useState([]);
+  const currentStudyInstanceUID = StudyInstanceUIDs[0];
+  const [comparedStudyInstanceUID, setComparedStudyInstanceUID] = useState(StudyInstanceUIDs.length > 1 ? StudyInstanceUIDs[1] : null);
 
   const onDoubleClickThumbnailHandler = displaySetInstanceUID => {
     let updatedViewports = [];
@@ -97,7 +98,7 @@ function PanelStudyBrowserTracking({
   const activeViewportDisplaySetInstanceUIDs =
     viewports.get(activeViewportId)?.displaySetInstanceUIDs;
 
-  const { trackedSeries, pastTimepoints } = trackedMeasurements.context;
+  const { trackedSeries, pastTimepoints, comparedTimepoint } = trackedMeasurements.context;
 
   // evibased, set current viewportid and compared viewportid
   useEffect(() => {
@@ -105,14 +106,11 @@ function PanelStudyBrowserTracking({
     let comparedViewportId = null;
     if (viewports.size > 1) {
       // get current viewport id
-      for (const { viewportId, displaySetOptions } of viewports.values()) {
-        if (['default', 'currentDisplaySetId'].includes(displaySetOptions[0].id)) {
-          currentViewportId = viewportId;
-          break;
-        } else if (['comparedDisplaySetId'].includes(displaySetOptions[0].id)) {
-          comparedViewportId = viewportId;
-        }
+      currentViewportId = getViewportId(viewports, 'currentDisplaySetId');
+      if (!currentViewportId) {
+        currentViewportId = getViewportId(viewports, 'default');
       }
+      comparedViewportId = getViewportId(viewports, 'comparedDisplaySetId');
     }
 
     sendTrackedMeasurementsEvent('UPDATE_CURRENT_VIEWPORT_ID', {
@@ -229,12 +227,19 @@ function PanelStudyBrowserTracking({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [StudyInstanceUIDs, getStudiesForPatientByMRN]);
 
+  // evibased, comparedTimepoint change
+  useEffect(() => {
+    if (comparedTimepoint && comparedTimepoint.studyInstanceUid !== comparedStudyInstanceUID) {
+      setComparedStudyInstanceUID(comparedTimepoint.studyInstanceUid);
+    }
+  }, [comparedTimepoint]); 
+
   // left panel tabs data based on studyDisplayList
   // set past timepoints
   useEffect(() => {
     const tabs = _createStudyBrowserTabs(
-      StudyInstanceUIDs,
       currentStudyInstanceUID,
+      comparedStudyInstanceUID,
       studyDisplayList,
       displaySets,
       hangingProtocolService
@@ -248,7 +253,7 @@ function PanelStudyBrowserTracking({
     }
 
     setTabs(tabs);
-  }, [studyDisplayList, displaySets]);
+  }, [studyDisplayList, displaySets, comparedStudyInstanceUID]);
 
   // ~~ Initial Thumbnails
   // get thumbnail for each displaySet，这里理解为每个series的thumbnail
@@ -416,7 +421,7 @@ function PanelStudyBrowserTracking({
     }
   }
 
-  function _handleCompareStudyClick(StudyInstanceUID) {
+  async function _handleCompareStudyClick(StudyInstanceUID) {
     // get compared timepoint and update compared timepoint info
     let newComparedTimepoint = null;
     for (const tp of pastTimepoints) {
@@ -426,9 +431,12 @@ function PanelStudyBrowserTracking({
       }
     }
     if (newComparedTimepoint) {
+      // need metadata fetched before update compared timepoint, so await here
+      await requestDisplaySetCreationForStudy(displaySetService, StudyInstanceUID, true);
       sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {
         measurementService: measurementService,
         comparedTimepoint: newComparedTimepoint,
+        comparedViewportId: getViewportId(viewports, 'comparedDisplaySetId'),
       });
     }
   }
@@ -758,8 +766,8 @@ function _getComponentType(ds) {
  * @returns tabs - The prop object expected by the StudyBrowser component
  */
 function _createStudyBrowserTabs(
-  primaryStudyInstanceUIDs,
   currentStudyInstanceUID,
+  comparedStudyInstanceUID,
   studyDisplayList,
   displaySets,
   hangingProtocolService
@@ -799,18 +807,16 @@ function _createStudyBrowserTabs(
     });
 
     // Add the "tab study" to the 'primary', ‘past’ or 'all' tab
-    if (primaryStudyInstanceUIDs.includes(study.studyInstanceUid)) {
+    if (currentStudyInstanceUID === study.studyInstanceUid) {
       primaryStudies.push(tabStudy);
-      if (currentStudyInstanceUID !== study.studyInstanceUid) {
-        // put other studies to past studies
-        pastStudies.push(tabStudy);
-      }
-      allStudies.push(tabStudy);
+    } else if (comparedStudyInstanceUID === study.studyInstanceUid) {
+      primaryStudies.push(tabStudy);
+      pastStudies.push(tabStudy);
     } else {
       // evibased, recent studies is all studies except primary studies for now
       pastStudies.push(tabStudy);
-      allStudies.push(tabStudy);
     }
+    allStudies.push(tabStudy);
   });
 
   // Newest first

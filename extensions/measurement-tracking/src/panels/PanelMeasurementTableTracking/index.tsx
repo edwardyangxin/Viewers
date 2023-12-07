@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
   targetKeyGroup, nontargetKeyGroup, otherKeyGroup, responseOptions } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
+import { getViewportId } from '../../utils/utils';
 
 const { downloadCSVReport } = utils;
 
@@ -202,15 +203,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     // jump to measurement by readonlyMeasurement uid
     // get viewport with comparedDisplaySetId
     const { viewports } = viewportGrid;
-    let comparedViewportId = null;
-    for (const viewport of viewports.values()) {
-      const { viewportId, displaySetOptions } = viewport;
-      // get id from displaySetOptions[0]
-      const idLabel = displaySetOptions[0]['id'];
-      if (idLabel === 'comparedDisplaySetId') {
-        comparedViewportId = viewportId;
-      }
-    }
+    const comparedViewportId = getViewportId(viewports, 'comparedDisplaySetId');
     if (comparedViewportId) {
       measurementService.jumpToReadonlyMeasurement(comparedViewportId, uid);
     } else {

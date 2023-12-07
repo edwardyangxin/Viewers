@@ -1,4 +1,4 @@
-function requestDisplaySetCreationForStudy(
+async function requestDisplaySetCreationForStudy(
   dataSource,
   displaySetService,
   StudyInstanceUID,
@@ -12,7 +12,7 @@ function requestDisplaySetCreationForStudy(
     return;
   }
 
-  dataSource.retrieve.series.metadata({ StudyInstanceUID, madeInClient });
+  await dataSource.retrieve.series.metadata({ StudyInstanceUID, madeInClient });
 }
 
 export default requestDisplaySetCreationForStudy;
