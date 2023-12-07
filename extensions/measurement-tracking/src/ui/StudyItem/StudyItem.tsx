@@ -11,6 +11,7 @@ const baseClasses =
 const StudyItem = ({
   studyInstanceUid,
   ifPrimary,
+  ifCompared,
   date,
   description,
   numInstances,
@@ -18,7 +19,7 @@ const StudyItem = ({
   trackedSeries,
   isActive,
   onClick,
-  onCompareClick=()=>{},
+  onCompareClick = () => {},
 }) => {
   const navigateToURLNewTab = () => {
     const url = `/viewer/?StudyInstanceUIDs=${studyInstanceUid}`;
@@ -40,18 +41,13 @@ const StudyItem = ({
       <div className="flex flex-1 flex-col px-4 pb-2">
         <div className="flex flex-row items-center justify-between pt-2 pb-2">
           <div className="text-base text-white">{date}</div>
-          {/* <div className="flex flex-row items-center text-base text-blue-300">
-            <Icon
+          <div className="flex flex-row items-center text-base text-blue-300">
+            {/* <Icon
               name="group-layers"
               className="mx-2 w-4 text-blue-300"
             />
-            {numInstances}
-          </div> */}
-        </div>
-        <div className="flex flex-row py-1">
-          {ifPrimary && (<div className="pr-5 text-xl text-blue-300">{modalities}</div>)}
-          {!ifPrimary && (
-            <>
+            {numInstances} */}
+            {!ifPrimary && !ifCompared && (
               <LegacyButton
                 key={studyInstanceUid + '-compare-button'}
                 className={'min-w-18 p-2 text-base text-white'}
@@ -62,8 +58,15 @@ const StudyItem = ({
               >
                 {'加入对比'}
               </LegacyButton>
-              {/* disable open, 过往访视可以加入对比 */}
-              {/* <LegacyButton
+            )}
+          </div>
+        </div>
+        <div className="flex flex-row items-center justify-between py-1">
+          <div className="pr-5 text-xl text-blue-300">{modalities}</div>
+          {/* 允许打开过往访视 */}
+          {!ifPrimary && (
+            <>
+              <LegacyButton
                 key={studyInstanceUid + '-open-button'}
                 className={'min-w-18 p-2 text-base text-white'}
                 size="initial"
@@ -72,7 +75,7 @@ const StudyItem = ({
                 onClick={navigateToURLNewTab}
               >
                 {'打开访视'}
-              </LegacyButton> */}
+              </LegacyButton>
             </>
           )}
           {/* <div className="truncate-2-lines break-words text-base text-blue-300">{description}</div> */}

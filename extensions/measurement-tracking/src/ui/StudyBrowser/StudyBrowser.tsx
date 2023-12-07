@@ -62,7 +62,8 @@ const StudyBrowser = ({
           <React.Fragment key={studyInstanceUid}>
             <StudyItem
               studyInstanceUid={studyInstanceUid}
-              ifPrimary={ifPrimary}
+              ifPrimary={ifCurrentTimePoint}
+              ifCompared={ifComparedTimePoint}
               date={trialTimePointInfo}
               description={description}
               numInstances={numInstances}
