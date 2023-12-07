@@ -234,6 +234,7 @@ function PanelStudyBrowserTracking({
   useEffect(() => {
     const tabs = _createStudyBrowserTabs(
       StudyInstanceUIDs,
+      currentStudyInstanceUID,
       studyDisplayList,
       displaySets,
       hangingProtocolService
@@ -758,6 +759,7 @@ function _getComponentType(ds) {
  */
 function _createStudyBrowserTabs(
   primaryStudyInstanceUIDs,
+  currentStudyInstanceUID,
   studyDisplayList,
   displaySets,
   hangingProtocolService
@@ -796,12 +798,15 @@ function _createStudyBrowserTabs(
       displaySets: displaySetsForStudy,
     });
 
-    // Add the "tab study" to the 'primary', 'recent', and/or 'all' tab group(s)
+    // Add the "tab study" to the 'primary', ‘past’ or 'all' tab
     if (primaryStudyInstanceUIDs.includes(study.studyInstanceUid)) {
       primaryStudies.push(tabStudy);
+      if (currentStudyInstanceUID !== study.studyInstanceUid) {
+        // put other studies to past studies
+        pastStudies.push(tabStudy);
+      }
       allStudies.push(tabStudy);
     } else {
-      // TODO: Filter allStudies to dates within one year of current date
       // evibased, recent studies is all studies except primary studies for now
       pastStudies.push(tabStudy);
       allStudies.push(tabStudy);
