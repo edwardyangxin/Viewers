@@ -275,8 +275,8 @@ const connectMeasurementServiceToTools = (
   cornerstoneViewportService,
   measurementSource
 ) => {
-  const { MEASUREMENT_REMOVED, MEASUREMENTS_CLEARED, MEASUREMENT_UPDATED, RAW_MEASUREMENT_ADDED } =
-    measurementService.EVENTS;
+  const { MEASUREMENT_REMOVED, MEASUREMENTS_CLEARED, MEASUREMENT_UPDATED, RAW_MEASUREMENT_ADDED,
+    READONLY_MEASUREMENT_ADDED } = measurementService.EVENTS;
 
   const csTools3DVer1MeasurementSource = measurementService.getSource(
     CORNERSTONE_3D_TOOLS_SOURCE_NAME,
@@ -334,6 +334,55 @@ const connectMeasurementServiceToTools = (
 
   measurementService.subscribe(
     RAW_MEASUREMENT_ADDED,
+    ({ source, measurement, data, dataSource }) => {
+      if (source.name !== CORNERSTONE_3D_TOOLS_SOURCE_NAME) {
+        return;
+      }
+
+      const { referenceSeriesUID, referenceStudyUID, SOPInstanceUID } = measurement;
+
+      const instance = DicomMetadataStore.getInstance(
+        referenceStudyUID,
+        referenceSeriesUID,
+        SOPInstanceUID
+      );
+
+      let imageId;
+      let frameNumber = 1;
+
+      if (measurement?.metadata?.referencedImageId) {
+        imageId = measurement.metadata.referencedImageId;
+        frameNumber = getSOPInstanceAttributes(measurement.metadata.referencedImageId).frameNumber;
+      } else {
+        imageId = dataSource.getImageIdsForInstance({ instance });
+      }
+
+      const annotationManager = annotation.state.getAnnotationManager();
+      annotationManager.addAnnotation({
+        annotationUID: measurement.uid,
+        highlighted: false,
+        isLocked: false,
+        invalidated: false,
+        metadata: {
+          toolName: measurement.toolName,
+          FrameOfReferenceUID: measurement.FrameOfReferenceUID,
+          referencedImageId: imageId,
+        },
+        data: {
+          text: data.annotation.data.text,
+          handles: { ...data.annotation.data.handles },
+          cachedStats: { ...data.annotation.data.cachedStats },
+          label: data.annotation.data.label,
+          frameNumber: frameNumber,
+          measurementLabelInfo: measurement.measurementLabelInfo,
+        },
+      });
+    }
+  );
+
+  // evibased, readonly measurement
+  measurementService.subscribe(
+    READONLY_MEASUREMENT_ADDED,
     ({ source, measurement, data, dataSource }) => {
       if (source.name !== CORNERSTONE_3D_TOOLS_SOURCE_NAME) {
         return;

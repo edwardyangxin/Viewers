@@ -7,7 +7,7 @@ import MeasurementItem from './MeasurementItem';
 import { locationInfoMapping } from '../../utils/mappings';
 
 
-const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager }) => {
+const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager, canEdit=true }) => {
   servicesManager = servicesManager as ServicesManager;
   const { customizationService } = servicesManager.services;
   const { t } = useTranslation('MeasurementTable');
@@ -38,6 +38,7 @@ const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager }) => 
               item={measurementItem}
               onClick={onClick}
               onEdit={onEdit}
+              canEdit={canEdit}
             />
           ))}
         {data.length === 0 && (

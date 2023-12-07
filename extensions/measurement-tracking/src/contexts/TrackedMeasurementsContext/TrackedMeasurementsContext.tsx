@@ -82,6 +82,55 @@ function TrackedMeasurementsContextProvider(
         },
       });
     },
+    jumpToFirstMeasurementInCurrentViewport: (ctx, evt) => {
+      const { trackedStudy, trackedSeries, activeViewportId, currentViewportId } = ctx;
+
+      const targetViewportId = currentViewportId ? currentViewportId : activeViewportId;
+
+      const measurements = measurementService.getMeasurements();
+      const trackedMeasurements = measurements.filter(
+        m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
+      );
+
+      console.log(
+        'jumping to measurement reset viewport',
+        targetViewportId,
+        trackedMeasurements[0]
+      );
+
+      const referencedDisplaySetUID = trackedMeasurements[0].displaySetInstanceUID;
+      const referencedDisplaySet = displaySetService.getDisplaySetByUID(referencedDisplaySetUID);
+
+      const referencedImages = referencedDisplaySet.images;
+      const isVolumeIdReferenced = referencedImages[0].imageId.startsWith('volumeId');
+
+      const measurementData = trackedMeasurements[0].data;
+
+      let imageIndex = 0;
+      if (!isVolumeIdReferenced && measurementData) {
+        // if it is imageId referenced find the index of the imageId, we don't have
+        // support for volumeId referenced images yet
+        imageIndex = referencedImages.findIndex(image => {
+          const imageIdToUse = Object.keys(measurementData)[0].substring(8);
+          return image.imageId === imageIdToUse;
+        });
+
+        if (imageIndex === -1) {
+          console.warn('Could not find image index for tracked measurement, using 0');
+          imageIndex = 0;
+        }
+      }
+
+      viewportGridService.setDisplaySetsForViewport({
+        viewportId: targetViewportId,
+        displaySetInstanceUIDs: [referencedDisplaySetUID],
+        viewportOptions: {
+          initialImageOptions: {
+            index: imageIndex,
+          },
+        },
+      });
+    },
     showStructuredReportDisplaySetInActiveViewport: (ctx, evt) => {
       if (evt.data.createdDisplaySetInstanceUIDs.length > 0) {
         const StructuredReportDisplaySetInstanceUID = evt.data.createdDisplaySetInstanceUIDs[0];

@@ -188,10 +188,34 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     downloadCSVReport(trackedMeasurements, measurementService);
   }
 
+  // function handle measurement item click
   const jumpToImage = ({ uid, isActive }) => {
+    // jump to measurement
     measurementService.jumpToMeasurement(viewportGrid.activeViewportId, uid);
 
+    // set measurement active
     onMeasurementItemClickHandler({ uid, isActive });
+  };
+
+  // evibased, jump to compared measurement
+  const jumpToComparedMeasurement = ({ uid }) => {
+    // jump to measurement by readonlyMeasurement uid
+    // get viewport with comparedDisplaySetId
+    const { viewports } = viewportGrid;
+    let comparedViewportId = null;
+    for (const viewport of viewports.values()) {
+      const { viewportId, displaySetOptions } = viewport;
+      // get id from displaySetOptions[0]
+      const idLabel = displaySetOptions[0]['id'];
+      if (idLabel === 'comparedDisplaySetId') {
+        comparedViewportId = viewportId;
+      }
+    }
+    if (comparedViewportId) {
+      measurementService.jumpToReadonlyMeasurement(comparedViewportId, uid);
+    } else {
+      console.error("can't find compared viewport id!");
+    }
   };
 
   // TODO: evibased, 重构，和extension cornerstone callInputDialog统一代码
@@ -582,6 +606,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
   function _mapComparedMeasurementToDisplay(measurement, index) {
     const {
+      uid,
       Width,
       Length,
       Unit,
@@ -594,7 +619,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const displayText = Width && Length ? [`${Width.toFixed(2)} x ${Length.toFixed(2)} ${Unit}`] : ['无法测量'];
 
     return {
-      uid: studyInstanceUid + '-' + index,
+      uid: uid,
       label,
       baseLabel,
       measurementType: type.split(':')[1],
@@ -617,7 +642,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       displaySets,
       trialTimePointId,
       reports,
-      ifPrimary,
     } = comparedTimepoint;
     const trialTimePointInfo = trialTimePointId ? `访视${trialTimePointId.slice(1)}` : '';
     // TODO: 现在只取第一个report，后续看是否需要针对展现所有人的report
@@ -674,23 +698,27 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               title={t('MeasurementTabel:Target Findings')}
               data={targetFindings}
               servicesManager={servicesManager}
-              onClick={() => {}}
-              onEdit={() => {}}
+              onClick={jumpToComparedMeasurement}
+              canEdit={false}
             />
-            <MeasurementTable
-              title={t('MeasurementTabel:Non-Target Findings')}
-              data={nonTargetFindings}
-              servicesManager={servicesManager}
-              onClick={() => {}}
-              onEdit={() => {}}
-            />
-            <MeasurementTable
-              title={t('MeasurementTabel:Other Findings')}
-              data={otherFindings}
-              servicesManager={servicesManager}
-              onClick={() => {}}
-              onEdit={() => {}}
-            />
+            {nonTargetFindings.length > 0 && (
+              <MeasurementTable
+                title={t('MeasurementTabel:Non-Target Findings')}
+                data={nonTargetFindings}
+                servicesManager={servicesManager}
+                onClick={jumpToComparedMeasurement}
+                canEdit={false}
+              />
+            )}
+            {otherFindings.length > 0 && (
+              <MeasurementTable
+                title={t('MeasurementTabel:Other Findings')}
+                data={otherFindings}
+                servicesManager={servicesManager}
+                onClick={jumpToComparedMeasurement}
+                canEdit={false}
+              />
+            )}
           </>
         )}
       </React.Fragment>

@@ -66,6 +66,8 @@ const EVENTS = {
   INTERNAL_MEASUREMENT_UPDATED: 'event:internal_measurement_updated',
   MEASUREMENT_ADDED: 'event::measurement_added',
   RAW_MEASUREMENT_ADDED: 'event::raw_measurement_added',
+  // evibased, for compared measurements
+  READONLY_MEASUREMENT_ADDED: 'event::readonly_measurement_added',
   MEASUREMENT_REMOVED: 'event::measurement_removed',
   MEASUREMENTS_CLEARED: 'event::measurements_cleared',
   // Give the viewport a chance to jump to the measurement
@@ -113,6 +115,8 @@ class MeasurementService extends PubSubService {
   public readonly VALUE_TYPES = VALUE_TYPES;
 
   private measurements = new Map();
+  // evibased, for compared measurements
+  private readonlyMeasurements = new Map();
   private unmappedMeasurements = new Set();
 
   constructor() {
@@ -450,6 +454,82 @@ class MeasurementService extends PubSubService {
     return newMeasurement.uid;
   }
 
+  // evivased, for compared measurements
+  addReadonlyMeasurement(source, annotationType, data, toMeasurementSchema, dataSource = {}) {
+    console.log("measurement service addReadonlyMeasurement:", source, annotationType, data, toMeasurementSchema, dataSource)
+    if (!this._isValidSource(source)) {
+      log.warn('Invalid source. Exiting early.');
+      return;
+    }
+
+    const sourceInfo = this._getSourceToString(source);
+
+    if (!annotationType) {
+      log.warn('No source annotationType provided. Exiting early.');
+      return;
+    }
+
+    if (!this._sourceHasMappings(source)) {
+      log.warn(`No measurement mappings found for '${sourceInfo}' source. Exiting early.`);
+      return;
+    }
+
+    let measurement = {};
+    try {
+      measurement = toMeasurementSchema(data);
+      measurement.source = source;
+    } catch (error) {
+      log.warn(
+        `Failed to map '${sourceInfo}' measurement for annotationType ${annotationType}:`,
+        error.message
+      );
+      return;
+    }
+
+    if (!this._isValidMeasurement(measurement)) {
+      log.warn(
+        `Attempting to add or update a invalid measurement provided by '${sourceInfo}'. Exiting early.`
+      );
+      return;
+    }
+
+    let internalUID = data.id;
+    if (!internalUID) {
+      internalUID = guid();
+      log.warn(`Measurement ID not found. Generating UID: ${internalUID}`);
+    }
+
+    const annotationData = data.annotation.data;
+
+    const newMeasurement = {
+      finding: annotationData.finding,
+      findingSites: annotationData.findingSites,
+      site: annotationData.findingSites?.[0],
+      ...measurement,
+      modifiedTimestamp: Math.floor(Date.now() / 1000),
+      uid: internalUID,
+    };
+
+    if (this.readonlyMeasurements.get(internalUID)) {
+      this.readonlyMeasurements.set(internalUID, newMeasurement);
+      this._broadcastEvent(this.EVENTS.MEASUREMENT_UPDATED, {
+        source,
+        measurement: newMeasurement,
+      });
+    } else {
+      log.info('readonlyMeasurement added', newMeasurement);
+      this.readonlyMeasurements.set(internalUID, newMeasurement);
+      this._broadcastEvent(this.EVENTS.READONLY_MEASUREMENT_ADDED, {
+        source,
+        measurement: newMeasurement,
+        data,
+        dataSource,
+      });
+    }
+
+    return newMeasurement.uid;
+  }
+
   /**
    * Adds or update persisted measurements.
    *
@@ -571,12 +651,41 @@ class MeasurementService extends PubSubService {
     });
   }
 
+  // evibased, for compared measurements
+  removeReadonlyMesurement(measurementUID, source, eventDetails) {
+    if (
+      !measurementUID ||
+      (!this.readonlyMeasurements.has(measurementUID) && !this.unmappedMeasurements.has(measurementUID))
+    ) {
+      log.warn(`No uid provided, or unable to find measurement by uid.`);
+      return;
+    }
+
+    this.unmappedMeasurements.delete(measurementUID);
+    this.readonlyMeasurements.delete(measurementUID);
+    this._broadcastEvent(this.EVENTS.MEASUREMENT_REMOVED, {
+      source,
+      measurement: measurementUID,
+      ...eventDetails,
+    });
+  }
+
   clearMeasurements() {
     this.unmappedMeasurements.clear();
 
     // Make a copy of the measurements
-    const measurements = [...this.measurements.values()];
+    // evibased, add readonlyMeasurement
+    const measurements = [...this.measurements.values(), ...this.readonlyMeasurements.values()];
     this.measurements.clear();
+    this.readonlyMeasurements.clear();
+    this._broadcastEvent(this.EVENTS.MEASUREMENTS_CLEARED, { measurements });
+  }
+
+  // evibased, for compared measurements
+  clearReadonlyMeasurements() {
+    // evibased, add readonlyMeasurement
+    const measurements = [...this.readonlyMeasurements.values()];
+    this.readonlyMeasurements.clear();
     this._broadcastEvent(this.EVENTS.MEASUREMENTS_CLEARED, { measurements });
   }
 
@@ -607,6 +716,23 @@ class MeasurementService extends PubSubService {
 
   public jumpToMeasurement(viewportId: string, measurementUID: string): void {
     const measurement = this.measurements.get(measurementUID);
+
+    if (!measurement) {
+      log.warn(`No measurement uid, or unable to find by uid.`);
+      return;
+    }
+    const consumableEvent = this.createConsumableEvent({
+      viewportId,
+      measurement,
+    });
+
+    this._broadcastEvent(EVENTS.JUMP_TO_MEASUREMENT_VIEWPORT, consumableEvent);
+    this._broadcastEvent(EVENTS.JUMP_TO_MEASUREMENT_LAYOUT, consumableEvent);
+  }
+
+  // evibased, for compared measurements
+  public jumpToReadonlyMeasurement(viewportId: string, measurementUID: string): void {
+    const measurement = this.readonlyMeasurements.get(measurementUID);
 
     if (!measurement) {
       log.warn(`No measurement uid, or unable to find by uid.`);

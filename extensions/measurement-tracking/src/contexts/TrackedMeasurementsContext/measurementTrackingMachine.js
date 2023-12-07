@@ -1,5 +1,6 @@
 import { hydrateStructuredReport } from '@ohif/extension-cornerstone-dicom-sr';
 import { assign } from 'xstate';
+import { utils } from '@ohif/core';
 
 const RESPONSE = {
   NO_NEVER: -1,
@@ -16,6 +17,8 @@ const machineConfiguration = {
   initial: 'idle',
   context: {
     activeViewportId: null,
+    currentViewportId: null,
+    comparedViewportId: null,
     trackedStudy: '',
     trackedSeries: [],
     ignoredSeries: [],
@@ -92,13 +95,21 @@ const machineConfiguration = {
           }),
         },
         UPDATE_COMPARED_TIMEPOINT_INFO: {
-          actions: assign({
-            comparedTimepoint: (_, event) => event.comparedTimepoint,
-          }),
+          actions: ['updateComparedTimepointInfo'],
         },
         UPDATE_PAST_TIMEPOINTS: {
           actions: assign({
             pastTimepoints: (_, event) => event.pastTimepoints,
+          }),
+        },
+        UPDATE_CURRENT_VIEWPORT_ID: {
+          actions: assign({
+            currentViewportId: (_, event) => event.currentViewportId,
+          }),
+        },
+        UPDATE_COMPARED_VIEWPORT_ID: {
+          actions: assign({
+            comparedViewportId: (_, event) => event.comparedViewportId,
           }),
         },
       },
@@ -324,7 +335,8 @@ const machineConfiguration = {
             actions: [
               'setTrackedStudyAndMultipleSeries',
               'setCurrentReportInfo',
-              'jumpToFirstMeasurementInActiveViewport',
+              // 'jumpToFirstMeasurementInActiveViewport',
+              'jumpToFirstMeasurementInCurrentViewport', // evibased
               'setIsDirtyToClean',
             ],
           },
@@ -359,6 +371,9 @@ const defaultOptions = {
     },
     jumpToFirstMeasurementInActiveViewport: (ctx, evt) => {
       console.warn('jumpToFirstMeasurementInActiveViewport: not implemented');
+    },
+    jumpToFirstMeasurementInCurrentViewport: (ctx, evt) => {
+      console.warn('jumpToFirstMeasurementInCurrentViewport: not implemented');
     },
     showStructuredReportDisplaySetInActiveViewport: (ctx, evt) => {
       console.warn('showStructuredReportDisplaySetInActiveViewport: not implemented');
@@ -460,6 +475,117 @@ const defaultOptions = {
 
       return {
         successSaveReport: true,
+      };
+    }),
+    // TODO: evibased, refactor long action
+    updateComparedTimepointInfo: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(updateComparedTimepointInfo): ", evt.type, evt);
+      if (!evt.comparedTimepoint || ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid) {
+        return {};
+      }
+      // create readonly measurements and annotations
+      const measurementService = evt.measurementService;
+      // default load first report
+      let reportData = evt.comparedTimepoint.reports[0];
+      const reportInfo = reportData.report_info;
+      let measurements = reportData.measurements;
+
+      // loop through all measurements
+      for (let i = 0; i < measurements.length; i++) {
+        let measurement = measurements[i];
+        const {
+          Patient_ID,
+          Patient_Name,
+          StudyInstanceUID,
+          SeriesInstanceUID,
+          SOPInstanceUID,
+          Label,
+          AnnotationType,
+          Length,
+          Width,
+          Unit,
+          FrameOfReferenceUID,
+          points,
+          label_info,
+        } = measurement;
+        // based on hydrateStructuredReport in cornerstone-dicom-sr extension
+        // use measurementService.addRawMeasurement to add measurement
+        // get source
+        const CORNERSTONE_3D_TOOLS_SOURCE_NAME = 'Cornerstone3DTools';
+        const CORNERSTONE_3D_TOOLS_SOURCE_VERSION = '0.1';
+        const source = measurementService.getSource(
+          CORNERSTONE_3D_TOOLS_SOURCE_NAME,
+          CORNERSTONE_3D_TOOLS_SOURCE_VERSION
+        );
+        // get AnnotationType, measurement["AnnotationType"] = "Cornerstone:Bidirectional"
+        const annotationType = AnnotationType.split(':')[1];
+        // get annotation
+        const referencedImageId = `wadors:/dicom-web/studies/${StudyInstanceUID}/series/${SeriesInstanceUID}/instances/${SOPInstanceUID}/frames/1`; 
+        const imageId = 'imageId:' + referencedImageId;
+        const cachedStats = {
+          [imageId]: {
+            length: parseFloat(Length),
+            width: parseFloat(Width),
+          },
+        };
+        // turn points string to array [[x y z]]
+        let handlesPoints = points.split(';');
+        for (let i = 0; i < handlesPoints.length; i++) {
+          handlesPoints[i] = handlesPoints[i].split(' ');
+          for (let j = 0; j < handlesPoints[i].length; j++) {
+            handlesPoints[i][j] = parseFloat(handlesPoints[i][j]);
+          }
+        }
+        const annotationData = {
+          handles: {
+            points: handlesPoints,
+            activeHandleIndex: 0,
+            textBox: {
+              hasMoved: false,
+            },
+          },
+          cachedStats: cachedStats,
+          frameNumber: undefined,
+          label: Label,
+          text: Label, // to support CornerstoneTools ArrowAnnotate
+          finding: undefined,
+          findingSites: undefined,
+          site: undefined,
+          measurementLabelInfo: label_info,
+        };
+
+        const annotation = {
+          annotationUID: utils.guid(),
+          data: annotationData,
+          metadata: {
+            toolName: annotationType,
+            referencedImageId: referencedImageId,
+            FrameOfReferenceUID,
+          },
+        };
+
+        const mappings = measurementService.getSourceMappings(
+          CORNERSTONE_3D_TOOLS_SOURCE_NAME,
+          CORNERSTONE_3D_TOOLS_SOURCE_VERSION
+        );
+        const matchingMapping = mappings.find(m => m.annotationType === annotationType);
+
+        // add measurement
+        const newReadonlyMeasurementUID = measurementService.addReadonlyMeasurement(
+          source,
+          annotationType,
+          { annotation },
+          matchingMapping.toMeasurementSchema,
+          extensionManager.getActiveDataSource()[0]
+        );
+        console.log("newReadonlyMeasurementUID: ", newReadonlyMeasurementUID);
+        measurement.uid = newReadonlyMeasurementUID;
+        // do we need to get measurement?
+        // const NewReadmonlyMeasurement = measurementService.getReadonlyMeasurement(newReadonlyMeasurementUID);
+      }
+
+      return {
+        comparedTimepoint: evt.comparedTimepoint,
       };
     }),
   },

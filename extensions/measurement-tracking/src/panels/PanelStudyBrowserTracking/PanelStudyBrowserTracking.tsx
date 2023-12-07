@@ -29,6 +29,7 @@ function PanelStudyBrowserTracking({
     hangingProtocolService,
     uiNotificationService,
     userAuthenticationService,
+    measurementService,
   } = servicesManager.services;
   const navigate = useNavigate();
 
@@ -76,7 +77,7 @@ function PanelStudyBrowserTracking({
   };
 
   // evibased, double click report thumbnail
-  const onDoubleClickReportThumbnailHandler = reportData => {
+  const onLoadReportHandler = reportData => {
     console.log('double click report thumbnail: ', reportData);
 
     // audit log loading report data
@@ -97,6 +98,30 @@ function PanelStudyBrowserTracking({
     viewports.get(activeViewportId)?.displaySetInstanceUIDs;
 
   const { trackedSeries } = trackedMeasurements.context;
+
+  // evibased, set current viewportid and compared viewportid
+  useEffect(() => {
+    let currentViewportId = 'default';
+    let comparedViewportId = null;
+    if (viewports.size > 1) {
+      // get current viewport id
+      for (const { viewportId, displaySetOptions } of viewports.values()) {
+        if (['default', 'currentDisplaySetId'].includes(displaySetOptions[0].id)) {
+          currentViewportId = viewportId;
+          break;
+        } else if (['comparedDisplaySetId'].includes(displaySetOptions[0].id)) {
+          comparedViewportId = viewportId;
+        }
+      }
+    }
+
+    sendTrackedMeasurementsEvent('UPDATE_CURRENT_VIEWPORT_ID', {
+      currentViewportId: currentViewportId,
+    });
+    sendTrackedMeasurementsEvent('UPDATE_COMPARED_VIEWPORT_ID', {
+      comparedViewportId: comparedViewportId,
+    });
+  }, [viewports]);
 
   // evibased, studyDisplayList update based on current timepoint study
   // evibased 获取studyDisplayList，list of all related studies(current study and related studies)
@@ -183,6 +208,7 @@ function PanelStudyBrowserTracking({
       });
 
       sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT_INFO', {
+        measurementService: measurementService,
         comparedTimepoint: comparedTimepoint,
       });
 
@@ -447,7 +473,7 @@ function PanelStudyBrowserTracking({
       }}
       onClickThumbnail={() => {}}
       onDoubleClickThumbnail={onDoubleClickThumbnailHandler}
-      onDoubleClickReportThumbnail={onDoubleClickReportThumbnailHandler}
+      onDoubleClickReportThumbnail={onLoadReportHandler}
       activeDisplaySetInstanceUIDs={activeViewportDisplaySetInstanceUIDs}
     />
   );

@@ -65,11 +65,11 @@ const priorDisplaySetSelector = {
 };
 
 const currentDisplaySet = {
-  id: 'defaultDisplaySetId',
+  id: 'currentDisplaySetId',
 };
 
 const priorDisplaySet = {
-  id: 'priorDisplaySetId',
+  id: 'comparedDisplaySetId',
 };
 
 const currentViewport0 = {
@@ -132,8 +132,8 @@ const timepointCompare: Types.HangingProtocol.Protocol = {
   ],
   toolGroupIds: ['default'],
   displaySetSelectors: {
-    defaultDisplaySetId: defaultDisplaySetSelector,
-    priorDisplaySetId: priorDisplaySetSelector,
+    currentDisplaySetId: defaultDisplaySetSelector,
+    comparedDisplaySetId: priorDisplaySetSelector,
   },
   defaultViewport: {
     viewportOptions: {
@@ -143,7 +143,7 @@ const timepointCompare: Types.HangingProtocol.Protocol = {
     },
     displaySets: [
       {
-        id: 'defaultDisplaySetId',
+        id: 'currentDisplaySetId',
         matchedDisplaySetsIndex: -1,
       },
     ],
