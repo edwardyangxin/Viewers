@@ -615,8 +615,12 @@ const defaultOptions = {
     },
     shouldKillMachine: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.NO_NEVER,
     shouldAddSeries: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.ADD_SERIES,
-    shouldSetStudyAndSeries: (ctx, evt) =>
-      evt.data && evt.data.userResponse === RESPONSE.SET_STUDY_AND_SERIES,
+    shouldSetStudyAndSeries: (ctx, evt) => {
+      if (ctx.currentTimepoint && ctx.currentTimepoint.studyInstanceUid !== evt.data.StudyInstanceUID) {
+        return false;
+      }
+      return evt.data && evt.data.userResponse === RESPONSE.SET_STUDY_AND_SERIES;
+    },
     shouldAddIgnoredSeries: (ctx, evt) =>
       evt.data && evt.data.userResponse === RESPONSE.NO_NOT_FOR_SERIES,
     shouldPromptSaveReport: (ctx, evt) =>

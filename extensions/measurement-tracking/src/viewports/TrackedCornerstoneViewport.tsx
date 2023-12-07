@@ -18,7 +18,7 @@ function TrackedCornerstoneViewport(props) {
 
   const { t } = useTranslation('Common');
 
-  const { measurementService, cornerstoneViewportService, viewportGridService } =
+  const { measurementService, cornerstoneViewportService, viewportGridService, uiNotificationService } =
     servicesManager.services;
 
   // Todo: handling more than one displaySet on the same viewport
@@ -30,7 +30,7 @@ function TrackedCornerstoneViewport(props) {
   const [trackedMeasurementUID, setTrackedMeasurementUID] = useState(null);
   const [viewportElem, setViewportElem] = useState(null);
 
-  const { trackedSeries } = trackedMeasurements.context;
+  const { trackedSeries, currentTimepoint } = trackedMeasurements.context;
 
   const { SeriesDate, SeriesDescription, SeriesInstanceUID, SeriesNumber } = displaySet;
 
@@ -147,15 +147,24 @@ function TrackedCornerstoneViewport(props) {
     [added, addedRaw].forEach(evt => {
       subscriptions.push(
         measurementService.subscribe(evt, ({ source, measurement }) => {
+          // evibased, check if the measurement is for the current timepoint
+          const { referenceStudyUID: StudyInstanceUID, referenceSeriesUID: SeriesInstanceUID } =
+            measurement;
+          if (currentTimepoint && currentTimepoint.studyInstanceUid !== StudyInstanceUID) {
+            uiNotificationService.show({
+              title: '添加标注',
+              message: `非当前访视，不进入报告`,
+              type: 'warning',
+            });
+            return;
+          }
+
           const { activeViewportId } = viewportGridService.getState();
 
           // Each TrackedCornerstoneViewport receives the MeasurementService's events.
           // Only send the tracked measurements event for the active viewport to avoid
           // sending it more than once.
           if (viewportId === activeViewportId) {
-            const { referenceStudyUID: StudyInstanceUID, referenceSeriesUID: SeriesInstanceUID } =
-              measurement;
-
             sendTrackedMeasurementsEvent('SET_DIRTY', { SeriesInstanceUID });
             sendTrackedMeasurementsEvent('TRACK_SERIES', {
               viewportId,
@@ -172,7 +181,7 @@ function TrackedCornerstoneViewport(props) {
         unsub();
       });
     };
-  }, [measurementService, sendTrackedMeasurementsEvent, viewportId, viewportGridService]);
+  }, [currentTimepoint, measurementService, sendTrackedMeasurementsEvent, viewportId, viewportGridService]);
 
   function switchMeasurement(direction) {
     const newTrackedMeasurementUID = _getNextMeasurementUID(
