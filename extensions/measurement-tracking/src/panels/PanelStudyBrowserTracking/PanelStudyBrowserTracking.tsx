@@ -97,7 +97,7 @@ function PanelStudyBrowserTracking({
   const activeViewportDisplaySetInstanceUIDs =
     viewports.get(activeViewportId)?.displaySetInstanceUIDs;
 
-  const { trackedSeries } = trackedMeasurements.context;
+  const { trackedSeries, pastTimepoints } = trackedMeasurements.context;
 
   // evibased, set current viewportid and compared viewportid
   useEffect(() => {
@@ -195,7 +195,7 @@ function PanelStudyBrowserTracking({
         }
       }
 
-      sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT_INFO', {
+      sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT', {
         currentTimepoint: currentTimepoint,
       });
 
@@ -207,7 +207,7 @@ function PanelStudyBrowserTracking({
         lastTimepoint: lastTimepointStudy,
       });
 
-      sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT_INFO', {
+      sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {
         measurementService: measurementService,
         comparedTimepoint: comparedTimepoint,
       });
@@ -239,12 +239,15 @@ function PanelStudyBrowserTracking({
       hangingProtocolService
     );
 
-    sendTrackedMeasurementsEvent('UPDATE_PAST_TIMEPOINTS', {
-      pastTimepoints: tabs[1].studies,
-    });
+    // update past timepoints only once, displaySets is updated due to lazy loading
+    if (tabs[1]?.studies?.length !== pastTimepoints?.length) {
+      sendTrackedMeasurementsEvent('UPDATE_PAST_TIMEPOINTS', {
+        pastTimepoints: tabs[1].studies, // use tabs[1] as past timepoints
+      });
+    }
 
     setTabs(tabs);
-  }, [studyDisplayList]);
+  }, [studyDisplayList, displaySets]);
 
   // ~~ Initial Thumbnails
   // get thumbnail for each displaySet，这里理解为每个series的thumbnail
@@ -412,6 +415,23 @@ function PanelStudyBrowserTracking({
     }
   }
 
+  function _handleCompareStudyClick(StudyInstanceUID) {
+    // get compared timepoint and update compared timepoint info
+    let newComparedTimepoint = null;
+    for (const tp of pastTimepoints) {
+      if (tp.studyInstanceUid === StudyInstanceUID) {
+        newComparedTimepoint = tp;
+        break;
+      }
+    }
+    if (newComparedTimepoint) {
+      sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {
+        measurementService: measurementService,
+        comparedTimepoint: newComparedTimepoint,
+      });
+    }
+  }
+
   // jumpToDisplaySet
   useEffect(() => {
     if (jumpToDisplaySet) {
@@ -460,6 +480,7 @@ function PanelStudyBrowserTracking({
       activeTabName={activeTabName}
       expandedStudyInstanceUIDs={expandedStudyInstanceUIDs}
       onClickStudy={_handleStudyClick}
+      onCompareStudy={_handleCompareStudyClick}
       onClickTab={clickedTabName => {
         setActiveTabName(clickedTabName);
       }}

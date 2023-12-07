@@ -79,7 +79,7 @@ const machineConfiguration = {
             taskInfo: (_, event) => event.taskInfo,
           }),
         },
-        UPDATE_CURRENT_TIMEPOINT_INFO: {
+        UPDATE_CURRENT_TIMEPOINT: {
           actions: assign({
             currentTimepoint: (_, event) => event.currentTimepoint,
           }),
@@ -94,7 +94,7 @@ const machineConfiguration = {
             lastTimepoint: (_, event) => event.lastTimepoint,
           }),
         },
-        UPDATE_COMPARED_TIMEPOINT_INFO: {
+        UPDATE_COMPARED_TIMEPOINT: {
           actions: ['updateComparedTimepointInfo'],
         },
         UPDATE_PAST_TIMEPOINTS: {
@@ -477,16 +477,29 @@ const defaultOptions = {
         successSaveReport: true,
       };
     }),
-    // TODO: evibased, refactor long action
+    // evibased, compared timepoint
     updateComparedTimepointInfo: assign((ctx, evt) => {
       console.log("measurementTrackingMachine action(updateComparedTimepointInfo): ", evt.type, evt);
-      if (!evt.comparedTimepoint || ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid) {
-        return {};
-      }
-      // create readonly measurements and annotations
       const measurementService = evt.measurementService;
+      // check comparedTimepoint studyInstanceUid
+      if (!evt.comparedTimepoint || ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid) {
+        // no comparedTimepoint or same studyInstanceUid
+        return {};
+      } else {
+        // different studyInstanceUid, clear all readonly measurements
+        measurementService.clearReadonlyMeasurements();
+      }
+
+      // create readonly measurements and annotations
       // default load first report
-      let reportData = evt.comparedTimepoint.reports[0];
+      let reportData = evt.comparedTimepoint.reports? evt.comparedTimepoint.reports[0]: undefined;
+      if (!reportData) {
+        // timepoint without report
+        return {
+          comparedTimepoint: evt.comparedTimepoint,
+        };
+      }
+      
       const reportInfo = reportData.report_info;
       let measurements = reportData.measurements;
 

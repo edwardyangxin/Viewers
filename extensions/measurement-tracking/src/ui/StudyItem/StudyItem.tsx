@@ -18,6 +18,7 @@ const StudyItem = ({
   trackedSeries,
   isActive,
   onClick,
+  onCompareClick=()=>{},
 }) => {
   const navigateToURLNewTab = () => {
     const url = `/viewer/?StudyInstanceUIDs=${studyInstanceUid}`;
@@ -48,18 +49,30 @@ const StudyItem = ({
           </div> */}
         </div>
         <div className="flex flex-row py-1">
-          <div className="pr-5 text-xl text-blue-300">{modalities}</div>
+          {ifPrimary && (<div className="pr-5 text-xl text-blue-300">{modalities}</div>)}
           {!ifPrimary && (
-            <LegacyButton
-              key={studyInstanceUid + '-button'}
-              className={'min-w-18 p-2 text-base text-white'}
-              size="initial"
-              // color={color}
-              bgColor={'bg-primary-main'}
-              onClick={navigateToURLNewTab}
-            >
-              {'打开访视'}
-            </LegacyButton>
+            <>
+              {/* <LegacyButton
+                key={studyInstanceUid + '-compare-button'}
+                className={'min-w-18 p-2 text-base text-white'}
+                size="initial"
+                color={'primaryActive'}
+                bgColor={'bg-primary-main'}
+                onClick={onCompareClick}
+              >
+                {'加入对比'}
+              </LegacyButton> */}
+              <LegacyButton
+                key={studyInstanceUid + '-open-button'}
+                className={'min-w-18 p-2 text-base text-white'}
+                size="initial"
+                // color={color}
+                bgColor={'bg-primary-main'}
+                onClick={navigateToURLNewTab}
+              >
+                {'打开访视'}
+              </LegacyButton>
+            </>
           )}
           {/* <div className="truncate-2-lines break-words text-base text-blue-300">{description}</div> */}
         </div>

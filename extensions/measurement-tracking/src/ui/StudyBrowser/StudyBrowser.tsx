@@ -27,6 +27,7 @@ const StudyBrowser = ({
   expandedStudyInstanceUIDs,
   onClickTab,
   onClickStudy,
+  onCompareStudy,
   onClickThumbnail,
   onDoubleClickThumbnail,
   onDoubleClickReportThumbnail,
@@ -70,6 +71,9 @@ const StudyBrowser = ({
               isActive={isExpanded}
               onClick={() => {
                 onClickStudy(studyInstanceUid);
+              }}
+              onCompareClick={() => {
+                onCompareStudy(studyInstanceUid);
               }}
               data-cy="thumbnail-list"
             />
