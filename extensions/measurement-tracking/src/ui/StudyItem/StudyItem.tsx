@@ -11,7 +11,7 @@ const baseClasses =
 const StudyItem = ({
   studyInstanceUid,
   ifPrimary,
-  ifCompared,
+  canCompare,
   date,
   description,
   numInstances,
@@ -47,7 +47,7 @@ const StudyItem = ({
               className="mx-2 w-4 text-blue-300"
             />
             {numInstances} */}
-            {!ifPrimary && !ifCompared && (
+            {canCompare && (
               <LegacyButton
                 key={studyInstanceUid + '-compare-button'}
                 className={'min-w-18 p-2 text-base text-white'}

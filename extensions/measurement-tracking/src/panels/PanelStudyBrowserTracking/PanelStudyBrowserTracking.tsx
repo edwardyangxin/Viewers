@@ -54,6 +54,8 @@ function PanelStudyBrowserTracking({
   const [tabs, setTabs] = useState([]);
   const currentStudyInstanceUID = StudyInstanceUIDs[0];
   const [comparedStudyInstanceUID, setComparedStudyInstanceUID] = useState(StudyInstanceUIDs.length > 1 ? StudyInstanceUIDs[1] : null);
+  // if in followup compare mode by StudyInstanceUIDs length in URL
+  const ifCompareMode = StudyInstanceUIDs.length > 1;
 
   const onDoubleClickThumbnailHandler = displaySetInstanceUID => {
     let updatedViewports = [];
@@ -181,9 +183,9 @@ function PanelStudyBrowserTracking({
       let lastTimepointStudy = undefined;
       const lastTimepointId = parseInt(currentTimepoint.trialTimePointId.slice(1)) - 1;
       let baselineStudy = undefined;
-      for (const study of actuallyMappedStudies) {
+      for (let study of actuallyMappedStudies) {
         const timepointId = parseInt(study.trialTimePointId.slice(1));
-        if (timepointId === 0) {
+        if (timepointId === 1) {
           study.ifBaseline = true;
           baselineStudy = study;
         }
@@ -191,6 +193,11 @@ function PanelStudyBrowserTracking({
           study.ifLastTimepoint = true;
           lastTimepointStudy = study;
         }
+      }
+
+      // if followups, auto go to compared mode if not
+      if (!currentTimepoint.ifBaseline && !ifCompareMode) {
+        navigate(`/viewer?StudyInstanceUIDs=${currentTimepoint.studyInstanceUid}&StudyInstanceUIDs=${lastTimepointStudy.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`);
       }
 
       sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT', {
@@ -482,6 +489,7 @@ function PanelStudyBrowserTracking({
 
   return (
     <StudyBrowser
+      ifCompareMode={ifCompareMode}
       currentStudyInstanceUID={currentStudyInstanceUID}
       comparedStudyInstanceUID={comparedStudyInstanceUID}
       tabs={tabs}
