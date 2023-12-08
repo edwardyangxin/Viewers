@@ -180,6 +180,7 @@ module.exports = (env, argv) => {
       //writeToDisk: true,
       historyApiFallback: {
         disableDotRule: true,
+        index: PUBLIC_URL + 'index.html',
       },
       headers: {
         'Cross-Origin-Embedder-Policy': 'require-corp',
