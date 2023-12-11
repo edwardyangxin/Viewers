@@ -1,4 +1,6 @@
+import getCommandsModule from './commandsModule';
 import getContextModule from './getContextModule';
+import getCustomizationModule from './getCustomizationModule';
 import getHangingProtocolModule from './getHangingProtocolModule';
 import getPanelModule from './getPanelModule';
 import getViewportModule from './getViewportModule';
@@ -13,8 +15,12 @@ const measurementTrackingExtension = {
   getContextModule,
   getPanelModule,
   getViewportModule,
-  // hangingProtocolModule
+  // evibased, hanging protocol
   getHangingProtocolModule,
+  // evibased, commands
+  getCommandsModule,
+  /** Registers some customizations */
+  getCustomizationModule,
 };
 
 export default measurementTrackingExtension;

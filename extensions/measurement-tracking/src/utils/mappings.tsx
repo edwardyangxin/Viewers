@@ -12,14 +12,15 @@ const targetIndexMapping = {
 };
 
 const targetInfoMapping = {
-  Target: 'Target',
-  Target_CR: 'Target(CR)',
-  Target_UN: 'Target(UN未知)',
-  Non_Target: 'Non_Target',
-  Non_Target_Disappear: 'Non_Target(消失)',
-  Non_Target_Progress: 'Non_Target(发展Progress)',
-  Non_Target_New: 'Non_Target(新发New)',
-  Other: 'Other',
+  Target: '靶病灶',
+  Target_NM: '靶病灶(太小无法测量)',
+  Target_CR: '靶病灶(消失)',
+  Target_UN: '靶病灶(UN未知)',
+  Non_Target: '非靶病灶',
+  Non_Target_Disappear: '非靶病灶(消失)',
+  Non_Target_Progress: '非靶病灶(进展)',
+  Non_Target_New: '非靶病灶(新发)',
+  Other: '其他',
 };
 
 const locationInfoMapping = {
@@ -54,16 +55,18 @@ const locationInfoMapping = {
 };
 
 // 区分target
-const targetKeyGroup = ['Target', 'Target_CR', 'Target_UN'];
+const targetKeyGroup = ['Target', 'Target_NM', 'Target_CR', 'Target_UN'];
 const nontargetKeyGroup = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
 const otherKeyGroup = ['Other'];
 
-const responseOptions = [ 
-  { value: 'Baseline', label: 'Baseline(No Response)' },
-  { value: 'CR', label: 'CR' },
-  { value: 'PR', label: 'PR' },
-  { value: 'SD', label: 'SD' },
-  { value: 'PD', label: 'PD' },
+const responseOptions = [
+  { value: 'Baseline', label: '基线评估' },
+  { value: 'CR', label: '完全缓解(CR)' },
+  { value: 'PR', label: '部分缓解(PR)' },
+  { value: 'SD', label: '疾病稳定(SD)' },
+  { value: 'PD', label: '疾病进展(PD)' },
+  { value: 'NCR_NPD', label: '非CR/非PD' },
+  { value: 'NE', label: '不可评估(NE)' },
 ];
 
 export { targetIndexMapping, targetInfoMapping, locationInfoMapping, 

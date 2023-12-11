@@ -162,7 +162,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
             // evibased, call command setMeasurementLabel for newly added measurement(label is '')
             if (data.measurement.label === '') {
-              commandsManager.runCommand('setMeasurementLabel', {
+              commandsManager.runCommand('setIRCMeasurementLabel', {
                 uid: data.measurement.uid,
               });
             }
@@ -323,9 +323,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           }
           return (
             <div>
+              <label className="text-[14px] leading-[1.2] text-white">选择病灶编号</label>
               <Select
                 id="targetIndex"
-                placeholder="选择目标编号"
+                placeholder="选择病灶编号"
                 value={targetIndex ? [String(targetIndex.value)] : []} //选项必须是string
                 onChange={(newSelection, action) => {
                   console.info('newSelection:', newSelection, 'action:', action);
@@ -339,9 +340,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
                 }}
                 options={targetIndexOptions}
               />
+              <label className="text-[14px] leading-[1.2] text-white">选择病灶类型</label>
               <Select
                 id="target"
-                placeholder="选择目标类型"
+                placeholder="选择病灶类型"
                 value={targetValue ? [targetValue.value] : []} //select只能传入target value
                 onChange={(newSelection, action) => {
                   console.info('newSelection:', newSelection, 'action:', action);
@@ -355,6 +357,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
                 }}
                 options={targetOptions}
               />
+              <label className="text-[14px] leading-[1.2] text-white">选择病灶位置</label>
               <Select
                 id="location"
                 placeholder="选择病灶位置"
@@ -540,12 +543,14 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     // calculate SOD based on targetFindings
     let culmulativeSOD = 0;
     for (const dm of targetFindings) {
+      const targetOption = dm.label.split('|')[1];
       const location = dm.label.split('|')[2];
       // get long and short axis from displayText
       const displayText = dm.displayText[0];
       let longAxis = 0.0;
       let shortAxis = 0.0;
       if (displayText.includes('x') && displayText.includes('mm')) {
+        // get long and short axis
         try {
           longAxis = parseFloat(displayText.split('x')[0]);
           shortAxis = parseFloat(displayText.split('x')[1].split('mm')[0]);
@@ -553,7 +558,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           console.log('failed to parse length', error);
         }
       } else {
-        // no axis info, just continue
+        // no axis info, could be Target_NM 太小无法测量，计5mm
+        if (targetOption === 'Target_NM') {
+          culmulativeSOD += 5.0;
+        }
         continue;
       }
 
@@ -565,9 +573,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         // use long axis
         culmulativeSOD += longAxis;
       }
-
-      setInputSOD(culmulativeSOD.toFixed(2));
     }
+    setInputSOD(culmulativeSOD.toFixed(2));
   }, [ displayMeasurements ]);
 
   // SOD input
@@ -677,6 +684,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           studyInstanceUid={studyInstanceUid}
           trialTimePointInfo={trialTimePointInfo}
           username={username}
+          responseOptions={responseOptions}
           SOD={SOD}
           response={response}
           isActive={extendedComparedReport}
@@ -760,7 +768,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         )}
         <div className="mt-3">
           <Input
-            label="总测量值SOD(回车计算公式,单位mm)"
+            label="直径总和SOD(回车计算公式,单位mm)"
             labelClassName="text-white text-[14px] leading-[1.2]"
             className="border-primary-main bg-black"
             type="text"
@@ -770,10 +778,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           />
         </div>
         <div>
-          <label className="text-[14px] leading-[1.2] text-white">结论(Response)</label>
+          <label className="text-[14px] leading-[1.2] text-white">基线/疗效评估</label>
           <Select
             id="response"
-            placeholder="选择结论(Response)"
+            placeholder="基线/疗效评估"
             value={[timepointResponse]}
             onChange={(newSelection, action) => {
               // console.info('newSelection:', newSelection, 'action:', action);

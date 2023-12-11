@@ -90,6 +90,11 @@ function modeFactory({ modeConfiguration }) {
       // Init Default and SR ToolGroups
       initToolGroups(extensionManager, toolGroupService, commandsManager);
 
+      // init customizations
+      customizationService.addModeCustomizations([
+        '@ohif/extension-measurement-tracking.customizationModule.custom-context-menu',
+      ]);
+
       let unsubscribe;
       toolbarService.setDefaultTool({
         groupId: 'WindowLevel',

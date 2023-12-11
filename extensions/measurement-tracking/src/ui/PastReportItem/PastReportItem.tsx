@@ -12,11 +12,14 @@ const PastReportItem = ({
   studyInstanceUid,
   trialTimePointInfo,
   username,
+  responseOptions,
   SOD,
   response,
   isActive,
   onClick,
 }) => {
+  const option = responseOptions.find(option => option.value === response);
+  const responseLabel = option ? option.label : '未知';
   return (
     <div
       className={classnames(
@@ -32,9 +35,9 @@ const PastReportItem = ({
       <div className="flex flex-1 flex-col px-4 pb-2">
         {username ? (
           <div className="flex flex-row items-center justify-between pt-2 pb-2">
-            <div className="text-base text-white">{`${trialTimePointInfo}(${username})`}</div>
+            <div className="text-base text-white">{`${trialTimePointInfo}报告(${username})`}</div>
             <div className="flex flex-row items-center text-base text-blue-300">
-              {`${response}(SOD:${SOD}mm)`}
+              {`${responseLabel}(SOD:${SOD}mm)`}
             </div>
           </div>
         ) : (
