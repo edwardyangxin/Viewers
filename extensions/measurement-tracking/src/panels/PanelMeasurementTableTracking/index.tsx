@@ -19,7 +19,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
   targetKeyGroup, nontargetKeyGroup, otherKeyGroup, nonTargetResponseOptions, 
-  responseOptions } from '../../utils/mappings';
+  responseOptions, 
+  targetIndexOptions,
+  targetOptions,
+  locationOptions,
+  nonTargetIndexOptions} from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
 import { getViewportId } from '../../utils/utils';
 
@@ -309,39 +313,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         noCloseButton: true,
         value: valueDialog,
         onClose: () => uiDialogService.dismiss({ id: dialogId }),
-
         body: ({ value, setValue }) => {
-          const targetIndexOptions = [];
-          for (const [key, value] of Object.entries(targetIndexMapping)) {
-            targetIndexOptions.push({ value: key, label: value });
-          }
-          const targetOptions = [];
-          for (const [key, value] of Object.entries(targetInfoMapping)) {
-            targetOptions.push({ value: key, label: value });
-          }
-          const locationOptions = [];
-          for (const [key, value] of Object.entries(locationInfoMapping)) {
-            locationOptions.push({ value: key, label: value });
-          }
+
           return (
             <div>
-              <label className="text-[14px] leading-[1.2] text-white">选择病灶编号</label>
-              <Select
-                id="targetIndex"
-                placeholder="选择病灶编号"
-                value={targetIndex ? [String(targetIndex.value)] : []} //选项必须是string
-                onChange={(newSelection, action) => {
-                  console.info('newSelection:', newSelection, 'action:', action);
-                  targetIndex = newSelection;
-                  setValue(value => {
-                    // update label info
-                    value['measurementLabelInfo']['targetIndex'] = targetIndex;
-                    value['label'][0] = targetIndex ? targetIndex['value'] : '';
-                    return value;
-                  });
-                }}
-                options={targetIndexOptions}
-              />
               <label className="text-[14px] leading-[1.2] text-white">选择病灶类型</label>
               <Select
                 id="target"
@@ -358,6 +333,23 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
                   });
                 }}
                 options={targetOptions}
+              />
+              <label className="text-[14px] leading-[1.2] text-white">选择病灶编号</label>
+              <Select
+                id="targetIndex"
+                placeholder="选择病灶编号"
+                value={targetIndex ? [String(targetIndex.value)] : []} //选项必须是string
+                onChange={(newSelection, action) => {
+                  console.info('newSelection:', newSelection, 'action:', action);
+                  targetIndex = newSelection;
+                  setValue(value => {
+                    // update label info
+                    value['measurementLabelInfo']['targetIndex'] = targetIndex;
+                    value['label'][0] = targetIndex ? targetIndex['value'] : '';
+                    return value;
+                  });
+                }}
+                options={targetKeyGroup.includes(value['label'][1]) ? targetIndexOptions: nonTargetIndexOptions}
               />
               <label className="text-[14px] leading-[1.2] text-white">选择病灶位置</label>
               <Select

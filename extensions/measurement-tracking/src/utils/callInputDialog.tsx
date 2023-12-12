@@ -1,7 +1,9 @@
 import React from 'react';
 import { Input, Dialog, ButtonEnums, Select } from '@ohif/ui';
 import i18n from '@ohif/i18n';
-import { locationInfoMapping, targetIndexMapping, targetInfoMapping } from './mappings';
+import { locationInfoMapping, locationOptions, targetIndexMapping, 
+  targetIndexOptions, targetInfoMapping, targetOptions, targetKeyGroup, 
+  nonTargetIndexOptions } from './mappings';
 
 /**
  * TODO: evibased，使用统一的edit dialog，重构。
@@ -147,37 +149,8 @@ function callInputDialog(
         ],
         onSubmit: onSubmitHandler,
         body: ({ value, setValue }) => {
-          const targetIndexOptions = [];
-          for (const [key, value] of Object.entries(targetIndexMapping)) {
-            targetIndexOptions.push({ value: key, label: value });
-          }
-          let targetOptions = [];
-          for (const [key, value] of Object.entries(targetInfoMapping)) {
-            targetOptions.push({ value: key, label: value });
-          }
-          let locationOptions = [];
-          for (const [key, value] of Object.entries(locationInfoMapping)) {
-            locationOptions.push({ value: key, label: value });
-          }
           return (
             <div>
-              <label className="text-[14px] leading-[1.2] text-white">选择病灶编号</label>
-              <Select
-                id="targetIndex"
-                placeholder="选择病灶编号"
-                value={targetIndex ? [String(targetIndex.value)] : []} //选项必须是string
-                onChange={(newSelection, action) => {
-                  console.info('newSelection:', newSelection, 'action:', action);
-                  targetIndex = newSelection;
-                  setValue(value => {
-                    // update label info
-                    value['measurementLabelInfo']['targetIndex'] = targetIndex;
-                    value['label'][0] = targetIndex ? targetIndex['value'] : '';
-                    return value;
-                  });
-                }}
-                options={targetIndexOptions}
-              />
               <label className="text-[14px] leading-[1.2] text-white">选择病灶类型</label>
               <Select
                 id="target"
@@ -194,6 +167,23 @@ function callInputDialog(
                   });
                 }}
                 options={targetOptions}
+              />
+              <label className="text-[14px] leading-[1.2] text-white">选择病灶编号</label>
+              <Select
+                id="targetIndex"
+                placeholder="选择病灶编号"
+                value={targetIndex ? [String(targetIndex.value)] : []} //选项必须是string
+                onChange={(newSelection, action) => {
+                  console.info('newSelection:', newSelection, 'action:', action);
+                  targetIndex = newSelection;
+                  setValue(value => {
+                    // update label info
+                    value['measurementLabelInfo']['targetIndex'] = targetIndex;
+                    value['label'][0] = targetIndex ? targetIndex['value'] : '';
+                    return value;
+                  });
+                }}
+                options={targetKeyGroup.includes(value['label'][1]) ? targetIndexOptions: nonTargetIndexOptions}
               />
               <label className="text-[14px] leading-[1.2] text-white">选择病灶位置</label>
               <Select

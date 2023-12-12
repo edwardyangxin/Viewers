@@ -4,11 +4,29 @@ const targetIndexMapping = {
   3: 3,
   4: 4,
   5: 5,
+};
+
+const nonTargetIndexMapping = {
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
   6: 6,
   7: 7,
   8: 8,
   9: 9,
   10: 10,
+  11: 11,
+  12: 12,
+  13: 13,
+  14: 14,
+  15: 15,
+  16: 16,
+  17: 17,
+  18: 18,
+  19: 19,
+  20: 20,
 };
 
 const targetInfoMapping = {
@@ -54,6 +72,24 @@ const locationInfoMapping = {
   Subcutaneous: 'Subcutaneous',
 };
 
+// options
+const targetIndexOptions = [];
+for (const [key, value] of Object.entries(targetIndexMapping)) {
+  targetIndexOptions.push({ value: key, label: value });
+}
+const nonTargetIndexOptions = [];
+for (const [key, value] of Object.entries(nonTargetIndexMapping)) {
+  nonTargetIndexOptions.push({ value: key, label: value });
+}
+const targetOptions = [];
+for (const [key, value] of Object.entries(targetInfoMapping)) {
+  targetOptions.push({ value: key, label: value });
+}
+const locationOptions = [];
+for (const [key, value] of Object.entries(locationInfoMapping)) {
+  locationOptions.push({ value: key, label: value });
+}
+
 // 区分target
 const targetKeyGroup = ['Target', 'Target_NM', 'Target_CR', 'Target_UN'];
 const nontargetKeyGroup = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
@@ -88,7 +124,10 @@ for (const [key, value] of Object.entries(responseMapping)) {
   responseOptions.push({ value: key, label: value });
 }
 
-export { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
+export {
+  targetIndexMapping, nonTargetIndexMapping, targetInfoMapping, locationInfoMapping,
+  targetIndexOptions, nonTargetIndexOptions, targetOptions, locationOptions, 
   targetKeyGroup, nontargetKeyGroup, otherKeyGroup, 
   nonTargetResponseMapping, nonTargetResponseOptions,
-  responseOptions, responseMapping };
+  responseOptions, responseMapping 
+};
