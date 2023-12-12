@@ -69,7 +69,8 @@ const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabel
                 当前访视完成
               </h4>
               {validPercent ? (
-                <span className="px-1 rounded-lg bg-red-900 text-red-500 text-sm">
+                <span className={`px-1 rounded-lg text-sm ${
+                  currentLabels >= todoLabels ? 'bg-green-900 text-green-500' : 'bg-red-900 text-red-500'}`}>
                   {currentLabels + '/' + todoLabels}
                 </span>
               ) : (
