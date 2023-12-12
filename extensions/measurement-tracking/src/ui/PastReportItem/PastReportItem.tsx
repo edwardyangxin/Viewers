@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import i18n from '@ohif/i18n';
 
 import { LegacyButton, Icon } from '@ohif/ui';
+import { responseOptions } from '../../utils/mappings';
 
 const baseClasses =
   'first:border-0 border-t border-secondary-light cursor-pointer select-none outline-none';
@@ -12,7 +13,6 @@ const PastReportItem = ({
   studyInstanceUid,
   trialTimePointInfo,
   username,
-  responseOptions,
   SOD,
   response,
   isActive,

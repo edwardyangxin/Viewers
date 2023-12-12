@@ -2,7 +2,7 @@ import React from 'react';
 
 import { ButtonEnums, Dialog, Input, Select } from '@ohif/ui';
 import i18n from '@ohif/i18n';
-import { responseOptions } from '../../utils/mappings';
+import { nonTargetResponseMapping, responseMapping } from '../../utils/mappings';
 
 export const CREATE_REPORT_DIALOG_RESPONSE = {
   CANCEL: 0,
@@ -143,24 +143,34 @@ export default function CreateReportDialogPrompt(uiDialogService, { extensionMan
                 </div>
               )}
               <div className="mt-3">
-                  <Input
-                    label="总测量值(SOD, 单位:mm)"
-                    labelClassName="text-white text-[14px] leading-[1.2]"
-                    className="border-primary-main bg-black"
-                    type="text"
-                    value={value.reportInfo.SOD}
-                    disabled
-                  />
+                <Input
+                  label="直径总和SOD(单位:mm)"
+                  labelClassName="text-white text-[14px] leading-[1.2]"
+                  className="border-primary-main bg-black"
+                  type="text"
+                  value={value.reportInfo.SOD}
+                  disabled
+                />
               </div>
               <div>
-                  <Input
-                    label="结论(Response)"
-                    labelClassName="text-white text-[14px] leading-[1.2]"
-                    className="border-primary-main bg-black"
-                    type="text"
-                    value={value.reportInfo.response}
-                    disabled
-                  />
+                <Input
+                  label="非靶病灶评估"
+                  labelClassName="text-white text-[14px] leading-[1.2]"
+                  className="border-primary-main bg-black"
+                  type="text"
+                  value={nonTargetResponseMapping[value.reportInfo.nonTargetResponse]}
+                  disabled
+                />
+              </div>
+              <div>
+                <Input
+                  label="总体评估"
+                  labelClassName="text-white text-[14px] leading-[1.2]"
+                  className="border-primary-main bg-black"
+                  type="text"
+                  value={responseMapping[value.reportInfo.response]}
+                  disabled
+                />
               </div>
             </>
           );

@@ -178,8 +178,9 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       report_template: 'RECIST1.1',
       report_template_version: 'v1',
       report_comments: '',
-      SOD: reportInfo ? reportInfo.SOD: '',
-      response: reportInfo ? reportInfo.response: '',
+      SOD: reportInfo ? reportInfo.SOD : '',
+      nonTargetResponse: reportInfo ? reportInfo.nonTargetResponse : '',
+      response: reportInfo ? reportInfo.response : '',
       report_info: reportInfo,
       measurements: trackedMeasurements,
     };

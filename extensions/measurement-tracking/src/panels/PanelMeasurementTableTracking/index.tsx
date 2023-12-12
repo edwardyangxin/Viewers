@@ -18,7 +18,8 @@ import debounce from 'lodash.debounce';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
-  targetKeyGroup, nontargetKeyGroup, otherKeyGroup, responseOptions } from '../../utils/mappings';
+  targetKeyGroup, nontargetKeyGroup, otherKeyGroup, nonTargetResponseOptions, 
+  responseOptions } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
 import { getViewportId } from '../../utils/utils';
 
@@ -65,6 +66,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
   const measurementsPanelRef = useRef(null);
   const [inputSOD, setInputSOD] = useState('0.0');
+  const [nonTargetResponse, setNonTargetResponse] = useState('Baseline');
   const [timepointResponse, setTimepointResponse] = useState('Baseline');
   const [extendedComparedReport, setExtentedComparedReport] = useState(true);
 
@@ -503,6 +505,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     console.log('currentReportInfo:', currentReportInfo);
     if (currentReportInfo) {
       setInputSOD(currentReportInfo.SOD);
+      setNonTargetResponse(currentReportInfo.nonTargetResponse);
       setTimepointResponse(currentReportInfo.response);
     }
   }, [ currentReportInfo ]);
@@ -684,7 +687,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           studyInstanceUid={studyInstanceUid}
           trialTimePointInfo={trialTimePointInfo}
           username={username}
-          responseOptions={responseOptions}
           SOD={SOD}
           response={response}
           isActive={extendedComparedReport}
@@ -778,10 +780,23 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           />
         </div>
         <div>
-          <label className="text-[14px] leading-[1.2] text-white">基线/疗效评估</label>
+          <label className="text-[14px] leading-[1.2] text-white">非靶病灶评估</label>
+          <Select
+            id="nonTargetResponse"
+            placeholder="非靶病灶评估"
+            value={[nonTargetResponse]}
+            onChange={(newSelection, action) => {
+              // console.info('newSelection:', newSelection, 'action:', action);
+              setNonTargetResponse(newSelection.value);
+            }}
+            options={nonTargetResponseOptions}
+          />
+        </div>
+        <div>
+          <label className="text-[14px] leading-[1.2] text-white">总体评估</label>
           <Select
             id="response"
-            placeholder="基线/疗效评估"
+            placeholder="总体评估"
             value={[timepointResponse]}
             onChange={(newSelection, action) => {
               // console.info('newSelection:', newSelection, 'action:', action);
@@ -800,6 +815,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               isBackupSave: true,
               reportInfo: {
                 SOD: inputSOD,
+                nonTargetResponse: nonTargetResponse,
                 response: timepointResponse,
               },
             });
