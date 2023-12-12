@@ -25,7 +25,7 @@ import { targetIndexMapping, targetInfoMapping, locationInfoMapping,
   locationOptions,
   nonTargetIndexOptions} from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
-import { getViewportId } from '../../utils/utils';
+import { getEditMeasurementLabelDialog, getViewportId, parseMeasurementLabelInfo } from '../../utils/utils';
 
 const { downloadCSVReport } = utils;
 
@@ -222,70 +222,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const measurement = measurementService.getMeasurement(uid);
     const dialogId = 'enter-annotation';
     jumpToImage({ uid, isActive });
-
-    // label for 保存尽量多的label信息，因为cornerstonejs只支持保存label到DicomSR中
-    let label = measurement ? measurement.label : '1|target_info|location_info';
-    label = label.split('|');
-    if (label.length === 1) {
-      label = [1, label[0], 'location_info'];
-    } else if (label.length < 3) {
-      // label at least 3 infos
-      label.push('location_info');
-    }
-
-    // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
-    // if no measurementLabelInfo, get from label
-    const measurementLabelInfo = measurement && measurement['measurementLabelInfo'] ?
-      measurement['measurementLabelInfo'] : {};
-
-    const valueDialog = {
-      measurementLabelInfo: measurementLabelInfo,
-      label: label,
-    };
-
-    // init targetValue, locationValue
-    let targetIndex = null;
-    if ('targetIndex' in measurementLabelInfo) {
-      targetIndex = measurementLabelInfo['targetIndex'];
-    } else {
-      // no target in measurementLabelInfo, get from label
-      const labelIndex = parseInt(label[0], 10);
-      targetIndex = {
-        value: labelIndex,
-        label: labelIndex,
-      };
-      measurementLabelInfo['targetIndex'] = targetIndex;
-    }
-
-    let targetValue = null;
-    if ('target' in measurementLabelInfo) {
-      targetValue = measurementLabelInfo['target'];
-    } else {
-      // no target in measurementLabelInfo, get from label
-      const labelTarget = label[1];
-      if (labelTarget in targetInfoMapping) {
-        targetValue = {
-          value: labelTarget,
-          label: targetInfoMapping[labelTarget],
-        };
-      }
-      measurementLabelInfo['target'] = targetValue;
-    }
-
-    let locationValue = null;
-    if ('location' in measurementLabelInfo) {
-      locationValue = measurementLabelInfo['location'];
-    } else {
-      // no target in measurementLabelInfo, get from label
-      const labelLocation = label[2];
-      if (labelLocation in locationInfoMapping) {
-        locationValue = {
-          value: labelLocation,
-          label: locationInfoMapping[labelLocation],
-        }
-      }
-      measurementLabelInfo['location'] = locationValue;
-    }
+    const dialogTitle = t('Dialog:Annotation');
+    const isArrowAnnotateTool = measurement && measurement.toolName.toLowerCase().includes('arrow');
+    const valueDialog = parseMeasurementLabelInfo(measurement);
 
     // for dialog sumbit button
     const onSubmitHandler = ({ action, value }) => {
@@ -302,90 +241,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       uiDialogService.dismiss({ id: dialogId });
     };
 
-    uiDialogService.create({
-      id: dialogId,
-      centralize: true,
-      isDraggable: false,
-      showOverlay: true,
-      content: Dialog,
-      contentProps: {
-        title: t('Dialog:Annotation'),
-        noCloseButton: true,
-        value: valueDialog,
-        onClose: () => uiDialogService.dismiss({ id: dialogId }),
-        body: ({ value, setValue }) => {
-
-          return (
-            <div>
-              <label className="text-[14px] leading-[1.2] text-white">选择病灶类型</label>
-              <Select
-                id="target"
-                placeholder="选择病灶类型"
-                value={targetValue ? [targetValue.value] : []} //select只能传入target value
-                onChange={(newSelection, action) => {
-                  console.info('newSelection:', newSelection, 'action:', action);
-                  targetValue = newSelection;
-                  setValue(value => {
-                    // update label info
-                    value['measurementLabelInfo']['target'] = targetValue;
-                    value['label'][1] = targetValue ? targetValue['value'] : '';
-                    return value;
-                  });
-                }}
-                options={targetOptions}
-              />
-              <label className="text-[14px] leading-[1.2] text-white">选择病灶编号</label>
-              <Select
-                id="targetIndex"
-                placeholder="选择病灶编号"
-                value={targetIndex ? [String(targetIndex.value)] : []} //选项必须是string
-                onChange={(newSelection, action) => {
-                  console.info('newSelection:', newSelection, 'action:', action);
-                  targetIndex = newSelection;
-                  setValue(value => {
-                    // update label info
-                    value['measurementLabelInfo']['targetIndex'] = targetIndex;
-                    value['label'][0] = targetIndex ? targetIndex['value'] : '';
-                    return value;
-                  });
-                }}
-                options={targetKeyGroup.includes(value['label'][1]) ? targetIndexOptions: nonTargetIndexOptions}
-              />
-              <label className="text-[14px] leading-[1.2] text-white">选择病灶位置</label>
-              <Select
-                id="location"
-                placeholder="选择病灶位置"
-                value={locationValue ? [locationValue.value] : []}
-                onChange={(newSelection, action) => {
-                  console.info('newSelection:', newSelection, 'action:', action);
-                  locationValue = newSelection;
-                  setValue(value => {
-                    // update label info
-                    value['measurementLabelInfo']['location'] = locationValue;
-                    value['label'][2] = locationValue ? locationValue['value'] : '';
-                    return value;
-                  });
-                }}
-                options={locationOptions}
-              />
-            </div>
-          );
-        },
-        actions: [
-          {
-            id: 'cancel',
-            text: t('Dialog:Cancel'),
-            type: ButtonEnums.type.secondary,
-          },
-          {
-            id: 'save',
-            text: t('Dialog:Save'),
-            type: ButtonEnums.type.primary,
-          },
-        ],
-        onSubmit: onSubmitHandler,
-      },
-    });
+    uiDialogService.create(
+      getEditMeasurementLabelDialog(
+        dialogId,
+        dialogTitle,
+        valueDialog,
+        isArrowAnnotateTool,
+        uiDialogService,
+        onSubmitHandler
+    ));
   };
 
   const onMeasurementItemClickHandler = ({ uid, isActive }) => {
@@ -733,8 +597,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             taskInfo={displayStudySummary.taskInfo}
             timepoint={displayStudySummary.timepoint ? displayStudySummary.timepoint.slice(1) : undefined}
             lastTimepointInfo={lastTimepoint}
-            modality={displayStudySummary.modality}
-            description={displayStudySummary.description}
+            currentLabels={targetFindings.length + nonTargetFindings.length}
           />
         )}
         <MeasurementTable

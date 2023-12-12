@@ -14,14 +14,16 @@ function promptTrackNewSeries({ servicesManager, extensionManager }, ctx, evt) {
   const { viewportId, StudyInstanceUID, SeriesInstanceUID } = evt;
 
   return new Promise(async function (resolve, reject) {
-    let promptResult = await _askShouldAddMeasurements(UIViewportDialogService, viewportId);
+    // let promptResult = await _askShouldAddMeasurements(UIViewportDialogService, viewportId);
 
-    if (promptResult === RESPONSE.CREATE_REPORT) {
-      promptResult = ctx.isDirty
-        ? await _askSaveDiscardOrCancel(UIViewportDialogService, viewportId)
-        : RESPONSE.SET_STUDY_AND_SERIES;
-    }
+    // if (promptResult === RESPONSE.CREATE_REPORT) {
+    //   promptResult = ctx.isDirty
+    //     ? await _askSaveDiscardOrCancel(UIViewportDialogService, viewportId)
+    //     : RESPONSE.SET_STUDY_AND_SERIES;
+    // }
 
+    // evibased, add to existing report
+    const promptResult = RESPONSE.ADD_SERIES;
     resolve({
       userResponse: promptResult,
       StudyInstanceUID,
