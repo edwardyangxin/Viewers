@@ -197,7 +197,7 @@ function PanelStudyBrowserTracking({
 
       // if followups, auto go to compared mode if not
       if (!currentTimepoint.ifBaseline && !ifCompareMode) {
-        navigate(`/viewer?StudyInstanceUIDs=${currentTimepoint.studyInstanceUid}&StudyInstanceUIDs=${lastTimepointStudy.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`);
+        navigate(`/viewer?StudyInstanceUIDs=${currentTimepoint.studyInstanceUid}&StudyInstanceUIDs=${lastTimepointStudy.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`, '_self');
       }
 
       sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT', {

@@ -70,6 +70,13 @@ window.config = {
   ],
   // evibased, config
   evibased: {
-    upload_api: 'http://localhost:3000/api/upload',
+    use_report_api: true,
+    ping_url: 'https://test.evi-based.com/api/ping',
+    audit_log_url: 'https://test.evi-based.com/api/log',
+    report_upload_url: 'https://test.evi-based.com/api/report',
+    report_fetch_url: 'https://test.evi-based.com/api/report',
+    task_get_url: 'https://test.evi-based.com/api/task',
+    task_update_url: 'https://test.evi-based.com/api/task',
+    task_post_url: 'https://test.evi-based.com/api/task',
   },
 };
