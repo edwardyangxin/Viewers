@@ -41,24 +41,23 @@ const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabel
             <span className="mr-2 text-lg font-bold text-white">{'所有任务已完成'}</span>
           ) : (
             <span className="mr-2 text-lg font-bold text-white">
-              {'总任务: ' + taskInfo.totalTask}
+              {'总任务数: ' + taskInfo.totalTask}
             </span>
           )}
           {/* <span className="bg-common-bright rounded-sm px-1 text-base font-bold text-black">
             {modality}
           </span> */}
         </div>
-        {ifBaseline && (
+        {/* {ifBaseline && (
           <div className="text-primary-light ellipse truncate pt-2 text-base leading-none">
             {`正在标注: 访视${timepoint}(基线)`}
           </div>
         )}
         {!ifBaseline && (
           <div className="text-primary-light ellipse truncate pt-2 text-base leading-none">
-            {/* {`正在标注: 访视${timepoint}(上次访视:${lastTarget}靶,${lastNonTarget}非靶)`} */}
             {`正在标注: 访视${timepoint}`}
           </div>
-        )}
+        )} */}
       </div>
       {/* progress */}
       {!ifBaseline && (
@@ -66,7 +65,7 @@ const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabel
           <div className="flex-1">
             <div className="flex items-center">
               <h4 className="font-medium text-sm mr-auto text-white flex items-center" >
-                当前访视完成
+                当前任务完成
               </h4>
               {validPercent ? (
                 <span className={`px-1 rounded-lg text-sm ${
