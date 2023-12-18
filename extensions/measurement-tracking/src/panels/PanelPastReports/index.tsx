@@ -171,21 +171,21 @@ function PastReports({ servicesManager, extensionManager, commandsManager }) {
             {isExpanded && username && (
               <>
                 <MeasurementTable
-                  title={t('MeasurementTabel:Target Findings')}
+                  title={t('MeasurementTable:Target Findings')}
                   data={targetFindings}
                   servicesManager={servicesManager}
                   onClick={() => {}}
                   onEdit={() => {}}
                 />
                 <MeasurementTable
-                  title={t('MeasurementTabel:Non-Target Findings')}
+                  title={t('MeasurementTable:Non-Target Findings')}
                   data={nonTargetFindings}
                   servicesManager={servicesManager}
                   onClick={() => {}}
                   onEdit={() => {}}
                 />
                 <MeasurementTable
-                  title={t('MeasurementTabel:Other Findings')}
+                  title={t('MeasurementTable:Other Findings')}
                   data={otherFindings}
                   servicesManager={servicesManager}
                   onClick={() => {}}
@@ -218,14 +218,14 @@ function PastReports({ servicesManager, extensionManager, commandsManager }) {
           />
         )}
         <MeasurementTable
-          title={t('MeasurementTabel:Target Findings')}
+          title={t('MeasurementTable:Target Findings')}
           data={targetFindings}
           servicesManager={servicesManager}
           onClick={jumpToImage}
           onEdit={onMeasurementItemEditHandler}
         />
         <MeasurementTable
-          title={t('MeasurementTabel:Non-Target Findings')}
+          title={t('MeasurementTable:Non-Target Findings')}
           data={nonTargetFindings}
           servicesManager={servicesManager}
           onClick={jumpToImage}
@@ -233,7 +233,7 @@ function PastReports({ servicesManager, extensionManager, commandsManager }) {
         />
         {otherFindings.length > 0 && (
           <MeasurementTable
-            title={t('MeasurementTabel:Other Findings')}
+            title={t('MeasurementTable:Other Findings')}
             data={otherFindings}
             servicesManager={servicesManager}
             onClick={jumpToImage}
