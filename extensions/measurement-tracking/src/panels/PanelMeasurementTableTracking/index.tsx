@@ -555,7 +555,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         {extendedComparedReport && username && (
           <>
             <MeasurementTable
-              title={t('MeasurementTabel:Target Findings')}
+              title={`${t('MeasurementTable:Target Findings')}(最多5个)`}
+              ifTarget={true}
               data={targetFindings}
               servicesManager={servicesManager}
               onClick={jumpToComparedMeasurement}
@@ -563,7 +564,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             />
             {nonTargetFindings.length > 0 && (
               <MeasurementTable
-                title={t('MeasurementTabel:Non-Target Findings')}
+                title={t('MeasurementTable:Non-Target Findings')}
                 data={nonTargetFindings}
                 servicesManager={servicesManager}
                 onClick={jumpToComparedMeasurement}
@@ -572,7 +573,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             )}
             {otherFindings.length > 0 && (
               <MeasurementTable
-                title={t('MeasurementTabel:Other Findings')}
+                title={t('MeasurementTable:Other Findings')}
                 data={otherFindings}
                 servicesManager={servicesManager}
                 onClick={jumpToComparedMeasurement}
@@ -602,14 +603,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           />
         )}
         <MeasurementTable
-          title={t('MeasurementTabel:Target Findings')}
+          title={`${t('MeasurementTable:Target Findings')}(最多5个)`}
+          ifTarget={true}
           data={targetFindings}
           servicesManager={servicesManager}
           onClick={jumpToImage}
           onEdit={onMeasurementItemEditHandler}
         />
         <MeasurementTable
-          title={t('MeasurementTabel:Non-Target Findings')}
+          title={t('MeasurementTable:Non-Target Findings')}
           data={nonTargetFindings}
           servicesManager={servicesManager}
           onClick={jumpToImage}
@@ -617,7 +619,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         />
         {otherFindings.length > 0 && (
           <MeasurementTable
-            title={t('MeasurementTabel:Other Findings')}
+            title={t('MeasurementTable:Other Findings')}
             data={otherFindings}
             servicesManager={servicesManager}
             onClick={jumpToImage}
