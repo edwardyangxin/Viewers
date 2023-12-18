@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { annotation } from '@cornerstonejs/tools';
 import { useTrackedMeasurements } from './../getContextModule';
 import { BaseVolumeViewport, Enums } from '@cornerstonejs/core';
+import { getTimepointName } from '../utils/utils';
 
 const { formatDate } = utils;
 
@@ -219,7 +220,7 @@ function TrackedCornerstoneViewport(props) {
   const comparedStudyInstanceUID = comparedTimepoint ? comparedTimepoint.studyInstanceUid : null;
   const clinicalTrialTimePointID =
     ClinicalTrialTimePointID &&
-    '访视' + ClinicalTrialTimePointID.slice(1) +
+    getTimepointName(ClinicalTrialTimePointID.slice(1)) +
       (currentStudyInstanceUID === StudyInstanceUID ? '(当前)' : '') +
       (comparedStudyInstanceUID === StudyInstanceUID ? '(对比)' : '');
   return (

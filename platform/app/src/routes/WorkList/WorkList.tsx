@@ -50,7 +50,7 @@ const taskStatusMap = {
 };
 
 /**
- * TODO:
+ * TODO: evibased, 重构到IRC的extension？
  * - debounce `setFilterValues` (150ms?)
  */
 function WorkList({
@@ -277,7 +277,7 @@ function WorkList({
     } = study;
     // evibased, add trial info
     let trialTimePointInfo = trialTimePointId ? trialTimePointId.slice(1) : date;
-    trialTimePointInfo = i18n.t('StudyList:TimePoint') + trialTimePointInfo;
+    trialTimePointInfo = trialTimePointInfo === 0 ? '基线' : `访视${trialTimePointInfo}`;
     // task info
     let taskInfo = '';
     for (const task of tasks) {

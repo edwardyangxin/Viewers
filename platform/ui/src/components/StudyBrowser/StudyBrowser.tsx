@@ -20,6 +20,7 @@ const getTrackedSeries = displaySets => {
   return trackedSeries;
 };
 
+// TODO: evibased, deprecated, rollback to original
 const StudyBrowser = ({
   tabs,
   activeTabName,
@@ -51,9 +52,7 @@ const StudyBrowser = ({
         ifPrimary,
       }) => {
         const isExpanded = expandedStudyInstanceUIDs.includes(studyInstanceUid);
-        const trialTimePointInfo = trialTimePointId
-          ? ` ${t('Studies') + trialTimePointId.slice(1)}` + (ifPrimary ? '(当前)' : '')
-          : date;
+        const trialTimePointInfo = date;
         return (
           <React.Fragment key={studyInstanceUid}>
             <StudyItem

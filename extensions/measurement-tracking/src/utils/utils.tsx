@@ -5,6 +5,13 @@ import i18n from '@ohif/i18n';
 import { locationInfoMapping, locationOptions, nonTargetIndexOptions, 
   targetIndexOptions, targetInfoMapping, targetKeyGroup, targetOptions } from "./mappings";
 
+function getTimepointName(timepointId) {
+  if (timepointId === null || timepointId === undefined) {
+    return '未知';
+  }
+  return timepointId === 0 ? '基线' : `访视${timepointId}`;
+}
+
 function getViewportId(viewports, viewportName = 'default') {
   let targetViewportId = null;
   for (const viewport of viewports.values()) {
@@ -209,4 +216,4 @@ function getEditMeasurementLabelDialog(dialogId, dialogTitle, valueDialog,
   };
 }
 
-export { getViewportId, parseMeasurementLabelInfo, getEditMeasurementLabelDialog };
+export { getTimepointName, getViewportId, parseMeasurementLabelInfo, getEditMeasurementLabelDialog };

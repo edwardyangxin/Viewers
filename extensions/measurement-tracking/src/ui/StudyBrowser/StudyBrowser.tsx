@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import StudyItem from '../StudyItem';
 import { LegacyButtonGroup, LegacyButton, ThumbnailList, Types } from '@ohif/ui';
 import ReportThumbnailList from '../ReportThumbnailList';
+import { getTimepointName } from '../../utils/utils';
 
 const { StringNumber } = Types;
 
@@ -57,7 +58,7 @@ const StudyBrowser = ({
         const ifCurrentTimePoint = studyInstanceUid === currentStudyInstanceUID;
         const ifComparedTimePoint = studyInstanceUid === comparedStudyInstanceUID;
         const trialTimePointInfo = trialTimePointId
-          ? ` ${t('Studies') + trialTimePointId.slice(1)}` + (ifCurrentTimePoint ? '(当前)' : '') + (ifComparedTimePoint ? '(对比)' : '') 
+          ? ` ${getTimepointName(trialTimePointId.slice(1))}` + (ifCurrentTimePoint ? '(当前)' : '') + (ifComparedTimePoint ? '(对比)' : '') 
           : date;
         return (
           <React.Fragment key={studyInstanceUid}>

@@ -185,7 +185,7 @@ function PanelStudyBrowserTracking({
       let baselineStudy = undefined;
       for (let study of actuallyMappedStudies) {
         const timepointId = parseInt(study.trialTimePointId.slice(1));
-        if (timepointId === 1) {
+        if (timepointId === 0) {
           study.ifBaseline = true;
           baselineStudy = study;
         }

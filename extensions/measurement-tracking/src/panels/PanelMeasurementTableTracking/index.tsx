@@ -25,7 +25,7 @@ import { targetIndexMapping, targetInfoMapping, locationInfoMapping,
   locationOptions,
   nonTargetIndexOptions} from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
-import { getEditMeasurementLabelDialog, getViewportId, parseMeasurementLabelInfo } from '../../utils/utils';
+import { getEditMeasurementLabelDialog, getTimepointName, getViewportId, parseMeasurementLabelInfo } from '../../utils/utils';
 
 const { downloadCSVReport } = utils;
 
@@ -475,7 +475,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     } = measurement;
 
     const label = baseLabel || '(empty)';
-    const displayText = Width && Length ? [`${Width.toFixed(2)} x ${Length.toFixed(2)} ${Unit}`] : ['无法测量'];
+    // only bidirectional shows displayText for now
+    const displayText = Width && Length ? [`${Length.toFixed(2)} x ${Width.toFixed(2)} ${Unit}`] : ['无测量信息'];
 
     return {
       uid: uid,
@@ -502,7 +503,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       trialTimePointId,
       reports,
     } = comparedTimepoint;
-    const trialTimePointInfo = trialTimePointId ? `访视${trialTimePointId.slice(1)}` : '';
+    const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId.slice(1)) : '';
     // TODO: 现在只取第一个report，后续看是否需要针对展现所有人的report
     const report = reports?.[0];
 

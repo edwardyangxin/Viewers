@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
   targetKeyGroup, nontargetKeyGroup, otherKeyGroup, responseOptions } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
-import { set } from 'lodash';
+import { getTimepointName } from '../../utils/utils';
 
 
 // evibased, 右边栏上部显示的信息
@@ -119,7 +119,7 @@ function PastReports({ servicesManager, extensionManager, commandsManager }) {
       }) => {
         // TODO: isExpanded dynamic
         const isExpanded = extendedReportItems.includes(studyInstanceUid);
-        const trialTimePointInfo = trialTimePointId ? `访视${trialTimePointId.slice(1)}` : '';
+        const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId.slice(1)) : '';
         // TODO: 现在只取第一个report，后续看是否需要针对展现所有人的report
         const report = reports?.[0];
         
