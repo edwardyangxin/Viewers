@@ -33,11 +33,13 @@ const targetInfoMapping = {
   Target: '靶病灶',
   Target_NM: '靶病灶(太小无法测量)',
   Target_CR: '靶病灶(消失)',
-  Target_UN: '靶病灶(UN未知)',
+  Target_UN: '靶病灶(本次扫描未覆盖)',
   Non_Target: '非靶病灶',
   Non_Target_Disappear: '非靶病灶(消失)',
   Non_Target_Progress: '非靶病灶(进展)',
-  Non_Target_New: '非靶病灶(新发)',
+  Non_Target_Possible_New: '非靶病灶(疑似新发)',
+  Non_Target_New: '非靶病灶(确认新发)',
+  Non_Target_UN: '非靶病灶(本次扫描未覆盖)',
   Other: '其他',
 };
 
@@ -47,29 +49,35 @@ const locationInfoMapping = {
   Lymph_Node: 'Lymph Node:淋巴结',
   Liver: 'Liver:肝',
   Mediastinum_Hilum: 'Mediastinum/Hilum:纵隔/肺门',
-  Pelvis: 'Pelvis:骨盆',
-  Petritoneum_Omentum: 'Petritoneum/Omentum:腹膜/大网膜',
-  Retroperitoneum: 'Retroperitoneum:腹膜后',
   Adrenal: 'Adrenal:肾上腺',
   Bladder: 'Bladder:膀胱',
   Bone: 'Bone:骨',
   Brain: 'Brain:脑',
   Breast: 'Breast:乳腺',
-  Colon: 'Colon:结肠',
+  Central_Nervous_System: 'Central Nervous System:中枢神经系统',
+  Cervix_Uteri_Uterine: 'Cervix Uteri/Uterine:宫颈/子宫',
+  Colon_Rectum: 'Colon/Rectum:结肠/直肠',
   Esophagus: 'Esophagus:食管',
   Extremities: 'Extremities:四肢',
   Gallbladder: 'Gallbladder:胆囊',
   Kidney: 'Kidney:肾',
   Muscle: 'Muscle:肌肉',
-  Neck: 'Neck:颈',
   Other_Soft_Tissue: 'Other Soft Tissue:其他软组织',
   Ovary: 'Ovary:卵巢',
+  Pericardium: 'Pericardium:心包',
+  Pelvis: 'Pelvis:骨盆',
+  Petritoneum_Omentum: 'Petritoneum/Omentum:腹膜/大网膜',
+  Pleura: 'Pleura:胸膜',
   Pancreas: 'Pancreas:胰腺',
   Prostate: 'Prostate:前列腺',
+  Retroperitoneum: 'Retroperitoneum:腹膜后',
   Small_Bowel: 'Small Bowel:小肠',
   Spleen: 'Spleen:脾',
   Stomach: 'Stomach:胃',
-  Subcutaneous: 'Subcutaneous:皮下',
+  Skin_Subcutaneous: 'Skin/Subcutaneous:皮肤/皮下',
+  Testicle: 'Testicle:睾丸',
+  Thyroid_Gland: 'Thyroid_Gland:甲状腺',
+  Other_specify: 'other,specify:其他,请填写',
 };
 
 // options
@@ -92,7 +100,14 @@ for (const [key, value] of Object.entries(locationInfoMapping)) {
 
 // 区分target
 const targetKeyGroup = ['Target', 'Target_NM', 'Target_CR', 'Target_UN'];
-const nontargetKeyGroup = ['Non_Target', 'Non_Target_Disappear', 'Non_Target_Progress', 'Non_Target_New'];
+const nontargetKeyGroup = [
+  'Non_Target',
+  'Non_Target_Disappear',
+  'Non_Target_Progress',
+  'Non_Target_Possible_New',
+  'Non_Target_New',
+  'Non_Target_UN',
+];
 const otherKeyGroup = ['Other'];
 
 const nonTargetResponseMapping = {
@@ -111,6 +126,7 @@ const responseMapping = {
   NCR_NPD: '非CR/非PD',
   PD: '疾病进展(PD)',
   NE: '不可评估(NE)',
+  Data_Unsatisfied: '影响质量问题(不可评估)',
 };
 
 // options
@@ -125,9 +141,19 @@ for (const [key, value] of Object.entries(responseMapping)) {
 }
 
 export {
-  targetIndexMapping, nonTargetIndexMapping, targetInfoMapping, locationInfoMapping,
-  targetIndexOptions, nonTargetIndexOptions, targetOptions, locationOptions, 
-  targetKeyGroup, nontargetKeyGroup, otherKeyGroup, 
-  nonTargetResponseMapping, nonTargetResponseOptions,
-  responseOptions, responseMapping 
+  targetIndexMapping,
+  nonTargetIndexMapping,
+  targetInfoMapping,
+  locationInfoMapping,
+  targetIndexOptions,
+  nonTargetIndexOptions,
+  targetOptions,
+  locationOptions,
+  targetKeyGroup,
+  nontargetKeyGroup,
+  otherKeyGroup,
+  nonTargetResponseMapping,
+  nonTargetResponseOptions,
+  responseOptions,
+  responseMapping,
 };
