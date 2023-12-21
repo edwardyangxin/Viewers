@@ -4,6 +4,7 @@ import { id } from './id';
 import initToolGroups from './initToolGroups';
 import moreTools from './moreTools';
 import moreToolsMpr from './moreToolsMpr';
+import i18n from 'i18next';
 
 const { performAuditLog } = utils;
 
@@ -72,7 +73,7 @@ function modeFactory({ modeConfiguration }) {
     // We should not be.
     id,
     routeName: 'viewer',
-    displayName: 'Basic Viewer',
+    displayName: i18n.t('Modes:Basic Viewer'),
     /**
      * Lifecycle hooks
      */

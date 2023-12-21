@@ -1,4 +1,5 @@
 import { ButtonEnums } from '@ohif/ui';
+import i18n from 'i18next';
 
 const RESPONSE = {
   NO_NEVER: -1,
@@ -12,14 +13,14 @@ function promptBeginTracking({ servicesManager, extensionManager }, ctx, evt) {
   const { uiViewportDialogService } = servicesManager.services;
   const { viewportId, StudyInstanceUID, SeriesInstanceUID } = evt;
 
-  return new Promise(async function(resolve, reject) {
+  return new Promise(async function (resolve, reject) {
     // let promptResult = await _askTrackMeasurements(
     //   uiViewportDialogService,
     //   viewportId
     // );
 
     // evibased resolve track directlly
-    let promptResult = RESPONSE.SET_STUDY_AND_SERIES
+    let promptResult = RESPONSE.SET_STUDY_AND_SERIES;
 
     resolve({
       userResponse: promptResult,
@@ -31,25 +32,25 @@ function promptBeginTracking({ servicesManager, extensionManager }, ctx, evt) {
 }
 
 function _askTrackMeasurements(uiViewportDialogService, viewportId) {
-  return new Promise(function(resolve, reject) {
-    const message = 'Track measurements for this series?';
+  return new Promise(function (resolve, reject) {
+    const message = i18n.t('MeasurementTable:Track measurements for this series?');
     const actions = [
       {
         id: 'prompt-begin-tracking-cancel',
         type: ButtonEnums.type.secondary,
-        text: 'No',
+        text: i18n.t('Common:No'),
         value: RESPONSE.CANCEL,
       },
       {
         id: 'prompt-begin-tracking-no-do-not-ask-again',
         type: ButtonEnums.type.secondary,
-        text: 'No, do not ask again',
+        text: i18n.t('MeasurementTable:No, do not ask again'),
         value: RESPONSE.NO_NEVER,
       },
       {
         id: 'prompt-begin-tracking-yes',
         type: ButtonEnums.type.primary,
-        text: 'Yes',
+        text: i18n.t('Common:Yes'),
         value: RESPONSE.SET_STUDY_AND_SERIES,
       },
     ];

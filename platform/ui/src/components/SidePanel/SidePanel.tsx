@@ -1,14 +1,7 @@
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import React, { CSSProperties, useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import i18n from '@ohif/i18n';
-import SwiperCore, { A11y, Controller, Navigation, Pagination, Scrollbar } from 'swiper';
-import { Swiper, SwiperSlide } from 'swiper/react';
 
-import { PanelService, ServicesManager, Types } from '@ohif/core';
-
-import LegacyButton from '../LegacyButton';
 import Icon from '../Icon';
 import Tooltip from '../Tooltip';
 
@@ -137,8 +130,6 @@ const getTabIconClassNames = (numTabs: number, isActiveTab: boolean) => {
 };
 
 const SidePanel = ({ side, className, activeTabIndex: activeTabIndexProp, tabs, onOpen }) => {
-  const { t } = useTranslation('SidePanel');
-
   const [panelOpen, setPanelOpen] = useState(activeTabIndexProp !== null);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
 
@@ -285,7 +276,13 @@ const SidePanel = ({ side, className, activeTabIndex: activeTabIndexProp, tabs, 
                     data-cy={`${tab.name}-btn`}
                   >
                     <div className={getTabIconClassNames(tabs.length, tabIndex === activeTabIndex)}>
-                      <Icon name={tab.iconName}></Icon>
+                      <Icon
+                        name={tab.iconName}
+                        style={{
+                          width: '22px',
+                          height: '22px',
+                        }}
+                      ></Icon>
                     </div>
                   </div>
                 </Tooltip>
@@ -364,73 +361,5 @@ SidePanel.propTypes = {
   ]),
   onOpen: PropTypes.func,
 };
-
-function _getMoreThanOneTabLayout(
-  swiperRef: any,
-  setSwiper: React.Dispatch<any>,
-  prevRef: React.MutableRefObject<undefined>,
-  nextRef: React.MutableRefObject<undefined>,
-  tabs: any,
-  activeTabIndex: any,
-  updateActiveTabIndex
-) {
-  return (
-    <div
-      className="flex-static collapse-sidebar relative"
-      style={{
-        backgroundColor: '#06081f',
-      }}
-    >
-      <div className="w-full">
-        <Swiper
-          onInit={(core: SwiperCore) => {
-            swiperRef.current = core.el;
-          }}
-          simulateTouch={false}
-          modules={[Navigation, Pagination, Scrollbar, A11y, Controller]}
-          slidesPerView={3}
-          spaceBetween={5}
-          onSwiper={swiper => setSwiper(swiper)}
-          navigation={{
-            prevEl: prevRef?.current,
-            nextEl: nextRef?.current,
-          }}
-        >
-          {tabs.map((obj, index) => (
-            <SwiperSlide key={index}>
-              <div
-                className={classnames(
-                  index === activeTabIndex ? 'bg-secondary-main text-white' : 'text-aqua-pale',
-                  'flex cursor-pointer flex-col items-center justify-center  rounded-[4px] px-4 py-1 text-center hover:text-white'
-                )}
-                key={index}
-                onClick={() => {
-                  updateActiveTabIndex(index);
-                }}
-                data-cy={`${obj.name}-btn`}
-              >
-                <span>
-                  <Icon
-                    name={obj.iconName}
-                    className={classnames(
-                      index === activeTabIndex ? 'text-white' : 'text-primary-active'
-                    )}
-                    style={{
-                      width: '22px',
-                      height: '22px',
-                    }}
-                  />
-                </span>
-                <span className="mt-[5px] select-none whitespace-nowrap text-[10px] font-medium">
-                  {i18n.t('SidePanel:' + obj.label)}
-                </span>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-    </div>
-  );
-}
 
 export default SidePanel;
