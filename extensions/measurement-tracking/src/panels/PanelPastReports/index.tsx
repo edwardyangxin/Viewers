@@ -33,17 +33,12 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
 };
 
 
-function PastReports({ servicesManager, extensionManager, commandsManager }) {
-  const navigate = useNavigate();
+function PastReports({ servicesManager, extensionManager }) {
   const { t } = useTranslation();
   const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(
     Date.now().toString()
-  );
-  const debouncedMeasurementChangeTimestamp = useDebounce(
-    measurementChangeTimestamp,
-    200
   );
   const {
     measurementService,
@@ -57,13 +52,12 @@ function PastReports({ servicesManager, extensionManager, commandsManager }) {
     sendTrackedMeasurementsEvent,
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
-  const { trackedStudy, trackedSeries, 
-    taskInfo, successSaveReport, currentReportInfo, currentTimepoint, lastTimepoint, pastTimepoints } = trackedMeasurements.context;
+  const { 
+    pastTimepoints } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
-  const measurementsPanelRef = useRef(null);
   const [inputSOD, setInputSOD] = useState('0.0');
   const [timepointResponse, setTimepointResponse] = useState('Baseline');
   const [extendedReportItems, setExtentedReportItems] = useState([]);
@@ -108,14 +102,8 @@ function PastReports({ servicesManager, extensionManager, commandsManager }) {
     return pastTimepoints.map(
       ({
         studyInstanceUid,
-        date,
-        description,
-        numInstances,
-        modalities,
-        displaySets,
         trialTimePointId,
         reports,
-        ifPrimary,
       }) => {
         // TODO: isExpanded dynamic
         const isExpanded = extendedReportItems.includes(studyInstanceUid);
@@ -201,71 +189,6 @@ function PastReports({ servicesManager, extensionManager, commandsManager }) {
 
   return (
     <>
-      {/* <div
-        className="invisible-scrollbar overflow-y-visible overflow-x-visible"
-        ref={measurementsPanelRef}
-        data-cy={'pastReports-panel'}
-      >
-
-        {displayStudySummary.taskInfo && (
-          <TimePointSummary
-            // evibased
-            taskInfo={displayStudySummary.taskInfo}
-            timepoint={displayStudySummary.timepoint ? displayStudySummary.timepoint.slice(1) : undefined}
-            lastTimepointInfo={lastTimepoint}
-            modality={displayStudySummary.modality}
-            description={displayStudySummary.description}
-          />
-        )}
-        <MeasurementTable
-          title={t('MeasurementTable:Target Findings')}
-          data={targetFindings}
-          servicesManager={servicesManager}
-          onClick={jumpToImage}
-          onEdit={onMeasurementItemEditHandler}
-        />
-        <MeasurementTable
-          title={t('MeasurementTable:Non-Target Findings')}
-          data={nonTargetFindings}
-          servicesManager={servicesManager}
-          onClick={jumpToImage}
-          onEdit={onMeasurementItemEditHandler}
-        />
-        {otherFindings.length > 0 && (
-          <MeasurementTable
-            title={t('MeasurementTable:Other Findings')}
-            data={otherFindings}
-            servicesManager={servicesManager}
-            onClick={jumpToImage}
-            onEdit={onMeasurementItemEditHandler}
-          />
-        )}
-        <div className="mt-3">
-          <Input
-            label="总测量值SOD(回车计算公式,单位mm)"
-            labelClassName="text-white text-[14px] leading-[1.2]"
-            className="border-primary-main bg-black"
-            type="text"
-            value={inputSOD}
-            onChange={onInputChangeHandler}
-            onKeyUp={onInputKeyUpHandler}
-          />
-        </div>
-        <div>
-          <label className="text-[14px] leading-[1.2] text-white">结论(Response)</label>
-          <Select
-            id="response"
-            placeholder="选择结论(Response)"
-            value={[timepointResponse]}
-            onChange={(newSelection, action) => {
-              // console.info('newSelection:', newSelection, 'action:', action);
-              setTimepointResponse(newSelection.value);
-            }}
-            options={responseOptions}
-          />
-        </div>
-      </div> */}
-
       <div className="ohif-scrollbar invisible-scrollbar flex flex-1 flex-col overflow-auto">
         {getTabContent()}
       </div>
@@ -283,67 +206,5 @@ PastReports.propTypes = {
     }).isRequired,
   }).isRequired,
 };
-
-// TODO: This could be a measurementService mapper
-function _mapMeasurementToDisplay(measurement, types, displaySetService) {
-  const { referenceStudyUID, referenceSeriesUID, SOPInstanceUID } = measurement;
-
-  // TODO: We don't deal with multiframe well yet, would need to update
-  // This in OHIF-312 when we add FrameIndex to measurements.
-
-  const instance = DicomMetadataStore.getInstance(
-    referenceStudyUID,
-    referenceSeriesUID,
-    SOPInstanceUID
-  );
-
-  const displaySets = displaySetService.getDisplaySetsForSeries(
-    referenceSeriesUID
-  );
-
-  if (!displaySets[0] || !displaySets[0].images) {
-    throw new Error(
-      'The tracked measurements panel should only be tracking "stack" displaySets.'
-    );
-  }
-
-  const {
-    displayText: baseDisplayText,
-    uid,
-    label: baseLabel,
-    type,
-    selected,
-    findingSites,
-    finding,
-  } = measurement;
-
-  const firstSite = findingSites?.[0];
-  const label = baseLabel || finding?.text || firstSite?.text || '(empty)';
-  let displayText = baseDisplayText || [];
-  if (findingSites) {
-    const siteText = [];
-    findingSites.forEach(site => {
-      if (site?.text !== label) {
-        siteText.push(site.text);
-      }
-    });
-    displayText = [...siteText, ...displayText];
-  }
-  if (finding && finding?.text !== label) {
-    displayText = [finding.text, ...displayText];
-  }
-
-  return {
-    uid,
-    label,
-    baseLabel,
-    measurementType: type,
-    displayText,
-    baseDisplayText,
-    isActive: selected,
-    finding,
-    findingSites,
-  };
-}
 
 export default PastReports;

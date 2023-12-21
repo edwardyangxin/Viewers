@@ -38,7 +38,7 @@ const MeasurementItem = ({ uid, index, label, displayText, isActive, onClick, on
           'bg-primary-dark text-primary-light group-hover:bg-secondary-main': !isActive,
         })}
       >
-        {index}
+        {index ? index : 'NA'}
       </div>
       <div className="relative flex flex-1 flex-col px-2 py-1">
         <span className="text-primary-light mb-1 text-base">{label}</span>

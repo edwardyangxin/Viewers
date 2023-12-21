@@ -79,9 +79,11 @@ function commandsModule({
       );
     },
 
-    // evibased, 箭头标注，重构，独立的command
+    // evibased, 箭头标注callback, 默认不在此编辑
     IRCArrowTextCallback: ({ callback, data }) => {
-      callInputDialog(uiDialogService, data, callback);
+      // callInputDialog(uiDialogService, data, callback);
+      // 默认传回label，和创建annotation（save）
+      callback('no label', 'save');
     },
 
     // Just call the toolbar service record interaction - allows

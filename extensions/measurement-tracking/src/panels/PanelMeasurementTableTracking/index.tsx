@@ -166,8 +166,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               measurementsPanelRef.current.scrollTop = measurementsPanelRef.current.scrollHeight;
             }, 300)();
 
-            // evibased, call command setMeasurementLabel for newly added measurement(label is '')
-            if (data.measurement.label === '') {
+            // evibased, call command setMeasurementLabel for newly added measurement(label is '' or 'no label')
+            if (data.measurement.label === '' || data.measurement.label === 'no label') {
               commandsManager.runCommand('setIRCMeasurementLabel', {
                 uid: data.measurement.uid,
               });
@@ -232,8 +232,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         case 'save': {
           // copy measurement
           const updatedMeasurement = { ...measurement };
-          updatedMeasurement['measurementLabelInfo'] = valueDialog['measurementLabelInfo'];
-          updatedMeasurement['label'] = valueDialog['label'].join('|');
+          updatedMeasurement['measurementLabelInfo'] = value['measurementLabelInfo'];
+          updatedMeasurement['label'] = value['label'].join('|');
 
           measurementService.update(uid, updatedMeasurement, true);
         }
