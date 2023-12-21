@@ -6,7 +6,6 @@ import StudyItem from '../StudyItem';
 import LegacyButtonGroup from '../LegacyButtonGroup';
 import LegacyButton from '../LegacyButton';
 import ThumbnailList from '../ThumbnailList';
-import ReportThumbnailList from '../ReportThumbnailList';
 import { StringNumber } from '../../types';
 
 const getTrackedSeries = displaySets => {
@@ -67,13 +66,6 @@ const StudyBrowser = ({
               }}
               data-cy="thumbnail-list"
             />
-            {isExpanded && Array.isArray(reports) && reports.length > 0 && (
-              <ReportThumbnailList
-                reportThumbnails={reports}
-                onReportThumbnailClick={onClickThumbnail} // no use
-                onReportThumbnailDoubleClick={onDoubleClickReportThumbnail}
-              />
-            )}
             {isExpanded && displaySets && (
               <ThumbnailList
                 thumbnails={displaySets}

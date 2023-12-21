@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
 import StudyItem from '../StudyItem';
-import { LegacyButtonGroup, LegacyButton, ThumbnailList, Types } from '@ohif/ui';
+import { LegacyButtonGroup, LegacyButton, Types } from '@ohif/ui';
+import ThumbnailList from '../ThumbnailList';
 import ReportThumbnailList from '../ReportThumbnailList';
 import { getTimepointName } from '../../utils/utils';
 

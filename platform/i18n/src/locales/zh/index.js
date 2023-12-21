@@ -12,6 +12,7 @@ import StudyList from './StudyList.json';
 import UserPreferencesModal from './UserPreferencesModal.json';
 import ViewportDownloadForm from './ViewportDownloadForm.json';
 import StudyBrowser from './StudyBrowser.json';
+import ThumbnailTracked from './ThumbnailTracked.json';
 import Modes from './Modes.json';
 import PatientInfo from './PatientInfo.json';
 import Notification from './Notification.json';
@@ -35,6 +36,7 @@ export default {
     UserPreferencesModal,
     ViewportDownloadForm,
     StudyBrowser,
+    ThumbnailTracked,
     Modes,
     PatientInfo,
     Notification,
