@@ -37,9 +37,9 @@ const targetInfoMapping = {
   Non_Target: '非靶病灶',
   Non_Target_Disappear: '非靶病灶(消失)',
   Non_Target_Progress: '非靶病灶(进展)',
-  Non_Target_Possible_New: '非靶病灶(疑似新发)',
-  Non_Target_New: '非靶病灶(确认新发)',
   Non_Target_UN: '非靶病灶(本次扫描未覆盖)',
+  Possible_New_Lesion: '非靶病灶(疑似新发)',
+  New_Lesion: '非靶病灶(确认新发)',
   Other: '其他',
 };
 
@@ -104,11 +104,20 @@ const nontargetKeyGroup = [
   'Non_Target',
   'Non_Target_Disappear',
   'Non_Target_Progress',
-  'Non_Target_Possible_New',
-  'Non_Target_New',
   'Non_Target_UN',
+  'Possible_New_Lesion',
+  'New_Lesion',
 ];
 const otherKeyGroup = ['Other'];
+
+const targetResponseMapping = {
+  Baseline: '基线评估',
+  CR: '完全缓解(CR)',
+  PR: '部分缓解(PR)',
+  SD: '疾病稳定(SD)',
+  PD: '疾病进展(PD)',
+  NE: '不可评估(NE)',
+};
 
 const nonTargetResponseMapping = {
   Baseline: '基线评估',
@@ -130,6 +139,11 @@ const responseMapping = {
 };
 
 // options
+const targetResponseOptions = [];
+for (const [key, value] of Object.entries(targetResponseMapping)) {
+  targetResponseOptions.push({ value: key, label: value });
+}
+
 const nonTargetResponseOptions = [];
 for (const [key, value] of Object.entries(nonTargetResponseMapping)) {
   nonTargetResponseOptions.push({ value: key, label: value });
@@ -152,6 +166,8 @@ export {
   targetKeyGroup,
   nontargetKeyGroup,
   otherKeyGroup,
+  targetResponseMapping,
+  targetResponseOptions,
   nonTargetResponseMapping,
   nonTargetResponseOptions,
   responseOptions,
