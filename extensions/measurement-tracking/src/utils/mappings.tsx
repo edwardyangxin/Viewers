@@ -38,8 +38,8 @@ const targetInfoMapping = {
   Non_Target_Disappear: '非靶病灶(消失)',
   Non_Target_Progress: '非靶病灶(进展)',
   Non_Target_UN: '非靶病灶(本次扫描未覆盖)',
-  Possible_New_Lesion: '非靶病灶(疑似新发)',
-  New_Lesion: '非靶病灶(确认新发)',
+  Possible_New_Lesion: '新发病灶(疑似)',
+  New_Lesion: '新发病灶(确认)',
   Other: '其他',
 };
 
@@ -108,6 +108,7 @@ const nontargetKeyGroup = [
   'Possible_New_Lesion',
   'New_Lesion',
 ];
+const newLesionKeyGroup = ['Possible_New_Lesion', 'New_Lesion'];
 const otherKeyGroup = ['Other'];
 
 const targetResponseMapping = {
@@ -165,6 +166,7 @@ export {
   locationOptions,
   targetKeyGroup,
   nontargetKeyGroup,
+  newLesionKeyGroup,
   otherKeyGroup,
   targetResponseMapping,
   targetResponseOptions,

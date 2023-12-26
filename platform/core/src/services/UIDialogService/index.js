@@ -59,6 +59,7 @@ function _create({
   showOverlay = false,
   onClickOutside,
   defaultPosition,
+  dialogWidth,  //evibased, control dialog width
 }) {
   return serviceImplementation._create({
     id,
@@ -73,6 +74,7 @@ function _create({
     onClickOutside,
     showOverlay,
     defaultPosition,
+    dialogWidth,
   });
 }
 

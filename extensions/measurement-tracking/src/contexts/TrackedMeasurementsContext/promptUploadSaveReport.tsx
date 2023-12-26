@@ -20,10 +20,17 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const { trackedStudy, trackedSeries } = ctx;
   let displaySetInstanceUIDs;
 
+  const measurements = measurementService.getMeasurements();
+  const filteredMeasurements = measurements.filter(
+    m =>
+      trackedStudy === m.referenceStudyUID &&
+      trackedSeries.includes(m.referenceSeriesUID)
+  );
+
   //evibased, call createReportDialogPrompt and 1. store report to evibased api, 2. store report to PACS dicomSR
   return new Promise(async function (resolve, reject) {
     // TODO: Fallback if (uiDialogService) {
-    const promptResult = await createReportDialogPrompt(uiDialogService, {
+    const promptResult = await createReportDialogPrompt(uiDialogService, filteredMeasurements, {
       extensionManager, reportInfo
     });
 
