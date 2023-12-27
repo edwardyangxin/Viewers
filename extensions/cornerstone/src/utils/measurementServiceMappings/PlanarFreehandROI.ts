@@ -71,6 +71,7 @@ const PlanarFreehandROI = {
       data: { ...data, ...data.cachedStats },
       type: getValueTypeFromToolType(toolName),
       getReport,
+      measurementLabelInfo: data.measurementLabelInfo, // evibased
     };
   },
 };

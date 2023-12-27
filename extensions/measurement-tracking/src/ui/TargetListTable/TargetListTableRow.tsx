@@ -136,8 +136,6 @@ TargetListTableRow.propTypes = {
       })
     ).isRequired,
     expandedContent: PropTypes.node.isRequired,
-    onClickRow: PropTypes.func.isRequired,
-    isExpanded: PropTypes.bool.isRequired,
     dataCY: PropTypes.string,
   }),
 };

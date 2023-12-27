@@ -13,11 +13,10 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const { uiDialogService, measurementService, displaySetService } = servicesManager.services;
   const viewportId = evt.viewportId === undefined ? evt.data.viewportId : evt.viewportId;
   const isBackupSave = evt.isBackupSave === undefined ? evt.data.isBackupSave : evt.isBackupSave;
-  const reportInfo = evt.reportInfo === undefined ? evt.data.reportInfo : evt.reportInfo;
   const StudyInstanceUID = evt?.data?.StudyInstanceUID;
   const SeriesInstanceUID = evt?.data?.SeriesInstanceUID;
 
-  const { trackedStudy, trackedSeries } = ctx;
+  const { trackedStudy, trackedSeries, currentReportInfo } = ctx;
   let displaySetInstanceUIDs;
 
   const measurements = measurementService.getMeasurements();
@@ -30,17 +29,17 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   //evibased, call createReportDialogPrompt and 1. store report to evibased api, 2. store report to PACS dicomSR
   return new Promise(async function (resolve, reject) {
     // TODO: Fallback if (uiDialogService) {
-    const promptResult = await createReportDialogPrompt(uiDialogService, filteredMeasurements, {
-      extensionManager, reportInfo
+    const reportSummaryResult = await createReportDialogPrompt(uiDialogService, filteredMeasurements, {
+      extensionManager, currentReportInfo
     });
 
     let successSaveReport = false;
-    if (promptResult.action === RESPONSE.CREATE_REPORT) {
+    if (reportSummaryResult.action === RESPONSE.CREATE_REPORT) {
       // get api flag
       const _appConfig = extensionManager._appConfig;
       if (_appConfig.evibased['use_report_api']) {
         // post to report api
-        successSaveReport = await _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries, reportInfo);
+        successSaveReport = await _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries, reportSummaryResult.value.reportInfo);
       } else {
         // deprecated, SR report has limited fields, use report api instead
         // reportInfo not saved to PACS dicomSR
@@ -55,9 +54,9 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
 
         const SeriesDescription =
           // isUndefinedOrEmpty
-          promptResult.value === undefined || promptResult.value === ''
+          reportSummaryResult.value === undefined || reportSummaryResult.value === ''
             ? 'Research Derived Series' // default
-            : promptResult.value; // provided value
+            : reportSummaryResult.value; // provided value
 
         const SeriesNumber = getNextSRSeriesNumber(displaySetService);
 
@@ -82,12 +81,12 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
         });
         successSaveReport = true;
       }
-    } else if (promptResult.action === RESPONSE.CANCEL) {
+    } else if (reportSummaryResult.action === RESPONSE.CANCEL) {
       // Do nothing
     }
 
     resolve({
-      userResponse: promptResult.action,
+      userResponse: reportSummaryResult.action,
       createdDisplaySetInstanceUIDs: displaySetInstanceUIDs,
       StudyInstanceUID,
       SeriesInstanceUID,
@@ -186,6 +185,7 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       report_template_version: 'v1',
       report_comments: '',
       SOD: reportInfo ? reportInfo.SOD : '',
+      targetResponse: reportInfo ? reportInfo.targetResponse : '',
       nonTargetResponse: reportInfo ? reportInfo.nonTargetResponse : '',
       response: reportInfo ? reportInfo.response : '',
       report_info: reportInfo,

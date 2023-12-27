@@ -9,6 +9,9 @@ import {
   responseMapping,
   targetInfoMapping,
   targetKeyGroup,
+  nonTargetResponseOptions,
+  responseOptions,
+  targetResponseOptions,
 } from '../../utils/mappings';
 import TargetListTable, { TargetListExpandedRow } from '../../ui/TargetListTable';
 
@@ -41,14 +44,34 @@ function getTargetExpandedContent(targetFindings) {
           diameter: '长径(单位:mm)',
         }}
         tableDataSource={nonNymphNodes.map((dm, index) => {
-          const targetIndex = dm.measurementLabelInfo.targetIndex.label;
-          const targetType = dm.measurementLabelInfo.target.label;
-          const location = dm.measurementLabelInfo.location.label;
+          const targetIndex = dm.measurementLabelInfo.targetIndex;
+          const targetType = dm.measurementLabelInfo.target;
+          const locationStr =
+            dm.measurementLabelInfo.location.label +
+              (dm.measurementLabelInfo.locationDescription
+              ? `(${dm.measurementLabelInfo.locationDescription})`
+              : '');
+          // get diameter
+          let diameter = 0.0;
+          // get long and short axis from displayText
+          const displayText = dm.displayText[0];
+          if (displayText.includes('x') && displayText.includes('mm')) {
+            // bi-dimensional tool
+            // get long axis
+            diameter = dm.data[Object.keys(dm.data)[0]].length;
+          } else {
+            // no axis info
+            if (targetType.value === 'Target_NM') {
+              // Target_NM 太小无法测量，计5mm
+              diameter = 5.0;
+            }
+          }
+
           return {
-            index: targetIndex,
-            targetType: targetType,
-            targetLocation: location,
-            diameter: `${dm.data[Object.keys(dm.data)[0]].length.toFixed(2)} ${dm.data[Object.keys(dm.data)[0]].unit}`,
+            index: targetIndex.label,
+            targetType: targetType.label,
+            targetLocation: locationStr,
+            diameter: `${diameter.toFixed(2)} mm`,
           };
         })}
       />
@@ -62,14 +85,34 @@ function getTargetExpandedContent(targetFindings) {
             diameter: '短径(单位:mm)',
           }}
           tableDataSource={NymphNodes.map((dm, index) => {
-            const targetIndex = dm.measurementLabelInfo.targetIndex.label;
-            const targetType = dm.measurementLabelInfo.target.label;
-            const location = dm.measurementLabelInfo.location.label;
+            const targetIndex = dm.measurementLabelInfo.targetIndex;
+            const targetType = dm.measurementLabelInfo.target;
+            const locationStr =
+              dm.measurementLabelInfo.location.label +
+                (dm.measurementLabelInfo.locationDescription
+                ? `(${dm.measurementLabelInfo.locationDescription.label})`
+                : '');
+            // get diameter
+            let diameter = 0.0;
+            // get long and short axis from displayText
+            const displayText = dm.displayText[0];
+            if (displayText.includes('x') && displayText.includes('mm')) {
+              // bi-dimensional tool
+              // get short axis
+              diameter = dm.data[Object.keys(dm.data)[0]].width;
+            } else {
+              // no axis info
+              if (targetType.value === 'Target_NM') {
+                // Target_NM 太小无法测量，计5mm
+                diameter = 5.0;
+              }
+            }
+
             return {
-              index: targetIndex,
-              targetType: targetType,
-              targetLocation: location,
-              diameter: `${dm.data[Object.keys(dm.data)[0]].width.toFixed(2)} ${dm.data[Object.keys(dm.data)[0]].unit}`,
+              index: targetIndex.label,
+              targetType: targetType.label,
+              targetLocation: locationStr,
+              diameter: `${diameter.toFixed(2)} mm`,
             };
           })}
         />
@@ -90,13 +133,17 @@ function getNonTargetExpandedContent(nonTargetFindings) {
           displayText: '描述信息',
         }}
         tableDataSource={nonTargetFindings.map((dm, index) => {
-          const targetIndex = dm.measurementLabelInfo.targetIndex.label;
-          const targetType = dm.measurementLabelInfo.target.label;
-          const location = dm.measurementLabelInfo.location.label;
+          const targetIndex = dm.measurementLabelInfo.targetIndex;
+          const targetType = dm.measurementLabelInfo.target;
+          const locationStr =
+            dm.measurementLabelInfo.location.label +
+              (dm.measurementLabelInfo.locationDescription
+              ? `(${dm.measurementLabelInfo.locationDescription.label})`
+              : '');
           return {
-            index: targetIndex,
-            targetType: targetType,
-            targetLocation: location,
+            index: targetIndex.label,
+            targetType: targetType.label,
+            targetLocation: locationStr,
             displayText: `${dm.displayText.join(' ')}`,
           };
         })}
@@ -130,13 +177,17 @@ function getNewLesionExpandedContent(newLesionFindings) {
           displayText: '描述信息',
         }}
         tableDataSource={possibleNews.map((dm, index) => {
-          const targetIndex = dm.measurementLabelInfo.targetIndex.label;
-          const targetType = dm.measurementLabelInfo.target.label;
-          const location = dm.measurementLabelInfo.location.label;
+          const targetIndex = dm.measurementLabelInfo.targetIndex;
+          const targetType = dm.measurementLabelInfo.target;
+          const locationStr =
+            dm.measurementLabelInfo.location.label +
+              (dm.measurementLabelInfo.locationDescription
+              ? `(${dm.measurementLabelInfo.locationDescription.label})`
+              : '');
           return {
-            index: targetIndex,
-            targetType: targetType,
-            targetLocation: location,
+            index: targetIndex.label,
+            targetType: targetType.label,
+            targetLocation: locationStr,
             displayText: `${dm.displayText.join(' ')}`,
           };
         })}
@@ -152,13 +203,17 @@ function getNewLesionExpandedContent(newLesionFindings) {
             displayText: '描述信息',
           }}
           tableDataSource={newLeisions.map((dm, index) => {
-            const targetIndex = dm.measurementLabelInfo.targetIndex.label;
-            const targetType = dm.measurementLabelInfo.target.label;
-            const location = dm.measurementLabelInfo.location.label;
+            const targetIndex = dm.measurementLabelInfo.targetIndex;
+            const targetType = dm.measurementLabelInfo.target;
+            const locationStr =
+              dm.measurementLabelInfo.location.label +
+                (dm.measurementLabelInfo.locationDescription
+                ? `(${dm.measurementLabelInfo.locationDescription.label})`
+                : '');
             return {
-              index: targetIndex,
-              targetType: targetType,
-              targetLocation: location,
+              index: targetIndex.label,
+              targetType: targetType.label,
+              targetLocation: locationStr,
               displayText: `${dm.displayText.join(' ')}`,
             };
           })}
@@ -168,7 +223,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
   );
 }
 
-function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings) {
+function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings, SOD) {
   const tableDataSource = [];
   // target
   tableDataSource.push({
@@ -185,7 +240,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
       },
       {
         key: 'SOD',
-        content: <span>{`径合(SOD):TODO mm`}</span>,  // TODO
+        content: <span>{`径和(SOD):${SOD} mm`}</span>,
         gridCol: 3,
       },
     ],
@@ -228,14 +283,53 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
   return tableDataSource;
 }
 
-// TODO: SOD 计算放入当前页面，； 2. 太小和消失的靶病灶的长度计算显示；
-// TODO：三个评估下拉框，放入当前页面
-// TODO: 1. 位置加入description； 2. 每个病灶可以编辑description
-// TODO: 如果没有新发，不显示新发栏目
+function autoCalSOD(targetFindings) {
+  let culmulativeSOD = 0.0;
+  try {
+    // calculate SOD based on targetFindings
+    for (const dm of targetFindings) {
+      const targetOption = dm.measurementLabelInfo.target.value;
+      const location = dm.measurementLabelInfo.location.value;
+      // get long and short axis from displayText
+      const displayText = dm.displayText[0];
+      let longAxis = 0.0;
+      let shortAxis = 0.0;
+      if (displayText.includes('x') && displayText.includes('mm')) {
+        // bi-dimensional tool
+        // get long and short axis
+        longAxis = dm.data[Object.keys(dm.data)[0]].length;
+        shortAxis = dm.data[Object.keys(dm.data)[0]].width;
+      } else {
+        // no axis info
+        if (targetOption === 'Target_NM') {
+          // Target_NM 太小无法测量，计5mm
+          culmulativeSOD += 5.0;
+        }
+        continue;
+      }
+
+      // if Lymph_Node
+      if (location === 'Lymph_Node') {
+        // use short axis
+        culmulativeSOD += shortAxis;
+      } else {
+        // use long axis
+        culmulativeSOD += longAxis;
+      }
+    }
+  } catch (error) {
+    console.log('failed to parse length', error);
+  }
+  return culmulativeSOD.toFixed(2);
+}
+
+// Todo:
+// 每个病灶可以comment
+// 显示SOD变化统计信息
 export default function CreateReportDialogPrompt(
   uiDialogService,
   filteredMeasurements,
-  { extensionManager, reportInfo }
+  { extensionManager, currentReportInfo }
 ) {
   // evibased 按照target&nonTarget分组显示
   const targetFindings = [];
@@ -260,25 +354,23 @@ export default function CreateReportDialogPrompt(
   }
   // sort by index, get index from label, TODO: get index from measurementLabelInfo
   targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
-  newLesionFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+  newLesionFindings.sort(
+    (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+  );
   nonTargetFindings.sort(
     (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
   );
   // do not show otherFindings in report?
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
-  // get table data source
-  const tableDataSource = getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings);
+  // initial SOD
+  const initialSOD = autoCalSOD(targetFindings);
 
   return new Promise(function (resolve, reject) {
     let dialogId = undefined;
     // evibased, get username, timestamp and comment for default report name
     const { userAuthenticationService } = extensionManager._servicesManager.services;
     const userInfo = userAuthenticationService.getUser();
-    // labelTemplate deprecated
-    let labelTemplate = userInfo ? userInfo.profile.preferred_username : 'unknown_user';
-    labelTemplate += '|' + new Date().toISOString().slice(0, 16).replace(/-/g, '');
-    labelTemplate += '|请在这里填写注释等信息';
 
     const _handleClose = () => {
       // Dismiss dialog
@@ -302,33 +394,24 @@ export default function CreateReportDialogPrompt(
         case 'save':
           resolve({
             action: CREATE_REPORT_DIALOG_RESPONSE.CREATE_REPORT,
-            value: value.label,
-            dataSourceName: value.dataSourceName,
+            value: {...value, reportInfo: {
+              SOD: value.SOD,
+              targetResponse: value.targetResponse,
+              nonTargetResponse: value.nonTargetResponse,
+              response: value.response,
+            }},
+            dataSourceName: undefined, // deprecated
           });
           break;
         case 'cancel':
           resolve({
             action: CREATE_REPORT_DIALOG_RESPONSE.CANCEL,
             value: undefined,
-            dataSourceName: undefined,
+            dataSourceName: undefined, // deprecated
           });
           break;
       }
     };
-
-    const dataSourcesOpts = Object.keys(extensionManager.dataSourceMap)
-      .filter(ds => {
-        const configuration = extensionManager.dataSourceDefs[ds]?.configuration;
-        const supportsStow = configuration?.supportsStow ?? configuration?.wadoRoot;
-        return supportsStow;
-      })
-      .map(ds => {
-        return {
-          value: ds,
-          label: ds,
-          placeHolder: ds,
-        };
-      });
 
     dialogId = uiDialogService.create({
       centralize: true,
@@ -340,9 +423,13 @@ export default function CreateReportDialogPrompt(
       contentProps: {
         title: i18n.t('MeasurementTable:Create Report'),
         value: {
-          label: labelTemplate,
-          dataSourceName: extensionManager.activeDataSource,
-          reportInfo: reportInfo,
+          targetFindings: targetFindings,
+          nonTargetFindings: nonTargetFindings,
+          newLesionFindings: newLesionFindings,
+          SOD: currentReportInfo ? currentReportInfo.SOD : initialSOD,
+          targetResponse: currentReportInfo ? currentReportInfo.targetResponse : 'Baseline',
+          nonTargetResponse: currentReportInfo ? currentReportInfo.nonTargetResponse : 'Baseline',
+          response: currentReportInfo ? currentReportInfo.response : 'Baseline',
         },
         noCloseButton: true,
         onClose: _handleClose,
@@ -354,93 +441,105 @@ export default function CreateReportDialogPrompt(
           },
           { id: 'save', text: i18n.t('MeasurementTable:Save'), type: ButtonEnums.type.primary },
         ],
-        // TODO: Should be on button press...
         onSubmit: _handleFormSubmit,
         body: ({ value, setValue }) => {
-          const onChangeHandler = event => {
+          // for SOD input
+          const onSODInputChangeHandler = event => {
             event.persist();
-            setValue(value => ({ ...value, label: event.target.value }));
+            setValue(value => ({ ...value, SOD: event.target.value }));
           };
-          const onKeyPressHandler = event => {
+
+          const onSODInputKeyUpHandler = event => {
+            event.persist();
             if (event.key === 'Enter') {
-              uiDialogService.dismiss({ id: dialogId });
-              resolve({
-                action: CREATE_REPORT_DIALOG_RESPONSE.CREATE_REPORT,
-                value: value.label,
-              });
+              const inputStr = event.target.value;
+              let result = inputStr;
+              // calculate SOD if input is equation
+              if (inputStr.includes('+') || inputStr.includes('-')) {
+                try {
+                  // Using Function constructor
+                  const calculateResult = new Function('return ' + inputStr);
+                  // Call the function to get the result
+                  result = calculateResult();
+                  result = result.toFixed(2);
+                } catch (error) {
+                  console.log('failed to calculate SOD', error);
+                }
+              }
+              setValue(value => ({ ...value, SOD: result }));
             }
           };
+
           return (
             <>
-              {/* evibased, multi datasource but same backend api */}
-              {/* {dataSourcesOpts.length > 1 && window.config?.allowMultiSelectExport && (
-                <div>
-                  <label className="text-[14px] leading-[1.2] text-white">Data Source</label>
-                  <Select
-                    closeMenuOnSelect={true}
-                    className="border-primary-main  mt-2 bg-black"
-                    options={dataSourcesOpts}
-                    placeholder={
-                      dataSourcesOpts.find(option => option.value === value.dataSourceName)
-                        .placeHolder
-                    }
-                    value={value.dataSourceName}
-                    onChange={evt => {
-                      setValue(v => ({ ...v, dataSourceName: evt.value }));
-                    }}
-                    isClearable={false}
-                  />
-                </div>
-              )}
-              {!extensionManager._appConfig.evibased['use_report_api'] && (
-                <div className="mt-3">
-                  <Input
-                    autoFocus
-                    label="Enter the report name"
-                    labelClassName="text-white text-[14px] leading-[1.2]"
-                    className="border-primary-main bg-black"
-                    type="text"
-                    value={value.label}
-                    onChange={onChangeHandler}
-                    onKeyPress={onKeyPressHandler}
-                    required
-                  />
-                </div>
-              )} */}
               <div className="flex h-full flex-col bg-black ">
-                <div className="ohif-scrollbar flex grow flex-col overflow-y-auto">
+                <div className="flex grow flex-col overflow-visible">
                   <div className="flex grow flex-col">
-                    <TargetListTable tableDataSource={tableDataSource} />
-                  </div>
-                  <div className="mt-3">
-                    <Input
-                      label="直径总和SOD(单位:mm)"
-                      labelClassName="text-white text-[14px] leading-[1.2]"
-                      className="border-primary-main bg-black"
-                      type="text"
-                      value={value.reportInfo.SOD}
-                      disabled
+                    <TargetListTable
+                      tableDataSource={getTableDataSource(
+                        value.targetFindings,
+                        value.nonTargetFindings,
+                        value.newLesionFindings,
+                        value.SOD
+                      )}
                     />
                   </div>
-                  <div>
-                    <Input
-                      label="非靶病灶评估"
-                      labelClassName="text-white text-[14px] leading-[1.2]"
-                      className="border-primary-main bg-black"
-                      type="text"
-                      value={nonTargetResponseMapping[value.reportInfo.nonTargetResponse]}
-                      disabled
-                    />
+                  <div className="flex grow flex-row justify-evenly mt-3">
+                    <div className="w-1/3">
+                      <Input
+                        label="直径总和SOD(回车计算公式,单位mm)"
+                        labelClassName="text-white text-[14px] leading-[1.2]"
+                        className="border-primary-main bg-black"
+                        type="text"
+                        value={value.SOD}
+                        onChange={onSODInputChangeHandler}
+                        onKeyUp={onSODInputKeyUpHandler}
+                      />
+                    </div>
+                    <div className="w-1/3">
+                      <label className="text-[14px] leading-[1.2] text-white">靶病灶评估</label>
+                      <Select
+                        id="targetResponse"
+                        isClearable={false}
+                        placeholder="靶病灶评估"
+                        value={[value.targetResponse]}
+                        onChange={(newSelection, action) => {
+                          // console.info('newSelection:', newSelection, 'action:', action);
+                          setValue(value => ({ ...value, targetResponse: newSelection?.value }));
+                        }}
+                        options={targetResponseOptions}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Input
-                      label="总体评估"
-                      labelClassName="text-white text-[14px] leading-[1.2]"
-                      className="border-primary-main bg-black"
-                      type="text"
-                      value={responseMapping[value.reportInfo.response]}
-                      disabled
-                    />
+                  <div className="flex grow flex-row justify-evenly">
+                    <div className="w-1/3">
+                      <label className="text-[14px] leading-[1.2] text-white">非靶病灶评估</label>
+                      <Select
+                        id="nonTargetResponse"
+                        isClearable={false}
+                        placeholder="非靶病灶评估"
+                        value={[value.nonTargetResponse]}
+                        onChange={(newSelection, action) => {
+                          // console.info('newSelection:', newSelection, 'action:', action);
+                          setValue(value => ({ ...value, nonTargetResponse: newSelection?.value }));
+                        }}
+                        options={nonTargetResponseOptions}
+                      />
+                    </div>
+                    <div className="w-1/3">
+                      <label className="text-[14px] leading-[1.2] text-white">总体评估</label>
+                      <Select
+                        id="response"
+                        isClearable={false}
+                        placeholder="总体评估"
+                        value={[value.response]}
+                        onChange={(newSelection, action) => {
+                          // console.info('newSelection:', newSelection, 'action:', action);
+                          setValue(value => ({ ...value, response: newSelection?.value }));
+                        }}
+                        options={responseOptions}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

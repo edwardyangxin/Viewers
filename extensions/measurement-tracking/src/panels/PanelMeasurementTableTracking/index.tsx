@@ -626,7 +626,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             onEdit={onMeasurementItemEditHandler}
           />
         )}
-        <div className="mt-3">
+        {/* deprecated */}
+        {/* <div className="mt-3">
           <Input
             label="直径总和SOD(回车计算公式,单位mm)"
             labelClassName="text-white text-[14px] leading-[1.2]"
@@ -662,7 +663,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             }}
             options={responseOptions}
           />
-        </div>
+        </div> */}
       </div>
       <div className="flex justify-center p-4">
         <ActionButtons
