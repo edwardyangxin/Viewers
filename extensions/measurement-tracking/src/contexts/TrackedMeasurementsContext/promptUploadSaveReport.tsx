@@ -16,21 +16,14 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const StudyInstanceUID = evt?.data?.StudyInstanceUID;
   const SeriesInstanceUID = evt?.data?.SeriesInstanceUID;
 
-  const { trackedStudy, trackedSeries, currentReportInfo } = ctx;
+  const { trackedStudy, trackedSeries } = ctx;
   let displaySetInstanceUIDs;
-
-  const measurements = measurementService.getMeasurements();
-  const filteredMeasurements = measurements.filter(
-    m =>
-      trackedStudy === m.referenceStudyUID &&
-      trackedSeries.includes(m.referenceSeriesUID)
-  );
 
   //evibased, call createReportDialogPrompt and 1. store report to evibased api, 2. store report to PACS dicomSR
   return new Promise(async function (resolve, reject) {
     // TODO: Fallback if (uiDialogService) {
-    const reportSummaryResult = await createReportDialogPrompt(uiDialogService, filteredMeasurements, {
-      extensionManager, currentReportInfo
+    const reportSummaryResult = await createReportDialogPrompt(ctx, uiDialogService, measurementService, {
+      extensionManager,
     });
 
     let successSaveReport = false;

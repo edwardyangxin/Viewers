@@ -790,6 +790,10 @@ module.exports = {
     transitionTimingFunction: ['responsive'],
     transitionDuration: ['responsive'],
   },
+  // evibased, 动态生成的class会丢失（例如w-x/y）
+  safelist: [
+    'w-1/5',
+  ],
   corePlugins: {},
   plugins: [],
 };

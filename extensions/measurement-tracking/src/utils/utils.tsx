@@ -151,7 +151,7 @@ function getEditMeasurementLabelDialog(
               }}
               options={targetOptions}
             />
-            <label className="text-[14px] leading-[1.2] text-white">选择病灶编号</label>
+            <label className="text-[14px] leading-[1.2] text-white mt-2">选择病灶编号</label>
             <Select
               id="targetIndex"
               placeholder="选择病灶编号"
@@ -175,7 +175,7 @@ function getEditMeasurementLabelDialog(
                   : nonTargetIndexOptions
               }
             />
-            <label className="text-[14px] leading-[1.2] text-white">选择病灶位置</label>
+            <label className="text-[14px] leading-[1.2] text-white mt-2">选择病灶位置</label>
             <Select
               id="location"
               placeholder="选择病灶器官"
@@ -199,8 +199,7 @@ function getEditMeasurementLabelDialog(
               className="border-primary-main bg-black"
               type="text"
               id="location-description"
-              label="病灶位置描述"
-              labelClassName="text-white text-[10px] leading-[1.2]"
+              labelClassName="hidden text-white text-[10px] leading-[1.2]"
               smallInput={true}
               placeholder="病灶位置描述"
               value={
@@ -235,6 +234,54 @@ function getEditMeasurementLabelDialog(
                       measurementLabelInfo: {
                         ...value.measurementLabelInfo,
                         locationDescription: event.target.value,
+                      },
+                    };
+                    console.info('value:', newValue);
+                    return newValue;
+                  });
+                }
+              }}
+            />
+            <Input
+              className="border-primary-main bg-black"
+              type="text"
+              id="comment"
+              label="病灶备注"
+              labelClassName="text-white text-[14px] leading-[1.2] mt-2"
+              smallInput={false}
+              placeholder="病灶备注"
+              value={
+                value.measurementLabelInfo?.comment
+                  ? value.measurementLabelInfo?.comment
+                  : ''
+              }
+              onChange={event => {
+                event.persist();
+                setValue(value => {
+                  console.info('event:', event);
+                  // update label info
+                  const newValue = {
+                    ...value,
+                    measurementLabelInfo: {
+                      ...value.measurementLabelInfo,
+                      comment: event.target.value,
+                    },
+                  };
+                  console.info('value:', newValue);
+                  return newValue;
+                });
+              }}
+              onKeyUp={event => {
+                event.persist();
+                if (event.key === 'Enter') {
+                  setValue(value => {
+                    console.info('event:', event);
+                    // update label info
+                    const newValue = {
+                      ...value,
+                      measurementLabelInfo: {
+                        ...value.measurementLabelInfo,
+                        comment: event.target.value,
                       },
                     };
                     console.info('value:', newValue);

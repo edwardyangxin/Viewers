@@ -180,9 +180,11 @@ function PanelStudyBrowserTracking({
         }
       }
 
+      // get last timepoint and baseline timepoint, lowest SOD timepoint
       let lastTimepointStudy = undefined;
       const lastTimepointId = parseInt(currentTimepoint.trialTimePointId.slice(1)) - 1;
       let baselineStudy = undefined;
+      let lowestSODStudy = undefined;
       for (let study of actuallyMappedStudies) {
         const timepointId = parseInt(study.trialTimePointId.slice(1));
         if (timepointId === 0) {
@@ -193,6 +195,17 @@ function PanelStudyBrowserTracking({
           study.ifLastTimepoint = true;
           lastTimepointStudy = study;
         }
+        const reports = study.reports;
+        if (reports && reports.length > 0) {
+          // get lowest SOD timepoint, TODO: 默认使用了reports[0]第一个report
+          const sod = parseFloat(reports[0].SOD);
+          study.SOD = sod;
+          if (sod) {
+            if (!lowestSODStudy || sod < lowestSODStudy.SOD) {
+              lowestSODStudy = study;
+            }
+          }
+        }
       }
 
       // if followups, auto go to compared mode if not
@@ -200,12 +213,18 @@ function PanelStudyBrowserTracking({
         navigate(`/viewer?StudyInstanceUIDs=${currentTimepoint.studyInstanceUid}&StudyInstanceUIDs=${lastTimepointStudy.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`, '_self');
       }
 
+      //  TODO: task check point, 如果不通过就暂停所有任务, if no baselineTimepoint or lowestSODTimepoint ...., show error and 联系管理员
+
       sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT', {
         currentTimepoint: currentTimepoint,
       });
 
       sendTrackedMeasurementsEvent('UPDATE_BASELINE_TIMEPOINT', {
         baselineTimepoint: baselineStudy,
+      });
+
+      sendTrackedMeasurementsEvent('UPDATE_LOWEST_SOD_TIMEPOINT', {
+        lowestSODTimepoint: lowestSODStudy,
       });
 
       sendTrackedMeasurementsEvent('UPDATE_LAST_TIMEPOINT', {

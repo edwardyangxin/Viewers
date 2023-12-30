@@ -42,13 +42,14 @@ function getTargetExpandedContent(targetFindings) {
           targetType: '靶病灶类型',
           targetLocation: '靶病灶位置',
           diameter: '长径(单位:mm)',
+          comment: '备注',
         }}
         tableDataSource={nonNymphNodes.map((dm, index) => {
           const targetIndex = dm.measurementLabelInfo.targetIndex;
           const targetType = dm.measurementLabelInfo.target;
           const locationStr =
             dm.measurementLabelInfo.location.label +
-              (dm.measurementLabelInfo.locationDescription
+            (dm.measurementLabelInfo.locationDescription
               ? `(${dm.measurementLabelInfo.locationDescription})`
               : '');
           // get diameter
@@ -72,6 +73,7 @@ function getTargetExpandedContent(targetFindings) {
             targetType: targetType.label,
             targetLocation: locationStr,
             diameter: `${diameter.toFixed(2)} mm`,
+            comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
         })}
       />
@@ -83,14 +85,15 @@ function getTargetExpandedContent(targetFindings) {
             targetType: '靶病灶类型',
             targetLocation: '靶病灶位置',
             diameter: '短径(单位:mm)',
+            comment: '备注',
           }}
           tableDataSource={NymphNodes.map((dm, index) => {
             const targetIndex = dm.measurementLabelInfo.targetIndex;
             const targetType = dm.measurementLabelInfo.target;
             const locationStr =
               dm.measurementLabelInfo.location.label +
-                (dm.measurementLabelInfo.locationDescription
-                ? `(${dm.measurementLabelInfo.locationDescription.label})`
+              (dm.measurementLabelInfo.locationDescription
+                ? `(${dm.measurementLabelInfo.locationDescription})`
                 : '');
             // get diameter
             let diameter = 0.0;
@@ -113,6 +116,7 @@ function getTargetExpandedContent(targetFindings) {
               targetType: targetType.label,
               targetLocation: locationStr,
               diameter: `${diameter.toFixed(2)} mm`,
+              comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             };
           })}
         />
@@ -131,20 +135,22 @@ function getNonTargetExpandedContent(nonTargetFindings) {
           targetType: '非靶病灶类型',
           targetLocation: '非靶病灶位置',
           displayText: '描述信息',
+          comment: '备注',
         }}
         tableDataSource={nonTargetFindings.map((dm, index) => {
           const targetIndex = dm.measurementLabelInfo.targetIndex;
           const targetType = dm.measurementLabelInfo.target;
           const locationStr =
             dm.measurementLabelInfo.location.label +
-              (dm.measurementLabelInfo.locationDescription
-              ? `(${dm.measurementLabelInfo.locationDescription.label})`
+            (dm.measurementLabelInfo.locationDescription
+              ? `(${dm.measurementLabelInfo.locationDescription})`
               : '');
           return {
             index: targetIndex.label,
             targetType: targetType.label,
             targetLocation: locationStr,
             displayText: `${dm.displayText.join(' ')}`,
+            comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
         })}
       />
@@ -175,20 +181,22 @@ function getNewLesionExpandedContent(newLesionFindings) {
           targetType: '新发病灶类型',
           targetLocation: '新发病灶位置',
           displayText: '描述信息',
+          comment: '备注',
         }}
         tableDataSource={possibleNews.map((dm, index) => {
           const targetIndex = dm.measurementLabelInfo.targetIndex;
           const targetType = dm.measurementLabelInfo.target;
           const locationStr =
             dm.measurementLabelInfo.location.label +
-              (dm.measurementLabelInfo.locationDescription
-              ? `(${dm.measurementLabelInfo.locationDescription.label})`
+            (dm.measurementLabelInfo.locationDescription
+              ? `(${dm.measurementLabelInfo.locationDescription})`
               : '');
           return {
             index: targetIndex.label,
             targetType: targetType.label,
             targetLocation: locationStr,
             displayText: `${dm.displayText.join(' ')}`,
+            comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
         })}
       />
@@ -207,14 +215,15 @@ function getNewLesionExpandedContent(newLesionFindings) {
             const targetType = dm.measurementLabelInfo.target;
             const locationStr =
               dm.measurementLabelInfo.location.label +
-                (dm.measurementLabelInfo.locationDescription
-                ? `(${dm.measurementLabelInfo.locationDescription.label})`
+              (dm.measurementLabelInfo.locationDescription
+                ? `(${dm.measurementLabelInfo.locationDescription})`
                 : '');
             return {
               index: targetIndex.label,
               targetType: targetType.label,
               targetLocation: locationStr,
               displayText: `${dm.displayText.join(' ')}`,
+              comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             };
           })}
         />
@@ -240,7 +249,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
       },
       {
         key: 'SOD',
-        content: <span>{`径和(SOD):${SOD} mm`}</span>,
+        content: <span>{`径线和(SOD):${SOD} mm`}</span>,
         gridCol: 3,
       },
     ],
@@ -323,14 +332,33 @@ function autoCalSOD(targetFindings) {
   return culmulativeSOD.toFixed(2);
 }
 
-// Todo:
-// 每个病灶可以comment
-// 显示SOD变化统计信息
+// 
 export default function CreateReportDialogPrompt(
+  ctx,
   uiDialogService,
-  filteredMeasurements,
-  { extensionManager, currentReportInfo }
+  measurementService,
+  { extensionManager }
 ) {
+  const { trackedStudy, trackedSeries, currentReportInfo, currentTimepoint, 
+    baselineTimepoint, lowestSODTimepoint } = ctx;
+
+  const measurements = measurementService.getMeasurements();
+  const filteredMeasurements = measurements.filter(
+    m =>
+      trackedStudy === m.referenceStudyUID &&
+      trackedSeries.includes(m.referenceSeriesUID)
+  );
+
+  // if baseline or followup
+  const ifBaseline = currentTimepoint.ifBaseline;
+  // SODs
+  let baselineSOD = undefined;
+  let lowestSOD = undefined;
+  if (!ifBaseline) {
+    baselineSOD = baselineTimepoint?.SOD;
+    lowestSOD = lowestSODTimepoint?.SOD;
+  }
+
   // evibased 按照target&nonTarget分组显示
   const targetFindings = [];
   const nonTargetFindings = [];
@@ -394,12 +422,16 @@ export default function CreateReportDialogPrompt(
         case 'save':
           resolve({
             action: CREATE_REPORT_DIALOG_RESPONSE.CREATE_REPORT,
-            value: {...value, reportInfo: {
-              SOD: value.SOD,
-              targetResponse: value.targetResponse,
-              nonTargetResponse: value.nonTargetResponse,
-              response: value.response,
-            }},
+            value: {
+              ...value,
+              reportInfo: {
+                SOD: value.SOD,
+                targetResponse: value.targetResponse,
+                nonTargetResponse: value.nonTargetResponse,
+                response: value.response,
+                comment: value.comment,
+              },
+            },
             dataSourceName: undefined, // deprecated
           });
           break;
@@ -430,6 +462,7 @@ export default function CreateReportDialogPrompt(
           targetResponse: currentReportInfo ? currentReportInfo.targetResponse : 'Baseline',
           nonTargetResponse: currentReportInfo ? currentReportInfo.nonTargetResponse : 'Baseline',
           response: currentReportInfo ? currentReportInfo.response : 'Baseline',
+          comment: currentReportInfo ? currentReportInfo.comment : '',
         },
         noCloseButton: true,
         onClose: _handleClose,
@@ -484,7 +517,7 @@ export default function CreateReportDialogPrompt(
                       )}
                     />
                   </div>
-                  <div className="flex grow flex-row justify-evenly mt-3">
+                  <div className="mt-3 flex grow flex-row justify-evenly">
                     <div className="w-1/3">
                       <Input
                         label="直径总和SOD(回车计算公式,单位mm)"
@@ -497,7 +530,15 @@ export default function CreateReportDialogPrompt(
                       />
                     </div>
                     <div className="w-1/3">
-                      <label className="text-[14px] leading-[1.2] text-white">靶病灶评估</label>
+                      {ifBaseline ? (
+                        <label className="text-[14px] leading-[1.2] text-white">靶病灶评估</label>
+                      ) : (
+                        <label className="text-[14px] leading-[1.2] text-white">{`靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${(
+                          ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) * 100).toFixed(1)}%; 
+                          与最低SOD(${lowestSOD}mm)变化:${(parseFloat(value.SOD) - lowestSOD).toFixed(1)}mm,
+                          ${(((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(1)}%)`}
+                        </label>
+                      )}
                       <Select
                         id="targetResponse"
                         isClearable={false}
@@ -508,6 +549,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, targetResponse: newSelection?.value }));
                         }}
                         options={targetResponseOptions}
+                        isDisabled={ifBaseline}
                       />
                     </div>
                   </div>
@@ -524,6 +566,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, nonTargetResponse: newSelection?.value }));
                         }}
                         options={nonTargetResponseOptions}
+                        isDisabled={ifBaseline}
                       />
                     </div>
                     <div className="w-1/3">
@@ -538,6 +581,31 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, response: newSelection?.value }));
                         }}
                         options={responseOptions}
+                        isDisabled={ifBaseline}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex grow flex-row justify-evenly">
+                    <div className="w-1/2">
+                    <Input
+                        className="border-primary-main bg-black"
+                        type="text"
+                        id="comment"
+                        label="备注信息"
+                        labelClassName="text-white text-[12px] leading-[1.2] mt-2"
+                        smallInput={false}
+                        placeholder="备注信息"
+                        value={value.comment}
+                        onChange={event => {
+                          event.persist();
+                          setValue(value => ({ ...value, comment: event.target.value }));
+                        }}
+                        onKeyUp={event => {
+                          event.persist();
+                          if (event.key === 'Enter') {
+                            setValue(value => ({ ...value, comment: event.target.value }));
+                          }
+                        }}
                       />
                     </div>
                   </div>

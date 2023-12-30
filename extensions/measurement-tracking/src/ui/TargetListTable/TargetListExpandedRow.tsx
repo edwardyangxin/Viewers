@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Table, TableHead, TableBody, TableRow, TableCell, Tooltip, Typography } from '@ohif/ui';
+import { Table, TableHead, TableBody, TableRow, TableCell } from '@ohif/ui';
 
 const TargetListExpandedRow = ({
   tableTitle,
@@ -9,6 +9,7 @@ const TargetListExpandedRow = ({
   tableDataSource,
   tabelBgColor = 'bg-black',
 }) => {
+  const cellsNum = Object.keys(tableColumns).length;
   return (
     <div className={`w-full py-4 pl-12 pr-2 ${tabelBgColor}`}>
       {tableTitle && <div className="text-lg font-bold text-white">{tableTitle}</div>}
@@ -17,7 +18,14 @@ const TargetListExpandedRow = ({
           <TableHead>
             <TableRow>
               {Object.keys(tableColumns).map(columnKey => {
-                return <TableCell key={columnKey}>{tableColumns[columnKey]}</TableCell>;
+                return (
+                  <TableCell
+                    cellsNum={cellsNum}
+                    key={columnKey}
+                  >
+                    {tableColumns[columnKey]}
+                  </TableCell>
+                );
               })}
             </TableRow>
           </TableHead>
@@ -27,7 +35,14 @@ const TargetListExpandedRow = ({
               <TableRow key={i}>
                 {Object.keys(row).map(cellKey => {
                   const content = row[cellKey];
-                  return <TableCell key={cellKey}>{content}</TableCell>;
+                  return (
+                    <TableCell
+                      cellsNum={cellsNum}
+                      key={cellKey}
+                    >
+                      {content}
+                    </TableCell>
+                  );
                 })}
               </TableRow>
             ))}

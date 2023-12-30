@@ -34,6 +34,7 @@ const machineConfiguration = {
     currentTimepoint: undefined,
     baselineTimepoint: undefined,
     lastTimepoint: undefined,
+    lowestSODTimepoint: undefined,
     comparedTimepoint: undefined,
     pastTimepoints: undefined,
     currentReportInfo: undefined,
@@ -92,6 +93,11 @@ const machineConfiguration = {
         UPDATE_LAST_TIMEPOINT: {
           actions: assign({
             lastTimepoint: (_, event) => event.lastTimepoint,
+          }),
+        },
+        UPDATE_LOWEST_SOD_TIMEPOINT: {
+          actions: assign({
+            lowestSODTimepoint: (_, event) => event.lowestSODTimepoint,
           }),
         },
         UPDATE_COMPARED_TIMEPOINT: {
