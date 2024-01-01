@@ -176,13 +176,8 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       task: taskId,
       report_template: 'RECIST1.1',
       report_template_version: 'v1',
-      report_comments: '',
-      SOD: reportInfo ? reportInfo.SOD : '',
-      targetResponse: reportInfo ? reportInfo.targetResponse : '',
-      nonTargetResponse: reportInfo ? reportInfo.nonTargetResponse : '',
-      response: reportInfo ? reportInfo.response : '',
-      report_info: reportInfo,
       measurements: trackedMeasurements,
+      ...reportInfo,
     };
     const reportResponse = await fetch(uploadReportUrl, {
       method: 'POST',
