@@ -277,7 +277,7 @@ function WorkList({
     } = study;
     // evibased, add trial info
     let trialTimePointInfo = trialTimePointId ? trialTimePointId.slice(1) : date;
-    trialTimePointInfo = trialTimePointInfo === 0 ? '基线' : `访视${trialTimePointInfo}`;
+    trialTimePointInfo = parseInt(trialTimePointInfo) === 0 ? '基线' : `访视${trialTimePointInfo}`;
     // task info
     let taskInfo = '';
     for (const task of tasks) {

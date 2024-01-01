@@ -16,7 +16,7 @@ function getTimepointName(timepointId) {
   if (timepointId === null || timepointId === undefined) {
     return '未知';
   }
-  return timepointId === 0 ? '基线' : `访视${timepointId}`;
+  return parseInt(timepointId) === 0 ? '基线' : `访视${timepointId}`;
 }
 
 function getViewportId(viewports, viewportName = 'default') {

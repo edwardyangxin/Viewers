@@ -30,7 +30,7 @@ const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabel
     percent = Math.round(currentLabels / todoLabels);
     if (percent && percent > 1) {
       percent = 1;
-    };
+    }
     validPercent = true;
   }
   return (
@@ -48,16 +48,9 @@ const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabel
             {modality}
           </span> */}
         </div>
-        {/* {ifBaseline && (
-          <div className="text-primary-light ellipse truncate pt-2 text-base leading-none">
-            {`正在标注: 访视${timepoint}(基线)`}
-          </div>
-        )}
-        {!ifBaseline && (
-          <div className="text-primary-light ellipse truncate pt-2 text-base leading-none">
-            {`正在标注: 访视${timepoint}`}
-          </div>
-        )} */}
+        {/* <div className="text-primary-light ellipse truncate pt-2 text-base leading-none">
+          {`正在标注: `}
+        </div> */}
       </div>
       {/* progress */}
       {!ifBaseline && (
