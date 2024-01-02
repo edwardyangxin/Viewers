@@ -27,11 +27,11 @@ const TargetListTable = ({ tableDataSource }) => {
 TargetListTable.propTypes = {
   tableDataSource: PropTypes.arrayOf(
     PropTypes.shape({
-      row: PropTypes.array.isRequired,
-      expandedContent: PropTypes.node.isRequired,
+      row: PropTypes.array,
+      expandedContent: PropTypes.node,
       querying: PropTypes.bool,
-      onClickRow: PropTypes.func.isRequired,
-      isExpanded: PropTypes.bool.isRequired,
+      onClickRow: PropTypes.func,
+      isExpanded: PropTypes.bool,
     })
   ),
 };

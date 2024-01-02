@@ -263,6 +263,76 @@ const moreTools = [
           'Rectangle'
         ),
         ToolbarService._createToolButton(
+          'Length',
+          'tool-length',
+          'Length',
+          [
+            {
+              commandName: 'setToolActive',
+              commandOptions: {
+                toolName: 'Length',
+              },
+              context: 'CORNERSTONE',
+            },
+            {
+              commandName: 'setToolActive',
+              commandOptions: {
+                toolName: 'SRLength',
+                toolGroupId: 'SRToolGroup',
+              },
+              // we can use the setToolActive command for this from Cornerstone commandsModule
+              context: 'CORNERSTONE',
+            },
+          ],
+          'Length Tool'
+        ),
+        ToolbarService._createToolButton(
+          'EllipticalROI',
+          'tool-elipse',
+          'Ellipse',
+          [
+            {
+              commandName: 'setToolActive',
+              commandOptions: {
+                toolName: 'EllipticalROI',
+              },
+              context: 'CORNERSTONE',
+            },
+            {
+              commandName: 'setToolActive',
+              commandOptions: {
+                toolName: 'SREllipticalROI',
+                toolGroupId: 'SRToolGroup',
+              },
+              context: 'CORNERSTONE',
+            },
+          ],
+          'Ellipse Tool'
+        ),
+        ToolbarService._createToolButton(
+          'CircleROI',
+          'tool-circle',
+          'Circle',
+          [
+            {
+              commandName: 'setToolActive',
+              commandOptions: {
+                toolName: 'CircleROI',
+              },
+              context: 'CORNERSTONE',
+            },
+            {
+              commandName: 'setToolActive',
+              commandOptions: {
+                toolName: 'SRCircleROI',
+                toolGroupId: 'SRToolGroup',
+              },
+              context: 'CORNERSTONE',
+            },
+          ],
+          'Circle Tool'
+        ),
+        ToolbarService._createToolButton(
           'CalibrationLine',
           'tool-calibration',
           'Calibration',

@@ -13,10 +13,9 @@ const RESPONSE = {
 function updateBackendReport({ servicesManager, extensionManager, appConfig }, ctx, evt) {
   const { measurementService } = servicesManager.services;
   const { viewportId } = evt;
-  const reportData = evt.reportData;
+  const reportInfo = evt.reportInfo;
 
-  const reportInfo = reportData.report_info;
-  const measurements = reportData.measurements;
+  const measurements = reportInfo.measurements;
 
   // for tracking StudyInstanceUID, SeriesInstanceUID
   let trackedStudyInstanceUID, trackedSeriesInstanceUIDs = [];
@@ -124,7 +123,7 @@ function updateBackendReport({ servicesManager, extensionManager, appConfig }, c
       viewportId,
       StudyInstanceUID: trackedStudyInstanceUID,
       SeriesInstanceUIDs: trackedSeriesInstanceUIDs,
-      reportInfo,
+      reportInfo: reportInfo,
     });
   });
 }

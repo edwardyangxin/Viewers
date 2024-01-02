@@ -54,9 +54,8 @@ function getTargetExpandedContent(targetFindings) {
               : '');
           // get diameter
           let diameter = 0.0;
-          // get long and short axis from displayText
-          const displayText = dm.displayText[0];
-          if (displayText.includes('x') && displayText.includes('mm')) {
+          // get long and short axis
+          if (dm.toolName === 'Bidirectional') {
             // bi-dimensional tool
             // get long axis
             diameter = dm.data[Object.keys(dm.data)[0]].length;
@@ -97,9 +96,8 @@ function getTargetExpandedContent(targetFindings) {
                 : '');
             // get diameter
             let diameter = 0.0;
-            // get long and short axis from displayText
-            const displayText = dm.displayText[0];
-            if (displayText.includes('x') && displayText.includes('mm')) {
+            // get long and short axis
+            if (dm.toolName === 'Bidirectional') {
               // bi-dimensional tool
               // get short axis
               diameter = dm.data[Object.keys(dm.data)[0]].width;
@@ -299,11 +297,10 @@ function autoCalSOD(targetFindings) {
     for (const dm of targetFindings) {
       const targetOption = dm.measurementLabelInfo.target.value;
       const location = dm.measurementLabelInfo.location.value;
-      // get long and short axis from displayText
-      const displayText = dm.displayText[0];
+      // get long and short axis
       let longAxis = 0.0;
       let shortAxis = 0.0;
-      if (displayText.includes('x') && displayText.includes('mm')) {
+      if (dm.toolName === 'Bidirectional') {
         // bi-dimensional tool
         // get long and short axis
         longAxis = dm.data[Object.keys(dm.data)[0]].length;

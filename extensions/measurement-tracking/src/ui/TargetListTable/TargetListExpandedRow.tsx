@@ -54,9 +54,9 @@ const TargetListExpandedRow = ({
 };
 
 TargetListExpandedRow.propTypes = {
-  tableDataSource: PropTypes.arrayOf(PropTypes.object).isRequired,
-  tableColumns: PropTypes.object.isRequired,
-  children: PropTypes.node.isRequired,
+  tableDataSource: PropTypes.arrayOf(PropTypes.object),
+  tableColumns: PropTypes.object,
+  children: PropTypes.node,
 };
 
 export default TargetListExpandedRow;

@@ -79,7 +79,7 @@ function _isValidEvent(eventName) {
  * @return void
  */
 function _broadcastEvent(eventName, callbackProps) {
-  console.log('broadcasting service event:', eventName, callbackProps)
+  console.log('broadcasting service event:', eventName, callbackProps);
   const hasListeners = Object.keys(this.listeners).length > 0;
   const hasCallbacks = Array.isArray(this.listeners[eventName]);
 

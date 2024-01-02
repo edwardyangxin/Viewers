@@ -80,8 +80,8 @@ function PanelStudyBrowserTracking({
   };
 
   // evibased, double click report thumbnail
-  const onLoadReportHandler = reportData => {
-    console.log('double click report thumbnail: ', reportData);
+  const onLoadReportHandler = reportInfo => {
+    console.log('double click report thumbnail: ', reportInfo);
 
     // audit log loading report data
     const auditMsg = 'leave viewer mode';
@@ -93,7 +93,7 @@ function PanelStudyBrowserTracking({
     performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
 
     sendTrackedMeasurementsEvent('UPDATE_BACKEND_REPORT', {
-      reportData: reportData,
+      reportInfo: reportInfo,
     });
   };
 

@@ -176,6 +176,7 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
       task: taskId,
       report_template: 'RECIST1.1',
       report_template_version: 'v1',
+      report_comments: '', // deprecated but required by api
       measurements: trackedMeasurements,
       ...reportInfo,
     };

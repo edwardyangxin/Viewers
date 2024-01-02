@@ -2,7 +2,7 @@ import React from 'react';
 import { ThumbnailNoImage } from '@ohif/ui';
 
 const ReportThumbnailList = ({
-  reportThumbnails,
+  reports,
   onReportThumbnailClick,
   onReportThumbnailDoubleClick,
 }) => {
@@ -11,30 +11,16 @@ const ReportThumbnailList = ({
       id="ohif-thumbnail-list"
       className="ohif-scrollbar min-h-[150px] overflow-y-hidden bg-black py-3"
     >
-      {reportThumbnails.map(
+      {reports.map(
         ({
-          // get displaySetInstanceUID, for click on the thumbnail
-          // 唯一idfor thumbnail component
-          // displaySetInstanceUID,
-          // report title: "test|20231024|测试report"
-          // description,
-          // dragData example: {
-          //   type: "displayset",
-          //   displaySetInstanceUID: "c9cf4e5f-a5e4-9f76-f50f-e3d4510efd44",
-          // }
-          // 全量的report信息？
-          // dragData,
-          // example: "24-Oct-2023", 显示report创建日期
-          // seriesDate,
           report_name,
-          report_info,
           create_time,
           username,
           user_report_version,
           report_template,
           report_template_version,
           measurements,
-        }) => {
+        }, index) => {
           // Convert ISO time string to Date object
           const dateObject = new Date(create_time);
           // Format local date as 'yyyy-MM-DD'
@@ -46,16 +32,7 @@ const ReportThumbnailList = ({
           const dragData = {
             type: 'displayset',
             displaySetInstanceUID: key,
-            report: {
-              report_name: reportName,
-              report_info: report_info,
-              create_time: create_time,
-              username: username,
-              user_report_version: user_report_version,
-              report_template: report_template,
-              report_template_version: report_template_version,
-              measurements: measurements,
-            },
+            report: reports[index],
           };
           switch ('thumbnailNoImage') {
             case 'thumbnailNoImage':
@@ -73,7 +50,7 @@ const ReportThumbnailList = ({
                   canReject={false}
                   onReject={undefined}
                   onClick={() => onReportThumbnailClick(key)}
-                  onDoubleClick={() => onReportThumbnailDoubleClick(dragData.report)}
+                  onDoubleClick={() => onReportThumbnailDoubleClick(reports[index])}
                   isHydratedForDerivedDisplaySet={undefined}
                 />
               );

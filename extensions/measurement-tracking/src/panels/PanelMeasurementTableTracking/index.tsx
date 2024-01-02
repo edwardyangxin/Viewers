@@ -17,13 +17,7 @@ import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { targetIndexMapping, targetInfoMapping, locationInfoMapping, 
-  targetKeyGroup, nontargetKeyGroup, otherKeyGroup, nonTargetResponseOptions, 
-  responseOptions, 
-  targetIndexOptions,
-  targetOptions,
-  locationOptions,
-  nonTargetIndexOptions} from '../../utils/mappings';
+import { targetInfoMapping, targetKeyGroup, nontargetKeyGroup } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
 import { getEditMeasurementLabelDialog, getTimepointName, getViewportId, parseMeasurementLabelInfo } from '../../utils/utils';
 
@@ -69,9 +63,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   );
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
   const measurementsPanelRef = useRef(null);
-  const [inputSOD, setInputSOD] = useState('0.0');
-  const [nonTargetResponse, setNonTargetResponse] = useState('Baseline');
-  const [timepointResponse, setTimepointResponse] = useState('Baseline');
   const [extendedComparedReport, setExtentedComparedReport] = useState(true);
 
   useEffect(() => {
@@ -357,15 +348,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     }
   }
 
-  useEffect(() => {
-    console.log('currentReportInfo:', currentReportInfo);
-    if (currentReportInfo) {
-      setInputSOD(currentReportInfo.SOD);
-      setNonTargetResponse(currentReportInfo.nonTargetResponse);
-      setTimepointResponse(currentReportInfo.response);
-    }
-  }, [ currentReportInfo ]);
-
   // default 分组显示
   // const displayMeasurementsWithoutFindings = displayMeasurements.filter(
   //   dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
@@ -396,72 +378,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
   nonTargetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
-
-  // evibased, auto calculate SOD
-  useEffect(() => {
-    // calculate SOD based on targetFindings
-    let culmulativeSOD = 0;
-    for (const dm of targetFindings) {
-      const targetOption = dm.label.split('|')[1];
-      const location = dm.label.split('|')[2];
-      // get long and short axis from displayText
-      const displayText = dm.displayText[0];
-      let longAxis = 0.0;
-      let shortAxis = 0.0;
-      if (displayText.includes('x') && displayText.includes('mm')) {
-        // get long and short axis
-        try {
-          longAxis = parseFloat(displayText.split('x')[0]);
-          shortAxis = parseFloat(displayText.split('x')[1].split('mm')[0]);
-        } catch (error) {
-          console.log('failed to parse length', error);
-        }
-      } else {
-        // no axis info, could be Target_NM 太小无法测量，计5mm
-        if (targetOption === 'Target_NM') {
-          culmulativeSOD += 5.0;
-        }
-        continue;
-      }
-
-      // if location is Lymph_Node
-      if (location === 'Lymph_Node') {
-        // lymph node use short axis
-        culmulativeSOD += shortAxis;
-      } else {
-        // use long axis
-        culmulativeSOD += longAxis;
-      }
-    }
-    setInputSOD(culmulativeSOD.toFixed(2));
-  }, [ displayMeasurements ]);
-
-  // SOD input
-  const onInputChangeHandler = event => {
-    event.persist();
-    setInputSOD(event.target.value);
-  };
-
-  const onInputKeyUpHandler = event => {
-    event.persist();
-    if (event.key === 'Enter') {
-      const inputStr = event.target.value;
-      let result = inputStr;
-      // calculate SOD if input is equation
-      if (inputStr.includes('+') || inputStr.includes('-')) {
-        try {
-          // Using Function constructor
-          const calculateResult = new Function('return ' + inputStr);
-          // Call the function to get the result
-          result = calculateResult();
-          result = result.toFixed(2);
-        } catch (error) {
-          console.log('failed to calculate SOD', error);
-        }
-      }
-      setInputSOD(result);
-    }
-  };
 
   function _mapComparedMeasurementToDisplay(measurement, index) {
     const {
@@ -626,44 +542,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             onEdit={onMeasurementItemEditHandler}
           />
         )}
-        {/* deprecated */}
-        {/* <div className="mt-3">
-          <Input
-            label="直径总和SOD(回车计算公式,单位mm)"
-            labelClassName="text-white text-[14px] leading-[1.2]"
-            className="border-primary-main bg-black"
-            type="text"
-            value={inputSOD}
-            onChange={onInputChangeHandler}
-            onKeyUp={onInputKeyUpHandler}
-          />
-        </div>
-        <div>
-          <label className="text-[14px] leading-[1.2] text-white">非靶病灶评估</label>
-          <Select
-            id="nonTargetResponse"
-            placeholder="非靶病灶评估"
-            value={[nonTargetResponse]}
-            onChange={(newSelection, action) => {
-              // console.info('newSelection:', newSelection, 'action:', action);
-              setNonTargetResponse(newSelection.value);
-            }}
-            options={nonTargetResponseOptions}
-          />
-        </div>
-        <div>
-          <label className="text-[14px] leading-[1.2] text-white">总体评估</label>
-          <Select
-            id="response"
-            placeholder="总体评估"
-            value={[timepointResponse]}
-            onChange={(newSelection, action) => {
-              // console.info('newSelection:', newSelection, 'action:', action);
-              setTimepointResponse(newSelection.value);
-            }}
-            options={responseOptions}
-          />
-        </div> */}
       </div>
       <div className="flex justify-center p-4">
         <ActionButtons
@@ -672,11 +550,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             sendTrackedMeasurementsEvent('SAVE_REPORT', {
               viewportId: viewportGrid.activeViewportId,
               isBackupSave: true,
-              reportInfo: {
-                SOD: inputSOD,
-                nonTargetResponse: nonTargetResponse,
-                response: timepointResponse,
-              },
             });
           }}
           disabled={

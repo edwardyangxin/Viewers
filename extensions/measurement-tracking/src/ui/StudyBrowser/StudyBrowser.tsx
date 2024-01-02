@@ -84,7 +84,7 @@ const StudyBrowser = ({
             {/* evibased, not showing report if not primary */}
             {ifPrimary && isExpanded && Array.isArray(reports) && reports.length > 0 && (
               <ReportThumbnailList
-                reportThumbnails={reports}
+                reports={reports}
                 onReportThumbnailClick={onClickThumbnail} // no use
                 onReportThumbnailDoubleClick={onDoubleClickReportThumbnail}
               />

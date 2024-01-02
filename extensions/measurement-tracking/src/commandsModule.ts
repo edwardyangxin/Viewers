@@ -47,27 +47,14 @@ function commandsModule({
         uiDialogService,
         measurement,
         (label, actionId) => {
-          /** label in form:
-            {measurementLabelInfo: {
-              length: 221.56495778786802,
-              unit: "mm",
-              target: {
-                value: "Target-CR",
-                label: "Target(CR)",
-              },
-              location: {
-                value: "Liver",
-                label: "Liver",
-              },
-            },
-            label: "Target|Liver"}
-          */
           if (actionId === 'cancel') {
             return;
           }
 
-          // copy measurement
-          const updatedMeasurement = { ...measurement };
+          // copy measurement, get measurement again in case it has been updated。
+          // 在创建annotation时，会不断更新长度。会导致update measurement为旧的长度错误。
+          const currentMeasurement = measurementService.getMeasurement(uid);
+          const updatedMeasurement = { ...currentMeasurement };
           // update label data
           updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
           updatedMeasurement['label'] = label['label'];
