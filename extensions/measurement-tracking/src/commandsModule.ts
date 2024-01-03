@@ -15,6 +15,7 @@ import {
 import { Types as OhifTypes } from '@ohif/core';
 
 import callInputDialog from './utils/callInputDialog';
+import toggleIRCImageSync from './utils/toggleStackImageSync';
 
 // evibased, based on cornerstone extension
 function commandsModule({
@@ -73,6 +74,13 @@ function commandsModule({
       callback('no label', 'save');
     },
 
+    toggleIRCImageSync: ({ toggledState }) => {
+      toggleIRCImageSync({
+        servicesManager,
+        toggledState,
+      });
+    },
+
     // Just call the toolbar service record interaction - allows
     // executing a toolbar command as a full toolbar command with side affects
     // coming from the ToolbarService itself.
@@ -89,6 +97,9 @@ function commandsModule({
     },
     IRCArrowTextCallback: {
       commandFn: actions.IRCArrowTextCallback,
+    },
+    toggleIRCImageSync: {
+      commandFn: actions.toggleIRCImageSync,
     },
   };
 

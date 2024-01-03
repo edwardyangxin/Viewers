@@ -62,14 +62,14 @@ const moreToolsMpr = [
           'Stack Image Sync',
           [
             {
-              commandName: 'toggleStackImageSync',
+              commandName: 'toggleIRCImageSync',
             },
           ],
           'Enable position synchronization on stack viewports',
           {
             listeners: {
               [EVENTS.STACK_VIEWPORT_NEW_STACK]: {
-                commandName: 'toggleStackImageSync',
+                commandName: 'toggleIRCImageSync',
                 commandOptions: { toggledState: true },
               },
             },
