@@ -3,10 +3,8 @@ import React from 'react';
 import { ButtonEnums, Dialog, Input, Select } from '@ohif/ui';
 import i18n from '@ohif/i18n';
 import {
-  nonTargetResponseMapping,
   nonTargetKeyGroup,
   newLesionKeyGroup,
-  responseMapping,
   LesionMapping,
   targetKeyGroup,
   nonTargetResponseOptions,
@@ -14,6 +12,7 @@ import {
   targetResponseOptions,
 } from '../../utils/mappings';
 import TargetListTable, { TargetListExpandedRow } from '../../ui/TargetListTable';
+import { locationStrBuilder } from '../../utils/utils';
 
 export const CREATE_REPORT_DIALOG_RESPONSE = {
   CANCEL: 0,
@@ -47,11 +46,7 @@ function getTargetExpandedContent(targetFindings) {
         tableDataSource={nonNymphNodes.map((dm, index) => {
           const lesionIndex = dm.measurementLabelInfo.lesionIndex;
           const lesion = dm.measurementLabelInfo.lesion;
-          const organStr =
-            dm.measurementLabelInfo.organ.label +
-            (dm.measurementLabelInfo.organDescription
-              ? `(${dm.measurementLabelInfo.organDescription})`
-              : '');
+          const lesionLocationStr = locationStrBuilder(dm.measurementLabelInfo);
           // get diameter
           let diameter = 0.0;
           // get long and short axis
@@ -70,7 +65,7 @@ function getTargetExpandedContent(targetFindings) {
           return {
             index: lesionIndex.label,
             lesionType: lesion.label,
-            lesionLocation: organStr,
+            lesionLocation: lesionLocationStr,
             diameter: `${diameter.toFixed(2)} mm`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
@@ -89,11 +84,7 @@ function getTargetExpandedContent(targetFindings) {
           tableDataSource={NymphNodes.map((dm, index) => {
             const lesionIndex = dm.measurementLabelInfo.lesionIndex;
             const lesion = dm.measurementLabelInfo.lesion;
-            const organStr =
-              dm.measurementLabelInfo.organ.label +
-              (dm.measurementLabelInfo.organDescription
-                ? `(${dm.measurementLabelInfo.organDescription})`
-                : '');
+            const lesionLocationStr = locationStrBuilder(dm.measurementLabelInfo);
             // get diameter
             let diameter = 0.0;
             // get long and short axis
@@ -112,7 +103,7 @@ function getTargetExpandedContent(targetFindings) {
             return {
               index: lesionIndex.label,
               lesionType: lesion.label,
-              lesionLocation: organStr,
+              lesionLocation: lesionLocationStr,
               diameter: `${diameter.toFixed(2)} mm`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             };
@@ -138,15 +129,11 @@ function getNonTargetExpandedContent(nonTargetFindings) {
         tableDataSource={nonTargetFindings.map((dm, index) => {
           const lesionIndex = dm.measurementLabelInfo.lesionIndex;
           const lesion = dm.measurementLabelInfo.lesion;
-          const organStr =
-            dm.measurementLabelInfo.organ.label +
-            (dm.measurementLabelInfo.organDescription
-              ? `(${dm.measurementLabelInfo.organDescription})`
-              : '');
+          const lesionLocationStr = locationStrBuilder(dm.measurementLabelInfo);
           return {
             index: lesionIndex.label,
             lesionType: lesion.label,
-            lesionLocation: organStr,
+            lesionLocation: lesionLocationStr,
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
@@ -184,15 +171,11 @@ function getNewLesionExpandedContent(newLesionFindings) {
         tableDataSource={possibleNews.map((dm, index) => {
           const lesionIndex = dm.measurementLabelInfo.lesionIndex;
           const lesion = dm.measurementLabelInfo.lesion;
-          const organStr =
-            dm.measurementLabelInfo.organ.label +
-            (dm.measurementLabelInfo.organDescription
-              ? `(${dm.measurementLabelInfo.organDescription})`
-              : '');
+          const lesionLocationStr = locationStrBuilder(dm.measurementLabelInfo);
           return {
             index: lesionIndex.label,
             lesionType: lesion.label,
-            lesionLocation: organStr,
+            lesionLocation: lesionLocationStr,
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };

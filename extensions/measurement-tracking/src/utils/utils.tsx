@@ -8,6 +8,8 @@ import {
   nonTargetIndexOptions,
   targetIndexOptions,
   LesionMapping,
+  organLateralOptions,
+  organLocationOptions,
   targetKeyGroup,
   lesionOptions,
 } from './mappings';
@@ -31,6 +33,20 @@ function getViewportId(viewports, viewportName = 'default') {
     }
   }
   return targetViewportId;
+}
+
+function locationStrBuilder(measurementLabelInfo) {
+  let lesionLocationStr = measurementLabelInfo.organ.label;
+  lesionLocationStr += measurementLabelInfo.organLocation
+    ? `-${measurementLabelInfo.organLocation.label}`
+    : '';
+  lesionLocationStr += measurementLabelInfo.organLateral
+    ? `-${measurementLabelInfo.organLateral.label}`
+    : '';
+  lesionLocationStr += measurementLabelInfo.organDescription
+    ? `(${measurementLabelInfo.organDescription})`
+    : '';
+  return lesionLocationStr;
 }
 
 function parseMeasurementLabelInfo(measurement) {
@@ -151,7 +167,7 @@ function getEditMeasurementLabelDialog(
               }}
               options={lesionOptions}
             />
-            <label className="text-[14px] leading-[1.2] text-white mt-2">选择病灶编号</label>
+            <label className="mt-2 text-[14px] leading-[1.2] text-white">选择病灶编号</label>
             <Select
               id="lesionIndex"
               placeholder="选择病灶编号"
@@ -175,14 +191,13 @@ function getEditMeasurementLabelDialog(
                   : nonTargetIndexOptions
               }
             />
-            <label className="text-[14px] leading-[1.2] text-white mt-2">选择病灶位置</label>
+            <label className="mt-2 text-[14px] leading-[1.2] text-white">选择病灶位置</label>
             <Select
               id="organ"
               placeholder="选择病灶器官"
+              isSearchable={true}
               value={
-                value.measurementLabelInfo?.organ
-                  ? [value.measurementLabelInfo?.organ.value]
-                  : []
+                value.measurementLabelInfo?.organ ? [value.measurementLabelInfo?.organ.value] : []
               }
               onChange={(newSelection, action) => {
                 console.info('newSelection:', newSelection, 'action:', action);
@@ -194,6 +209,46 @@ function getEditMeasurementLabelDialog(
                 });
               }}
               options={organOptions}
+            />
+            {value.measurementLabelInfo?.organ?.value in organLocationOptions && (
+              <Select
+                id="organLocation"
+                placeholder="选择器官位置"
+                isSearchable={true}
+                value={
+                  value.measurementLabelInfo?.organLocation
+                    ? [value.measurementLabelInfo?.organLocation.value]
+                    : []
+                }
+                onChange={(newSelection, action) => {
+                  console.info('newSelection:', newSelection, 'action:', action);
+                  setValue(value => {
+                    // update label info
+                    value['measurementLabelInfo']['organLocation'] = newSelection;
+                    return value;
+                  });
+                }}
+                options={organLocationOptions[value.measurementLabelInfo.organ.value]}
+              />
+            )}
+            <Select
+              id="organLateral"
+              placeholder="选择器官方位"
+              isSearchable={true}
+              value={
+                value.measurementLabelInfo?.organLateral
+                  ? [value.measurementLabelInfo?.organLateral.value]
+                  : []
+              }
+              onChange={(newSelection, action) => {
+                console.info('newSelection:', newSelection, 'action:', action);
+                setValue(value => {
+                  // update label info
+                  value['measurementLabelInfo']['organLateral'] = newSelection;
+                  return value;
+                });
+              }}
+              options={organLateralOptions}
             />
             <Input
               className="border-primary-main bg-black"
@@ -250,11 +305,7 @@ function getEditMeasurementLabelDialog(
               labelClassName="text-white text-[14px] leading-[1.2] mt-2"
               smallInput={false}
               placeholder="病灶备注"
-              value={
-                value.measurementLabelInfo?.comment
-                  ? value.measurementLabelInfo?.comment
-                  : ''
-              }
+              value={value.measurementLabelInfo?.comment ? value.measurementLabelInfo?.comment : ''}
               onChange={event => {
                 event.persist();
                 setValue(value => {
@@ -327,6 +378,7 @@ function getEditMeasurementLabelDialog(
 export {
   getTimepointName,
   getViewportId,
+  locationStrBuilder,
   parseMeasurementLabelInfo,
   getEditMeasurementLabelDialog,
 };
