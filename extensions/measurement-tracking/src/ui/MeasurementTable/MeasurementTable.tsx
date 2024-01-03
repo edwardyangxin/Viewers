@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
 import MeasurementItem from './MeasurementItem';
-import { locationInfoMapping } from '../../utils/mappings';
+import { organMapping } from '../../utils/mappings';
 
 const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager, ifTarget=false, canEdit=true }) => {
   servicesManager = servicesManager as ServicesManager;
@@ -34,7 +34,7 @@ const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager, ifTar
               key={measurementItem.uid}
               uid={measurementItem.uid}
               index={parseInt(measurementItem.label.split('|')[0])}
-              label={measurementItem.label.split('|')[2] in locationInfoMapping ? locationInfoMapping[measurementItem.label.split('|')[2]] : t('Edit Measurement')} // 获取label的第二位location信息
+              label={measurementItem.label.split('|')[2] in organMapping ? organMapping[measurementItem.label.split('|')[2]] : t('Edit Measurement')} // 获取label的第二位organ信息
               isActive={measurementItem.isActive}
               displayText={measurementItem.displayText}
               item={measurementItem}

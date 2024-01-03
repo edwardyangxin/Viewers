@@ -4,10 +4,10 @@ import { ButtonEnums, Dialog, Input, Select } from '@ohif/ui';
 import i18n from '@ohif/i18n';
 import {
   nonTargetResponseMapping,
-  nontargetKeyGroup,
+  nonTargetKeyGroup,
   newLesionKeyGroup,
   responseMapping,
-  targetInfoMapping,
+  LesionMapping,
   targetKeyGroup,
   nonTargetResponseOptions,
   responseOptions,
@@ -25,8 +25,8 @@ function getTargetExpandedContent(targetFindings) {
   const nonNymphNodes = [];
   const NymphNodes = [];
   for (const dm of targetFindings) {
-    const locationInfo = dm.measurementLabelInfo.location.value;
-    if (locationInfo === 'Lymph_Node') {
+    const organ = dm.measurementLabelInfo.organ.value;
+    if (organ === 'Lymph_Node') {
       NymphNodes.push(dm);
     } else {
       nonNymphNodes.push(dm);
@@ -39,18 +39,18 @@ function getTargetExpandedContent(targetFindings) {
         tableTitle="非淋巴结靶病灶"
         tableColumns={{
           index: '序号',
-          targetType: '靶病灶类型',
-          targetLocation: '靶病灶位置',
+          lesionType: '靶病灶类型',
+          lesionLocation: '靶病灶位置',
           diameter: '长径(单位:mm)',
           comment: '备注',
         }}
         tableDataSource={nonNymphNodes.map((dm, index) => {
-          const targetIndex = dm.measurementLabelInfo.targetIndex;
-          const targetType = dm.measurementLabelInfo.target;
-          const locationStr =
-            dm.measurementLabelInfo.location.label +
-            (dm.measurementLabelInfo.locationDescription
-              ? `(${dm.measurementLabelInfo.locationDescription})`
+          const lesionIndex = dm.measurementLabelInfo.lesionIndex;
+          const lesion = dm.measurementLabelInfo.lesion;
+          const organStr =
+            dm.measurementLabelInfo.organ.label +
+            (dm.measurementLabelInfo.organDescription
+              ? `(${dm.measurementLabelInfo.organDescription})`
               : '');
           // get diameter
           let diameter = 0.0;
@@ -61,16 +61,16 @@ function getTargetExpandedContent(targetFindings) {
             diameter = dm.data[Object.keys(dm.data)[0]].length;
           } else {
             // no axis info
-            if (targetType.value === 'Target_NM') {
+            if (lesion.value === 'Target_NM') {
               // Target_NM 太小无法测量，计5mm
               diameter = 5.0;
             }
           }
 
           return {
-            index: targetIndex.label,
-            targetType: targetType.label,
-            targetLocation: locationStr,
+            index: lesionIndex.label,
+            lesionType: lesion.label,
+            lesionLocation: organStr,
             diameter: `${diameter.toFixed(2)} mm`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
@@ -81,18 +81,18 @@ function getTargetExpandedContent(targetFindings) {
           tableTitle="淋巴结靶病灶"
           tableColumns={{
             index: '序号',
-            targetType: '靶病灶类型',
-            targetLocation: '靶病灶位置',
+            lesionType: '靶病灶类型',
+            lesionLocation: '靶病灶位置',
             diameter: '短径(单位:mm)',
             comment: '备注',
           }}
           tableDataSource={NymphNodes.map((dm, index) => {
-            const targetIndex = dm.measurementLabelInfo.targetIndex;
-            const targetType = dm.measurementLabelInfo.target;
-            const locationStr =
-              dm.measurementLabelInfo.location.label +
-              (dm.measurementLabelInfo.locationDescription
-                ? `(${dm.measurementLabelInfo.locationDescription})`
+            const lesionIndex = dm.measurementLabelInfo.lesionIndex;
+            const lesion = dm.measurementLabelInfo.lesion;
+            const organStr =
+              dm.measurementLabelInfo.organ.label +
+              (dm.measurementLabelInfo.organDescription
+                ? `(${dm.measurementLabelInfo.organDescription})`
                 : '');
             // get diameter
             let diameter = 0.0;
@@ -103,16 +103,16 @@ function getTargetExpandedContent(targetFindings) {
               diameter = dm.data[Object.keys(dm.data)[0]].width;
             } else {
               // no axis info
-              if (targetType.value === 'Target_NM') {
+              if (lesion.value === 'Target_NM') {
                 // Target_NM 太小无法测量，计5mm
                 diameter = 5.0;
               }
             }
 
             return {
-              index: targetIndex.label,
-              targetType: targetType.label,
-              targetLocation: locationStr,
+              index: lesionIndex.label,
+              lesionType: lesion.label,
+              lesionLocation: organStr,
               diameter: `${diameter.toFixed(2)} mm`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             };
@@ -130,23 +130,23 @@ function getNonTargetExpandedContent(nonTargetFindings) {
         // tableTitle="非靶病灶"
         tableColumns={{
           index: '序号',
-          targetType: '非靶病灶类型',
-          targetLocation: '非靶病灶位置',
+          lesionType: '非靶病灶类型',
+          lesionLocation: '非靶病灶位置',
           displayText: '描述信息',
           comment: '备注',
         }}
         tableDataSource={nonTargetFindings.map((dm, index) => {
-          const targetIndex = dm.measurementLabelInfo.targetIndex;
-          const targetType = dm.measurementLabelInfo.target;
-          const locationStr =
-            dm.measurementLabelInfo.location.label +
-            (dm.measurementLabelInfo.locationDescription
-              ? `(${dm.measurementLabelInfo.locationDescription})`
+          const lesionIndex = dm.measurementLabelInfo.lesionIndex;
+          const lesion = dm.measurementLabelInfo.lesion;
+          const organStr =
+            dm.measurementLabelInfo.organ.label +
+            (dm.measurementLabelInfo.organDescription
+              ? `(${dm.measurementLabelInfo.organDescription})`
               : '');
           return {
-            index: targetIndex.label,
-            targetType: targetType.label,
-            targetLocation: locationStr,
+            index: lesionIndex.label,
+            lesionType: lesion.label,
+            lesionLocation: organStr,
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
@@ -161,8 +161,8 @@ function getNewLesionExpandedContent(newLesionFindings) {
   const possibleNews = [];
   const newLeisions = [];
   for (const dm of newLesionFindings) {
-    const locationInfo = dm.measurementLabelInfo.target.value;
-    if (locationInfo === 'New_Lesion') {
+    const lesionValue = dm.measurementLabelInfo.lesion.value;
+    if (lesionValue === 'New_Lesion') {
       newLeisions.push(dm);
     } else {
       possibleNews.push(dm);
@@ -176,23 +176,23 @@ function getNewLesionExpandedContent(newLesionFindings) {
         tabelBgColor="bg-red-800"
         tableColumns={{
           index: '序号',
-          targetType: '新发病灶类型',
-          targetLocation: '新发病灶位置',
+          lesionType: '新发病灶类型',
+          lesionLocation: '新发病灶位置',
           displayText: '描述信息',
           comment: '备注',
         }}
         tableDataSource={possibleNews.map((dm, index) => {
-          const targetIndex = dm.measurementLabelInfo.targetIndex;
-          const targetType = dm.measurementLabelInfo.target;
-          const locationStr =
-            dm.measurementLabelInfo.location.label +
-            (dm.measurementLabelInfo.locationDescription
-              ? `(${dm.measurementLabelInfo.locationDescription})`
+          const lesionIndex = dm.measurementLabelInfo.lesionIndex;
+          const lesion = dm.measurementLabelInfo.lesion;
+          const organStr =
+            dm.measurementLabelInfo.organ.label +
+            (dm.measurementLabelInfo.organDescription
+              ? `(${dm.measurementLabelInfo.organDescription})`
               : '');
           return {
-            index: targetIndex.label,
-            targetType: targetType.label,
-            targetLocation: locationStr,
+            index: lesionIndex.label,
+            lesionType: lesion.label,
+            lesionLocation: organStr,
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
@@ -204,22 +204,22 @@ function getNewLesionExpandedContent(newLesionFindings) {
           tabelBgColor="bg-red-500"
           tableColumns={{
             index: '序号',
-            targetType: '新发病灶类型',
-            targetLocation: '新发病灶位置',
+            lesionType: '新发病灶类型',
+            lesionLocation: '新发病灶位置',
             displayText: '描述信息',
           }}
           tableDataSource={newLeisions.map((dm, index) => {
-            const targetIndex = dm.measurementLabelInfo.targetIndex;
-            const targetType = dm.measurementLabelInfo.target;
-            const locationStr =
-              dm.measurementLabelInfo.location.label +
-              (dm.measurementLabelInfo.locationDescription
-                ? `(${dm.measurementLabelInfo.locationDescription})`
+            const lesionIndex = dm.measurementLabelInfo.lesionIndex;
+            const lesion = dm.measurementLabelInfo.lesion;
+            const organStr =
+              dm.measurementLabelInfo.organ.label +
+              (dm.measurementLabelInfo.organDescription
+                ? `(${dm.measurementLabelInfo.organDescription})`
                 : '');
             return {
-              index: targetIndex.label,
-              targetType: targetType.label,
-              targetLocation: locationStr,
+              index: lesionIndex.label,
+              lesionType: lesion.label,
+              lesionLocation: organStr,
               displayText: `${dm.displayText.join(' ')}`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             };
@@ -295,8 +295,8 @@ function autoCalSOD(targetFindings) {
   try {
     // calculate SOD based on targetFindings
     for (const dm of targetFindings) {
-      const targetOption = dm.measurementLabelInfo.target.value;
-      const location = dm.measurementLabelInfo.location.value;
+      const lesionValue = dm.measurementLabelInfo.lesion.value;
+      const organValue = dm.measurementLabelInfo.organ.value;
       // get long and short axis
       let longAxis = 0.0;
       let shortAxis = 0.0;
@@ -307,7 +307,7 @@ function autoCalSOD(targetFindings) {
         shortAxis = dm.data[Object.keys(dm.data)[0]].width;
       } else {
         // no axis info
-        if (targetOption === 'Target_NM') {
+        if (lesionValue === 'Target_NM') {
           // Target_NM 太小无法测量，计5mm
           culmulativeSOD += 5.0;
         }
@@ -315,7 +315,7 @@ function autoCalSOD(targetFindings) {
       }
 
       // if Lymph_Node
-      if (location === 'Lymph_Node') {
+      if (organValue === 'Lymph_Node') {
         // use short axis
         culmulativeSOD += shortAxis;
       } else {
@@ -363,15 +363,15 @@ export default function CreateReportDialogPrompt(
   const otherFindings = [];
   for (const dm of filteredMeasurements) {
     // get target info
-    const targetInfo = dm.label.split('|')[1];
-    if (!(targetInfo in targetInfoMapping)) {
-      // not in targetInfoMapping, just show and allow edit in other group
+    const lesionValue = dm.label.split('|')[1];
+    if (!(lesionValue in LesionMapping)) {
+      // not in LesionMapping, just show and allow edit in other group
       otherFindings.push(dm);
-    } else if (targetKeyGroup.includes(targetInfo)) {
+    } else if (targetKeyGroup.includes(lesionValue)) {
       targetFindings.push(dm);
-    } else if (newLesionKeyGroup.includes(targetInfo)) {
+    } else if (newLesionKeyGroup.includes(lesionValue)) {
       newLesionFindings.push(dm);
-    } else if (nontargetKeyGroup.includes(targetInfo)) {
+    } else if (nonTargetKeyGroup.includes(lesionValue)) {
       nonTargetFindings.push(dm);
     } else {
       otherFindings.push(dm);

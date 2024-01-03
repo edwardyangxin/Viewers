@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { targetKeyGroup, nontargetKeyGroup, otherKeyGroup } from '../../utils/mappings';
+import { targetKeyGroup, nonTargetKeyGroup, otherKeyGroup } from '../../utils/mappings';
 
 const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabels }) => {
   const ifBaseline = timepoint && parseInt(timepoint) > 1 ? false : true;
@@ -17,7 +17,7 @@ const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabel
         const targetLabel = measurement?.Label?.split('|')[1];
         if (targetKeyGroup.includes(targetLabel)) {
           lastTarget++;
-        } else if (nontargetKeyGroup.includes(targetLabel)) {
+        } else if (nonTargetKeyGroup.includes(targetLabel)) {
           lastNonTarget++;
         }
       }

@@ -17,7 +17,7 @@ import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { targetInfoMapping, targetKeyGroup, nontargetKeyGroup } from '../../utils/mappings';
+import { LesionMapping, targetKeyGroup, nonTargetKeyGroup } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
 import { getEditMeasurementLabelDialog, getTimepointName, getViewportId, parseMeasurementLabelInfo } from '../../utils/utils';
 
@@ -362,13 +362,13 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   const otherFindings = [];
   for (const dm of displayMeasurements) {
     // get target info
-    const targetInfo = dm.label.split('|')[1];
-    if (!(targetInfo in targetInfoMapping)) {
-      // not in targetInfoMapping, just show and allow edit in other group
+    const lesionValue = dm.label.split('|')[1];
+    if (!(lesionValue in LesionMapping)) {
+      // not in LesionMapping, just show and allow edit in other group
       otherFindings.push(dm);
-    } else if (targetKeyGroup.includes(targetInfo)) {
+    } else if (targetKeyGroup.includes(lesionValue)) {
       targetFindings.push(dm);
-    } else if (nontargetKeyGroup.includes(targetInfo)) {
+    } else if (nonTargetKeyGroup.includes(lesionValue)) {
       nonTargetFindings.push(dm);
     } else {
       otherFindings.push(dm);
@@ -436,13 +436,13 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       const displayMeasurements = report.measurements.map((m, index) => _mapComparedMeasurementToDisplay(m, index));
       for (const dm of displayMeasurements) {
         // get target info
-        const targetInfo = dm.label.split('|')[1];
-        if (!(targetInfo in targetInfoMapping)) {
-          // not in targetInfoMapping, just show and allow edit in other group
+        const lesionValue = dm.label.split('|')[1];
+        if (!(lesionValue in LesionMapping)) {
+          // not in LesionMapping, just show and allow edit in other group
           otherFindings.push(dm);
-        } else if (targetKeyGroup.includes(targetInfo)) {
+        } else if (targetKeyGroup.includes(lesionValue)) {
           targetFindings.push(dm);
-        } else if (nontargetKeyGroup.includes(targetInfo)) {
+        } else if (nonTargetKeyGroup.includes(lesionValue)) {
           nonTargetFindings.push(dm);
         } else {
           otherFindings.push(dm);

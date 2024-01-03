@@ -29,7 +29,7 @@ const nonTargetIndexMapping = {
   20: 20,
 };
 
-const targetInfoMapping = {
+const LesionMapping = {
   Target: '靶病灶',
   Target_NM: '靶病灶(太小无法测量)',
   Target_CR: '靶病灶(消失)',
@@ -43,7 +43,44 @@ const targetInfoMapping = {
   Other: '其他',
 };
 
-const locationInfoMapping = {
+const organMapping = {
+  Abdomen_Chest_Wall: 'Abdomen/Chest Wall:腹壁/胸壁',
+  Lung: 'Lung:肺',
+  Lymph_Node: 'Lymph Node:淋巴结',
+  Liver: 'Liver:肝',
+  Mediastinum_Hilum: 'Mediastinum/Hilum:纵隔/肺门',
+  Adrenal: 'Adrenal:肾上腺',
+  Bladder: 'Bladder:膀胱',
+  Bone: 'Bone:骨',
+  Brain: 'Brain:脑',
+  Breast: 'Breast:乳腺',
+  Central_Nervous_System: 'Central Nervous System:中枢神经系统',
+  Cervix_Uteri_Uterine: 'Cervix Uteri/Uterine:宫颈/子宫',
+  Colon_Rectum: 'Colon/Rectum:结肠/直肠',
+  Esophagus: 'Esophagus:食管',
+  Extremities: 'Extremities:四肢',
+  Gallbladder: 'Gallbladder:胆囊',
+  Kidney: 'Kidney:肾',
+  Muscle: 'Muscle:肌肉',
+  Other_Soft_Tissue: 'Other Soft Tissue:其他软组织',
+  Ovary: 'Ovary:卵巢',
+  Pericardium: 'Pericardium:心包',
+  Pelvis: 'Pelvis:骨盆',
+  Petritoneum_Omentum: 'Petritoneum/Omentum:腹膜/大网膜',
+  Pleura: 'Pleura:胸膜',
+  Pancreas: 'Pancreas:胰腺',
+  Prostate: 'Prostate:前列腺',
+  Retroperitoneum: 'Retroperitoneum:腹膜后',
+  Small_Bowel: 'Small Bowel:小肠',
+  Spleen: 'Spleen:脾',
+  Stomach: 'Stomach:胃',
+  Skin_Subcutaneous: 'Skin/Subcutaneous:皮肤/皮下',
+  Testicle: 'Testicle:睾丸',
+  Thyroid_Gland: 'Thyroid_Gland:甲状腺',
+  Other_specify: 'other,specify:其他,请填写',
+};
+
+const secondaryorganMapping = {
   Abdomen_Chest_Wall: 'Abdomen/Chest Wall:腹壁/胸壁',
   Lung: 'Lung:肺',
   Lymph_Node: 'Lymph Node:淋巴结',
@@ -89,18 +126,18 @@ const nonTargetIndexOptions = [];
 for (const [key, value] of Object.entries(nonTargetIndexMapping)) {
   nonTargetIndexOptions.push({ value: key, label: value });
 }
-const targetOptions = [];
-for (const [key, value] of Object.entries(targetInfoMapping)) {
-  targetOptions.push({ value: key, label: value });
+const lesionOptions = [];
+for (const [key, value] of Object.entries(LesionMapping)) {
+  lesionOptions.push({ value: key, label: value });
 }
-const locationOptions = [];
-for (const [key, value] of Object.entries(locationInfoMapping)) {
-  locationOptions.push({ value: key, label: value });
+const organOptions = [];
+for (const [key, value] of Object.entries(organMapping)) {
+  organOptions.push({ value: key, label: value });
 }
 
 // 区分target
 const targetKeyGroup = ['Target', 'Target_NM', 'Target_CR', 'Target_UN'];
-const nontargetKeyGroup = [
+const nonTargetKeyGroup = [
   'Non_Target',
   'Non_Target_Disappear',
   'Non_Target_Progress',
@@ -158,14 +195,14 @@ for (const [key, value] of Object.entries(responseMapping)) {
 export {
   targetIndexMapping,
   nonTargetIndexMapping,
-  targetInfoMapping,
-  locationInfoMapping,
+  LesionMapping,
+  organMapping,
   targetIndexOptions,
   nonTargetIndexOptions,
-  targetOptions,
-  locationOptions,
+  lesionOptions,
+  organOptions,
   targetKeyGroup,
-  nontargetKeyGroup,
+  nonTargetKeyGroup,
   newLesionKeyGroup,
   otherKeyGroup,
   targetResponseMapping,

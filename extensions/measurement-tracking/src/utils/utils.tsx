@@ -3,13 +3,13 @@ import { Input, Dialog, ButtonEnums, Select, CheckBox } from '@ohif/ui';
 import i18n from '@ohif/i18n';
 
 import {
-  locationInfoMapping,
-  locationOptions,
+  organMapping,
+  organOptions,
   nonTargetIndexOptions,
   targetIndexOptions,
-  targetInfoMapping,
+  LesionMapping,
   targetKeyGroup,
-  targetOptions,
+  lesionOptions,
 } from './mappings';
 
 function getTimepointName(timepointId) {
@@ -36,14 +36,14 @@ function getViewportId(viewports, viewportName = 'default') {
 function parseMeasurementLabelInfo(measurement) {
   const noMeasurement = measurement ? false : true;
   // label for 保存尽量多的label信息，因为cornerstonejs只支持保存label到DicomSR中
-  let label = measurement ? measurement.label : '1|target_info|location_info';
+  let label = measurement ? measurement.label : '1|lesion_info|organ_info';
   label = label.split('|');
   // try to backward compatible, deprecated?
   if (label.length === 1) {
-    label = [1, label[0] ? label[0] : 'target_info', 'location_info'];
+    label = [1, label[0] ? label[0] : 'lesion_info', 'organ_info'];
   } else if (label.length < 3) {
     // label at least 3 infos
-    label.push('location_info');
+    label.push('organ_info');
   }
 
   // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
@@ -51,24 +51,24 @@ function parseMeasurementLabelInfo(measurement) {
   const measurementLabelInfo =
     measurement && measurement['measurementLabelInfo'] ? measurement['measurementLabelInfo'] : {};
 
-  // init targetIndex, targetValue, locationValue
-  if (!('targetIndex' in measurementLabelInfo)) {
-    // no target in measurementLabelInfo, get from label
-    const labelIndex = parseInt(label[0], 10);
-    measurementLabelInfo['targetIndex'] = {
-      value: labelIndex,
-      label: labelIndex,
+  // init lesionIndex, lesionValue, organValue
+  if (!('lesionIndex' in measurementLabelInfo)) {
+    // no lesion in measurementLabelInfo, get from label
+    const lesionIndex = parseInt(label[0], 10);
+    measurementLabelInfo['lesionIndex'] = {
+      value: lesionIndex,
+      label: lesionIndex,
     };
   }
 
-  if (!('target' in measurementLabelInfo)) {
-    // no target in measurementLabelInfo, get from label
-    const labelTarget = label[1];
-    measurementLabelInfo['target'] =
-      labelTarget in targetInfoMapping
+  if (!('lesion' in measurementLabelInfo)) {
+    // no lesion in measurementLabelInfo, get from label
+    const lesionValue = label[1];
+    measurementLabelInfo['lesion'] =
+      lesionValue in LesionMapping
         ? {
-            value: labelTarget,
-            label: targetInfoMapping[labelTarget],
+            value: lesionValue,
+            label: LesionMapping[lesionValue],
           }
         : {
             value: null,
@@ -76,14 +76,14 @@ function parseMeasurementLabelInfo(measurement) {
           };
   }
 
-  if (!('location' in measurementLabelInfo)) {
-    // no target in measurementLabelInfo, get from label
-    const labelLocation = label[2];
-    measurementLabelInfo['location'] =
-      labelLocation in locationInfoMapping
+  if (!('organ' in measurementLabelInfo)) {
+    // no organ in measurementLabelInfo, get from label
+    const organValue = label[2];
+    measurementLabelInfo['organ'] =
+      organValue in organMapping
         ? {
-            value: labelLocation,
-            label: locationInfoMapping[labelLocation],
+            value: organValue,
+            label: organMapping[organValue],
           }
         : {
             value: null,
@@ -135,36 +135,36 @@ function getEditMeasurementLabelDialog(
           <div>
             <label className="text-[14px] leading-[1.2] text-white">选择病灶类型</label>
             <Select
-              id="target"
+              id="lesion"
               placeholder="选择病灶类型"
               value={
-                value.measurementLabelInfo?.target ? [value.measurementLabelInfo?.target.value] : []
-              } //select只能传入target value
+                value.measurementLabelInfo?.lesion ? [value.measurementLabelInfo?.lesion.value] : []
+              } //select只能传入lesion value
               onChange={(newSelection, action) => {
                 console.info('newSelection:', newSelection, 'action:', action);
                 setValue(value => {
                   // update label info
-                  value['measurementLabelInfo']['target'] = newSelection;
+                  value['measurementLabelInfo']['lesion'] = newSelection;
                   value['label'][1] = newSelection ? newSelection['value'] : '';
                   return value;
                 });
               }}
-              options={targetOptions}
+              options={lesionOptions}
             />
             <label className="text-[14px] leading-[1.2] text-white mt-2">选择病灶编号</label>
             <Select
-              id="targetIndex"
+              id="lesionIndex"
               placeholder="选择病灶编号"
               value={
-                value.measurementLabelInfo?.targetIndex
-                  ? [String(value.measurementLabelInfo?.targetIndex.value)]
+                value.measurementLabelInfo?.lesionIndex
+                  ? [String(value.measurementLabelInfo?.lesionIndex.value)]
                   : []
               } //选项必须是string
               onChange={(newSelection, action) => {
                 console.info('newSelection:', newSelection, 'action:', action);
                 setValue(value => {
                   // update label info
-                  value['measurementLabelInfo']['targetIndex'] = newSelection;
+                  value['measurementLabelInfo']['lesionIndex'] = newSelection;
                   value['label'][0] = newSelection ? newSelection['value'] : '';
                   return value;
                 });
@@ -177,34 +177,34 @@ function getEditMeasurementLabelDialog(
             />
             <label className="text-[14px] leading-[1.2] text-white mt-2">选择病灶位置</label>
             <Select
-              id="location"
+              id="organ"
               placeholder="选择病灶器官"
               value={
-                value.measurementLabelInfo?.location
-                  ? [value.measurementLabelInfo?.location.value]
+                value.measurementLabelInfo?.organ
+                  ? [value.measurementLabelInfo?.organ.value]
                   : []
               }
               onChange={(newSelection, action) => {
                 console.info('newSelection:', newSelection, 'action:', action);
                 setValue(value => {
                   // update label info
-                  value['measurementLabelInfo']['location'] = newSelection;
+                  value['measurementLabelInfo']['organ'] = newSelection;
                   value['label'][2] = newSelection ? newSelection['value'] : '';
                   return value;
                 });
               }}
-              options={locationOptions}
+              options={organOptions}
             />
             <Input
               className="border-primary-main bg-black"
               type="text"
-              id="location-description"
+              id="organ-description"
               labelClassName="hidden text-white text-[10px] leading-[1.2]"
               smallInput={true}
               placeholder="病灶位置描述"
               value={
-                value.measurementLabelInfo?.locationDescription
-                  ? value.measurementLabelInfo?.locationDescription
+                value.measurementLabelInfo?.organDescription
+                  ? value.measurementLabelInfo?.organDescription
                   : ''
               }
               onChange={event => {
@@ -216,7 +216,7 @@ function getEditMeasurementLabelDialog(
                     ...value,
                     measurementLabelInfo: {
                       ...value.measurementLabelInfo,
-                      locationDescription: event.target.value,
+                      organDescription: event.target.value,
                     },
                   };
                   console.info('value:', newValue);
@@ -233,7 +233,7 @@ function getEditMeasurementLabelDialog(
                       ...value,
                       measurementLabelInfo: {
                         ...value.measurementLabelInfo,
-                        locationDescription: event.target.value,
+                        organDescription: event.target.value,
                       },
                     };
                     console.info('value:', newValue);
