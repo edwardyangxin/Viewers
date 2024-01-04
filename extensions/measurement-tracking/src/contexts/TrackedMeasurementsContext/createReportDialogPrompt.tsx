@@ -312,21 +312,26 @@ function autoCalSOD(targetFindings) {
   return culmulativeSOD.toFixed(2);
 }
 
-// 
+//
 export default function CreateReportDialogPrompt(
   ctx,
   uiDialogService,
   measurementService,
   { extensionManager }
 ) {
-  const { trackedStudy, trackedSeries, currentReportInfo, currentTimepoint, 
-    baselineTimepoint, lowestSODTimepoint } = ctx;
+  const {
+    trackedStudy,
+    trackedSeries,
+    currentReportInfo,
+    currentTimepoint,
+    baselineTimepoint,
+    lowestSODTimepoint,
+    userRoles,
+  } = ctx;
 
   const measurements = measurementService.getMeasurements();
   const filteredMeasurements = measurements.filter(
-    m =>
-      trackedStudy === m.referenceStudyUID &&
-      trackedSeries.includes(m.referenceSeriesUID)
+    m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
   );
 
   // if baseline or followup
@@ -425,6 +430,24 @@ export default function CreateReportDialogPrompt(
       }
     };
 
+    // actions, if user is QC, no save button
+    let dialogActions = [
+      {
+        id: 'cancel',
+        text: i18n.t('MeasurementTable:Cancel'),
+        type: ButtonEnums.type.secondary,
+      },
+    ];
+    if (userRoles && userRoles.length > 0) {
+      if (!userRoles.includes('QC')) {
+        dialogActions.push({
+          id: 'save',
+          text: i18n.t('MeasurementTable:Save'),
+          type: ButtonEnums.type.primary,
+        });
+      }
+    }
+
     dialogId = uiDialogService.create({
       centralize: true,
       isDraggable: false,
@@ -446,14 +469,7 @@ export default function CreateReportDialogPrompt(
         },
         noCloseButton: true,
         onClose: _handleClose,
-        actions: [
-          {
-            id: 'cancel',
-            text: i18n.t('MeasurementTable:Cancel'),
-            type: ButtonEnums.type.secondary,
-          },
-          { id: 'save', text: i18n.t('MeasurementTable:Save'), type: ButtonEnums.type.primary },
-        ],
+        actions: dialogActions,
         onSubmit: _handleFormSubmit,
         body: ({ value, setValue }) => {
           // for SOD input
@@ -513,10 +529,17 @@ export default function CreateReportDialogPrompt(
                       {ifBaseline ? (
                         <label className="text-[14px] leading-[1.2] text-white">靶病灶评估</label>
                       ) : (
-                        <label className="text-[14px] leading-[1.2] text-white">{`靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${(
-                          ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) * 100).toFixed(1)}%; 
-                          与最低SOD(${lowestSOD}mm)变化:${(parseFloat(value.SOD) - lowestSOD).toFixed(1)}mm,
-                          ${(((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(1)}%)`}
+                        <label className="text-[14px] leading-[1.2] text-white">
+                          {`靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${(
+                            ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) *
+                            100
+                          ).toFixed(1)}%; 
+                          与最低SOD(${lowestSOD}mm)变化:${(
+                            parseFloat(value.SOD) - lowestSOD
+                          ).toFixed(1)}mm,
+                          ${(((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(
+                            1
+                          )}%)`}
                         </label>
                       )}
                       <Select
@@ -567,7 +590,7 @@ export default function CreateReportDialogPrompt(
                   </div>
                   <div className="flex grow flex-row justify-evenly">
                     <div className="w-1/2">
-                    <Input
+                      <Input
                         className="border-primary-main bg-black"
                         type="text"
                         id="comment"

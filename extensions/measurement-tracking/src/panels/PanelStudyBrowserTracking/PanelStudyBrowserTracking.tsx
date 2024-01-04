@@ -7,7 +7,7 @@ import { useImageViewer, useViewportGrid, Dialog, ButtonEnums } from '@ohif/ui';
 import StudyBrowser from '../../ui/StudyBrowser';
 import { useTrackedMeasurements } from '../../getContextModule';
 import i18n from '@ohif/i18n';
-import { getViewportId } from '../../utils/utils';
+import { getUserName, getUserRoles, getViewportId } from '../../utils/utils';
 
 const { formatDate, performAuditLog } = utils;
 
@@ -57,50 +57,23 @@ function PanelStudyBrowserTracking({
   // if in followup compare mode by StudyInstanceUIDs length in URL
   const ifCompareMode = StudyInstanceUIDs.length > 1;
 
-  const onDoubleClickThumbnailHandler = displaySetInstanceUID => {
-    let updatedViewports = [];
-    const viewportId = activeViewportId;
-    try {
-      updatedViewports = hangingProtocolService.getViewportsRequireUpdate(
-        viewportId,
-        displaySetInstanceUID
-      );
-    } catch (error) {
-      console.warn(error);
-      uiNotificationService.show({
-        title: 'Thumbnail Double Click',
-        message:
-          'The selected display sets could not be added to the viewport due to a mismatch in the Hanging Protocol rules.',
-        type: 'info',
-        duration: 3000,
-      });
-    }
-
-    viewportGridService.setDisplaySetsForViewports(updatedViewports);
-  };
-
-  // evibased, double click report thumbnail
-  const onLoadReportHandler = reportInfo => {
-    console.log('double click report thumbnail: ', reportInfo);
-
-    // audit log loading report data
-    const auditMsg = 'leave viewer mode';
-    const auditLogBodyMeta = {
-      StudyInstanceUID: StudyInstanceUIDs,
-      action: auditMsg,
-      action_result: 'success',
-    };
-    performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
-
-    sendTrackedMeasurementsEvent('UPDATE_BACKEND_REPORT', {
-      reportInfo: reportInfo,
-    });
-  };
-
   const activeViewportDisplaySetInstanceUIDs =
     viewports.get(activeViewportId)?.displaySetInstanceUIDs;
 
   const { trackedSeries, pastTimepoints, comparedTimepoint } = trackedMeasurements.context;
+
+  // one time useEffect
+  useEffect(() => {
+    // update context username and userRoles
+    const username = getUserName(userAuthenticationService);
+    const userRoles = getUserRoles(userAuthenticationService);
+    sendTrackedMeasurementsEvent('UPDATE_USERNAME', {
+      username: username,
+    });
+    sendTrackedMeasurementsEvent('UPDATE_USERROLES', {
+      userRoles: userRoles,
+    });
+  }, []);
 
   // evibased, set current viewportid and compared viewportid
   useEffect(() => {
@@ -258,7 +231,7 @@ function PanelStudyBrowserTracking({
     if (comparedTimepoint && comparedTimepoint.studyInstanceUid !== comparedStudyInstanceUID) {
       setComparedStudyInstanceUID(comparedTimepoint.studyInstanceUid);
     }
-  }, [comparedTimepoint]); 
+  }, [comparedTimepoint]);
 
   // left panel tabs data based on studyDisplayList
   // set past timepoints
@@ -280,6 +253,51 @@ function PanelStudyBrowserTracking({
 
     setTabs(tabs);
   }, [studyDisplayList, displaySets, comparedStudyInstanceUID]);
+
+  const onDoubleClickThumbnailHandler = displaySetInstanceUID => {
+    let updatedViewports = [];
+    const viewportId = activeViewportId;
+    try {
+      updatedViewports = hangingProtocolService.getViewportsRequireUpdate(
+        viewportId,
+        displaySetInstanceUID
+      );
+    } catch (error) {
+      console.warn(error);
+      uiNotificationService.show({
+        title: 'Thumbnail Double Click',
+        message:
+          'The selected display sets could not be added to the viewport due to a mismatch in the Hanging Protocol rules.',
+        type: 'info',
+        duration: 3000,
+      });
+    }
+
+    viewportGridService.setDisplaySetsForViewports(updatedViewports);
+  };
+
+  // evibased, double click report thumbnail
+  const onLoadReportHandler = reportInfo => {
+    console.log('double click report thumbnail: ', reportInfo);
+
+    sendTrackedMeasurementsEvent('UNTRACK_ALL', {});
+    // wait 1s for untrack all. TODO: find a better way to wait for untrack all
+    setTimeout(() => {
+      // audit log loading report data
+      const auditMsg = 'load report data';
+      const auditLogBodyMeta = {
+        reportInfo: reportInfo,
+        StudyInstanceUID: StudyInstanceUIDs,
+        action: auditMsg,
+        action_result: 'success',
+      };
+      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+
+      sendTrackedMeasurementsEvent('UPDATE_BACKEND_REPORT', {
+        reportInfo: reportInfo,
+      });
+    }, 1000);
+  };
 
   // ~~ Initial Thumbnails
   // get thumbnail for each displaySet，这里理解为每个series的thumbnail
@@ -584,15 +602,11 @@ async function _fetchReportsBackend(_appConfig, userAuthenticationService, mappe
   try {
     const reportFetchUrl = _appConfig.evibased['report_fetch_url'];
     // get username from userAuthenticationService
-    const user = userAuthenticationService.getUser();
-    let username = 'unknown';
     const authHeader = userAuthenticationService.getAuthorizationHeader();
-    if (user) {
-      username = user.profile.preferred_username;
-    }
-    const realm_role = user?.profile?.realm_role;
+    const username = getUserName(userAuthenticationService);
+    const userRoles = getUserRoles(userAuthenticationService);
     // evibased, if role is doctor, filter studies by task list
-    const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
+    const ifDoctor = userRoles ? userRoles.includes('doctor') : false;
     // loop through all studies
     for (let i = 0; i < mappedStudies.length; i++) {
       const study = mappedStudies[i];

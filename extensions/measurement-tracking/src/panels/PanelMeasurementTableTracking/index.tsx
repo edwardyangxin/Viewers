@@ -57,7 +57,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
   const { trackedStudy, trackedSeries, taskInfo, successSaveReport, currentReportInfo, 
-    currentTimepoint, lastTimepoint, comparedTimepoint } = trackedMeasurements.context;
+    currentTimepoint, lastTimepoint, comparedTimepoint, username, userRoles } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
@@ -545,6 +545,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       </div>
       <div className="flex justify-center p-4">
         <ActionButtons
+          userRoles={userRoles}
           onExportClick={exportReport}
           onCreateReportClick={() => {
             sendTrackedMeasurementsEvent('SAVE_REPORT', {

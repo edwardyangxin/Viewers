@@ -14,6 +14,24 @@ import {
   lesionOptions,
 } from './mappings';
 
+function getUserName(userAuthenticationService) {
+  let username = 'unknown';
+  const user = userAuthenticationService.getUser();
+  if (user) {
+    username = user.profile.preferred_username;
+  }
+  return username;
+}
+
+function getUserRoles(userAuthenticationService) {
+  let userRoles = [];
+  const user = userAuthenticationService.getUser();
+  if (user?.profile?.realm_role) {
+    userRoles = user.profile.realm_role;
+  }
+  return userRoles;
+}
+
 function getTimepointName(timepointId) {
   if (timepointId === null || timepointId === undefined) {
     return '未知';
@@ -376,6 +394,8 @@ function getEditMeasurementLabelDialog(
 }
 
 export {
+  getUserName,
+  getUserRoles,
   getTimepointName,
   getViewportId,
   locationStrBuilder,

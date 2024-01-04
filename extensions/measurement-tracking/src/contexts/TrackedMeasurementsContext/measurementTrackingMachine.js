@@ -30,6 +30,8 @@ const machineConfiguration = {
     ignoredSRSeriesForHydration: [],
     isDirty: false,
     // evibased
+    username: undefined,
+    userRoles: undefined,
     successSaveReport: false,
     currentTimepoint: undefined,
     baselineTimepoint: undefined,
@@ -74,6 +76,16 @@ const machineConfiguration = {
         // load report to measurements
         UPDATE_BACKEND_REPORT: {
           target: 'updateBackendReport',
+        },
+        UPDATE_USERNAME: {
+          actions: assign({
+            username: (_, event) => event.username,
+          }),
+        },
+        UPDATE_USERROLES: {
+          actions: assign({
+            userRoles: (_, event) => event.userRoles,
+          }),
         },
         UPDATE_TASK_INFO: {
           actions: assign({
@@ -187,6 +199,12 @@ const machineConfiguration = {
             taskInfo: (_, event) => event.taskInfo,
           }),
         },
+        UNTRACK_ALL: [
+          {
+            target: 'idle',
+            actions: ['clearAllMeasurements'],
+          },
+        ],
       },
     },
     promptTrackNewSeries: {

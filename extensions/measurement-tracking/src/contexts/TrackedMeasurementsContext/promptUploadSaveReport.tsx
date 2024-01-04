@@ -5,6 +5,7 @@ import RESPONSE from '../../_shared/PROMPT_RESPONSES';
 import { DicomMetadataStore, utils } from '@ohif/core';
 import React from 'react';
 import i18n from '@ohif/i18n';
+import { getUserName } from '../../utils/utils';
 
 const { performAuditLog } = utils;
 
@@ -117,12 +118,8 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
     trackedMeasurements = _convertToReportMeasurements(trackedMeasurements);
 
     console.log('Authenticated user info: ', userAuthenticationService.getUser());
-    const user = userAuthenticationService.getUser();
-    let username = 'unknown';
+    const username = getUserName(userAuthenticationService);
     const authHeader = userAuthenticationService.getAuthorizationHeader();
-    if (user) {
-      username = user.profile.preferred_username;
-    }
     const StudyInstanceUID = trackedMeasurements[0]['StudyInstanceUID'];
 
     // TODO: evibased, refactor api calls and task type check. 在页面加载处获取taskid&type？
