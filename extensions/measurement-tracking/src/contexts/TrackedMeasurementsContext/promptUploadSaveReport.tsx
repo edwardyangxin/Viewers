@@ -17,15 +17,20 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const StudyInstanceUID = evt?.data?.StudyInstanceUID;
   const SeriesInstanceUID = evt?.data?.SeriesInstanceUID;
 
-  const { trackedStudy, trackedSeries } = ctx;
+  const { trackedStudy, trackedSeries, userTask } = ctx;
   let displaySetInstanceUIDs;
 
   //evibased, call createReportDialogPrompt and 1. store report to evibased api, 2. store report to PACS dicomSR
   return new Promise(async function (resolve, reject) {
     // TODO: Fallback if (uiDialogService) {
-    const reportSummaryResult = await createReportDialogPrompt(ctx, uiDialogService, measurementService, {
-      extensionManager,
-    });
+    const reportSummaryResult = await createReportDialogPrompt(
+      ctx,
+      uiDialogService,
+      measurementService,
+      {
+        extensionManager,
+      }
+    );
 
     let successSaveReport = false;
     if (reportSummaryResult.action === RESPONSE.CREATE_REPORT) {
@@ -33,7 +38,14 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
       const _appConfig = extensionManager._appConfig;
       if (_appConfig.evibased['use_report_api']) {
         // post to report api
-        successSaveReport = await _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries, reportSummaryResult.value.reportInfo);
+        successSaveReport = await _uploadReportAsync(
+          servicesManager,
+          extensionManager,
+          trackedStudy,
+          trackedSeries,
+          userTask,
+          reportSummaryResult.value.reportInfo
+        );
       } else {
         // deprecated, SR report has limited fields, use report api instead
         // reportInfo not saved to PACS dicomSR
@@ -92,7 +104,14 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
 }
 
 // evibased, upload report to backend api
-async function _uploadReportAsync(servicesManager, extensionManager, trackedStudy, trackedSeries, reportInfo) {
+async function _uploadReportAsync(
+  servicesManager,
+  extensionManager,
+  trackedStudy,
+  trackedSeries,
+  userTask,
+  reportInfo
+) {
   const { measurementService, userAuthenticationService, uiNotificationService, uiDialogService } =
     servicesManager.services;
   const _appConfig = extensionManager._appConfig;
@@ -106,6 +125,12 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
   });
 
   try {
+    // check userTask exist
+    if (!userTask) {
+      console.log('no tasks found', StudyInstanceUID, username);
+      throw new Error(`no tasks found, can't upload report`);
+    }
+
     const measurements = measurementService.getMeasurements();
     let trackedMeasurements = measurements.filter(
       m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
@@ -122,50 +147,9 @@ async function _uploadReportAsync(servicesManager, extensionManager, trackedStud
     const authHeader = userAuthenticationService.getAuthorizationHeader();
     const StudyInstanceUID = trackedMeasurements[0]['StudyInstanceUID'];
 
-    // TODO: evibased, refactor api calls and task type check. 在页面加载处获取taskid&type？
-    // get task api for current study
-    const getTaskUrl = _appConfig['evibased']['task_get_url'];
-    const getTaskResponse = await fetch(
-      `${getTaskUrl}?username=${username}&StudyInstanceUID=${StudyInstanceUID}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authHeader.Authorization,
-        },
-      }
-    );
-    if (!getTaskResponse.ok) {
-      const body = await getTaskResponse.text();
-      throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
-    }
-    let tasks = [];
-    if (getTaskResponse.status === 204) {
-      // no content
-    } else {
-      const body = await getTaskResponse.json();
-      tasks = Array.isArray(body) ? body : [body];
-    }
-    if (tasks.length === 0) {
-      console.log('no tasks found', StudyInstanceUID, username);
-      throw new Error(`no tasks found, can't upload report`);
-    }
-
-    // loop tasks and get task id&type
-    let taskId = undefined;
-    let taskType = undefined;
-    tasks.forEach(task => {
-      if (['reading', 'arbitration'].includes(task.type) && ['create'].includes(task.status)) {
-        taskId = task._id;
-        taskType = task.type;
-      }
-    });
-    if (!taskId) {
-      console.log('no suitable taskType found', StudyInstanceUID, username);
-      throw new Error(`no suitable taskType found, can't upload report`);
-    }
-
     // post report api
+    const taskId = userTask._id;
+    const taskType = userTask.type;
     const uploadReportUrl = _appConfig['evibased']['report_upload_url'];
     const uploadReportBody = {
       StudyInstanceUID: StudyInstanceUID,

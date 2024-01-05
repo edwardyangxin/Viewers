@@ -8,6 +8,7 @@ import StudyBrowser from '../../ui/StudyBrowser';
 import { useTrackedMeasurements } from '../../getContextModule';
 import i18n from '@ohif/i18n';
 import { getUserName, getUserRoles, getViewportId } from '../../utils/utils';
+import { getTaskByUserAndUID } from '../../utils/apiCall';
 
 const { formatDate, performAuditLog } = utils;
 
@@ -63,7 +64,7 @@ function PanelStudyBrowserTracking({
   const { trackedSeries, pastTimepoints, comparedTimepoint } = trackedMeasurements.context;
 
   // one time useEffect
-  useEffect(() => {
+  useEffect(async () => {
     // update context username and userRoles
     const username = getUserName(userAuthenticationService);
     const userRoles = getUserRoles(userAuthenticationService);
@@ -73,6 +74,22 @@ function PanelStudyBrowserTracking({
     sendTrackedMeasurementsEvent('UPDATE_USERROLES', {
       userRoles: userRoles,
     });
+
+    // get user task
+    const authHeader = userAuthenticationService.getAuthorizationHeader();
+    const tasks = await getTaskByUserAndUID(_appConfig['evibased']['task_get_url'], authHeader.Authorization, username, currentStudyInstanceUID);
+    let userTask = null;
+    tasks.forEach(task => {
+      // find the first task with status 'create' and type in ['reading'--阅片, 'arbitration'--裁判, 'QC'--质控']
+      if (['reading', 'arbitration', 'QC'].includes(task.type) && ['create'].includes(task.status)) {
+        userTask = task;
+      }
+    });
+    if (userTask) {
+      sendTrackedMeasurementsEvent('UPDATE_USER_TASK', {
+        userTask: userTask,
+      });
+    }
   }, []);
 
   // evibased, set current viewportid and compared viewportid

@@ -32,6 +32,7 @@ const machineConfiguration = {
     // evibased
     username: undefined,
     userRoles: undefined,
+    userTask: undefined,
     successSaveReport: false,
     currentTimepoint: undefined,
     baselineTimepoint: undefined,
@@ -85,6 +86,11 @@ const machineConfiguration = {
         UPDATE_USERROLES: {
           actions: assign({
             userRoles: (_, event) => event.userRoles,
+          }),
+        },
+        UPDATE_USER_TASK: {
+          actions: assign({
+            userTask: (_, event) => event.userTask,
           }),
         },
         UPDATE_TASK_INFO: {
