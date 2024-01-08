@@ -1,3 +1,9 @@
+const TaskMapping = {
+  reading: '阅片',
+  arbitration: '仲裁',
+  QC: '质控',
+};
+
 const targetIndexMapping = {
   1: 1,
   2: 2,
@@ -211,6 +217,7 @@ for (const [key, value] of Object.entries(responseMapping)) {
 }
 
 export {
+  TaskMapping,
   targetIndexMapping,
   nonTargetIndexMapping,
   LesionMapping,

@@ -61,10 +61,11 @@ function PanelStudyBrowserTracking({
   const activeViewportDisplaySetInstanceUIDs =
     viewports.get(activeViewportId)?.displaySetInstanceUIDs;
 
-  const { trackedSeries, pastTimepoints, comparedTimepoint } = trackedMeasurements.context;
+  const { trackedSeries, pastTimepoints, comparedTimepoint } =
+    trackedMeasurements.context;
 
   // one time useEffect
-  useEffect(async () => {
+  useEffect(() => {
     // update context username and userRoles
     const username = getUserName(userAuthenticationService);
     const userRoles = getUserRoles(userAuthenticationService);
@@ -74,22 +75,6 @@ function PanelStudyBrowserTracking({
     sendTrackedMeasurementsEvent('UPDATE_USERROLES', {
       userRoles: userRoles,
     });
-
-    // get user task
-    const authHeader = userAuthenticationService.getAuthorizationHeader();
-    const tasks = await getTaskByUserAndUID(_appConfig['evibased']['task_get_url'], authHeader.Authorization, username, currentStudyInstanceUID);
-    let userTask = null;
-    tasks.forEach(task => {
-      // find the first task with status 'create' and type in ['reading'--阅片, 'arbitration'--裁判, 'QC'--质控']
-      if (['reading', 'arbitration', 'QC'].includes(task.type) && ['create'].includes(task.status)) {
-        userTask = task;
-      }
-    });
-    if (userTask) {
-      sendTrackedMeasurementsEvent('UPDATE_USER_TASK', {
-        userTask: userTask,
-      });
-    }
   }, []);
 
   // evibased, set current viewportid and compared viewportid
@@ -118,7 +103,24 @@ function PanelStudyBrowserTracking({
   useEffect(() => {
     // Fetch all studies for the patient in each primary study
     // evibased, 这里去search所有相关的study信息。当前的study和series信息在列表页获取并传进来了。
-    async function fetchStudiesForPatient(StudyInstanceUID) {
+    async function fetchTaskAndStudiesForPatient(StudyInstanceUID) {
+      // get user task
+      const authHeader = userAuthenticationService.getAuthorizationHeader();
+      const username = getUserName(userAuthenticationService);
+      const tasks = await getTaskByUserAndUID(_appConfig['evibased']['task_get_url'], authHeader.Authorization, username, currentStudyInstanceUID);
+      let currentTask = null;
+      tasks.forEach(task => {
+        // find the first task with status 'create' and type in ['reading'--阅片, 'arbitration'--裁判, 'QC'--质控']
+        if (['reading', 'arbitration', 'QC'].includes(task.type) && ['create'].includes(task.status)) {
+          currentTask = task;
+        }
+      });
+      if (currentTask) {
+        sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
+          currentTask: currentTask,
+        });
+      }
+
       // current study qido
       const qidoForStudyUID = await dataSource.query.studies.search({
         studyInstanceUid: StudyInstanceUID,
@@ -141,9 +143,10 @@ function PanelStudyBrowserTracking({
 
       let mappedStudies = _mapDataSourceStudies(qidoStudiesForPatient);
       if (_appConfig.evibased['use_report_api']) {
-        mappedStudies = await _fetchReportsBackend(
+        mappedStudies = await _fetchBackendReports(
           _appConfig,
           userAuthenticationService,
+          currentTask,
           mappedStudies
         );
       }
@@ -227,9 +230,9 @@ function PanelStudyBrowserTracking({
       });
 
       setStudyDisplayList(prevArray => {
-        const ret = [...prevArray];
-        for (const study of actuallyMappedStudies) {
-          if (!prevArray.find(it => it.studyInstanceUid === study.studyInstanceUid)) {
+        const ret = [...actuallyMappedStudies];
+        for (const study of prevArray) {
+          if (!actuallyMappedStudies.find(it => it.studyInstanceUid === study.studyInstanceUid)) {
             ret.push(study);
           }
         }
@@ -238,8 +241,8 @@ function PanelStudyBrowserTracking({
     }
 
     // evibase, only fetch data for current study
-    // StudyInstanceUIDs.forEach(sid => fetchStudiesForPatient(sid));
-    fetchStudiesForPatient(currentStudyInstanceUID);
+    // StudyInstanceUIDs.forEach(sid => fetchTaskAndStudiesForPatient(sid));
+    fetchTaskAndStudiesForPatient(currentStudyInstanceUID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [StudyInstanceUIDs, getStudiesForPatientByMRN]);
 
@@ -613,7 +616,7 @@ function _mapDataSourceStudies(studies) {
 }
 
 // evibased, fetch data from API backend
-async function _fetchReportsBackend(_appConfig, userAuthenticationService, mappedStudies) {
+async function _fetchBackendReports(_appConfig, userAuthenticationService, currentTask, mappedStudies) {
   console.log('fetching Backend reports for: ', mappedStudies);
 
   try {
@@ -621,15 +624,13 @@ async function _fetchReportsBackend(_appConfig, userAuthenticationService, mappe
     // get username from userAuthenticationService
     const authHeader = userAuthenticationService.getAuthorizationHeader();
     const username = getUserName(userAuthenticationService);
-    const userRoles = getUserRoles(userAuthenticationService);
-    // evibased, if role is doctor, filter studies by task list
-    const ifDoctor = userRoles ? userRoles.includes('doctor') : false;
+    const ifReadingTask = currentTask ? currentTask.type === 'reading' : false;
     // loop through all studies
     for (let i = 0; i < mappedStudies.length; i++) {
       const study = mappedStudies[i];
       // get reports from reportFetchUrl by http request
       let fetchUrl;
-      if (ifDoctor) {
+      if (ifReadingTask) {
         // doctor only see own reports
         fetchUrl = `${reportFetchUrl}?username=${username}&StudyInstanceUID=${study.StudyInstanceUID}`;
       } else {

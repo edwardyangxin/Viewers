@@ -327,8 +327,12 @@ export default function CreateReportDialogPrompt(
     baselineTimepoint,
     lowestSODTimepoint,
     userRoles,
+    currentTask,
   } = ctx;
-
+  let taskType = null;
+  if (currentTask) {
+    taskType = currentTask.type;
+  }
   const measurements = measurementService.getMeasurements();
   const filteredMeasurements = measurements.filter(
     m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
@@ -405,18 +409,26 @@ export default function CreateReportDialogPrompt(
       uiDialogService.dismiss({ id: dialogId });
       switch (action.id) {
         case 'save':
+          let returnVal = {
+            ...value,
+            reportInfo: {
+              SOD: value.SOD,
+              targetResponse: value.targetResponse,
+              nonTargetResponse: value.nonTargetResponse,
+              response: value.response,
+              comment: value.comment,
+            }
+          };
+          if (taskType === 'arbitration') {
+            // 仲裁
+            returnVal.reportInfo.arbitrationComment = value.arbitrationComment;
+            returnVal.reportInfo.reportRef = {
+              $oid: currentReportInfo._id,
+            };
+          }
           resolve({
             action: CREATE_REPORT_DIALOG_RESPONSE.CREATE_REPORT,
-            value: {
-              ...value,
-              reportInfo: {
-                SOD: value.SOD,
-                targetResponse: value.targetResponse,
-                nonTargetResponse: value.nonTargetResponse,
-                response: value.response,
-                comment: value.comment,
-              },
-            },
+            value: returnVal,
             dataSourceName: undefined, // deprecated
           });
           break;
@@ -440,9 +452,15 @@ export default function CreateReportDialogPrompt(
     ];
     if (userRoles && userRoles.length > 0) {
       if (!userRoles.includes('QC')) {
+        let buttonText;
+        if (taskType === 'arbitration') {
+          buttonText = `${i18n.t('MeasurementTable:Save')}(选择${currentReportInfo.username}的报告)`;
+        } else {
+          buttonText = `${i18n.t('MeasurementTable:Save')}`;
+        }
         dialogActions.push({
           id: 'save',
-          text: i18n.t('MeasurementTable:Save'),
+          text: buttonText,
           type: ButtonEnums.type.primary,
         });
       }
@@ -466,6 +484,7 @@ export default function CreateReportDialogPrompt(
           nonTargetResponse: currentReportInfo ? currentReportInfo.nonTargetResponse : 'Baseline',
           response: currentReportInfo ? currentReportInfo.response : 'Baseline',
           comment: currentReportInfo ? currentReportInfo.comment : '',
+          arbitrationComment: currentReportInfo?.arbitrationComment ? currentReportInfo.arbitrationComment : '',
         },
         noCloseButton: true,
         onClose: _handleClose,
@@ -612,6 +631,32 @@ export default function CreateReportDialogPrompt(
                       />
                     </div>
                   </div>
+                  {taskType === 'arbitration' && (
+                    <div className="flex grow flex-row justify-evenly">
+                      <div className="w-1/2">
+                        <Input
+                          className="border-primary-main bg-black"
+                          type="text"
+                          id="arbitration_comment"
+                          label="仲裁备注"
+                          labelClassName="text-white text-[12px] leading-[1.2] mt-2"
+                          smallInput={false}
+                          placeholder="仲裁备注"
+                          value={value.arbitrationComment}
+                          onChange={event => {
+                            event.persist();
+                            setValue(value => ({ ...value, arbitrationComment: event.target.value }));
+                          }}
+                          onKeyUp={event => {
+                            event.persist();
+                            if (event.key === 'Enter') {
+                              setValue(value => ({ ...value, arbitrationComment: event.target.value }));
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </>

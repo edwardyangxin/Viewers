@@ -1,9 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { targetKeyGroup, nonTargetKeyGroup, otherKeyGroup } from '../../utils/mappings';
+import { targetKeyGroup, nonTargetKeyGroup, TaskMapping } from '../../utils/mappings';
 
-const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabels }) => {
+const TimePointSummary = ({ currentTask, taskInfo, timepoint, lastTimepointInfo, currentLabels }) => {
+  const taskType = currentTask?.type;
   const ifBaseline = timepoint && parseInt(timepoint) > 1 ? false : true;
   const ifFinished = taskInfo.totalTask === undefined || taskInfo.totalTask === 0;
   const reports = lastTimepointInfo?.reports;
@@ -48,9 +49,9 @@ const TimePointSummary = ({ taskInfo, timepoint, lastTimepointInfo, currentLabel
             {modality}
           </span> */}
         </div>
-        {/* <div className="text-primary-light ellipse truncate pt-2 text-base leading-none">
-          {`正在标注: `}
-        </div> */}
+        <div className="text-primary-light ellipse truncate pt-2 text-base leading-none">
+          {`当前任务类型: ${taskType ? TaskMapping[taskType] : 'N/A'}`}
+        </div>
       </div>
       {/* progress */}
       {!ifBaseline && (

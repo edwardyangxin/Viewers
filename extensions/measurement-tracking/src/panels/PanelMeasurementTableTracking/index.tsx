@@ -29,6 +29,7 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
   timepoint: undefined,
   modality: '', // 'deprecated',
   description: '', // 'deprecated',
+  currentTask: undefined,
   taskInfo: undefined, // task info
 };
 
@@ -57,7 +58,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
   const { trackedStudy, trackedSeries, taskInfo, successSaveReport, currentReportInfo, 
-    currentTimepoint, lastTimepoint, comparedTimepoint, username, userRoles } = trackedMeasurements.context;
+    currentTimepoint, lastTimepoint, comparedTimepoint, username, userRoles, currentTask } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
@@ -110,6 +111,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           timepoint: currentTimepoint?.trialTimePointId,
           modality,
           description: StudyDescription,
+          currentTask: currentTask,
           taskInfo: taskInfo,
         });
       }
@@ -119,6 +121,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         timepoint: currentTimepoint?.trialTimePointId,
         modality: '', // 'CT',
         description: '', // 'CHEST/ABD/PELVIS W CONTRAST',
+        currentTask: currentTask,
         taskInfo: taskInfo,
       });
     }
@@ -133,6 +136,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     trackedMeasurements,
     trackedStudy,
     currentTimepoint,
+    currentTask,
   ]);
 
   // TODO: Better way to consolidated, debounce, check on change?
@@ -512,6 +516,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         {displayStudySummary.taskInfo && (
           <TimePointSummary
             // evibased
+            currentTask={displayStudySummary.currentTask}
             taskInfo={displayStudySummary.taskInfo}
             timepoint={displayStudySummary.timepoint ? displayStudySummary.timepoint.slice(1) : undefined}
             lastTimepointInfo={lastTimepoint}

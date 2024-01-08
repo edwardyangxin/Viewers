@@ -17,7 +17,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const StudyInstanceUID = evt?.data?.StudyInstanceUID;
   const SeriesInstanceUID = evt?.data?.SeriesInstanceUID;
 
-  const { trackedStudy, trackedSeries, userTask } = ctx;
+  const { trackedStudy, trackedSeries, currentTask } = ctx;
   let displaySetInstanceUIDs;
 
   //evibased, call createReportDialogPrompt and 1. store report to evibased api, 2. store report to PACS dicomSR
@@ -43,7 +43,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
           extensionManager,
           trackedStudy,
           trackedSeries,
-          userTask,
+          currentTask,
           reportSummaryResult.value.reportInfo
         );
       } else {
@@ -109,7 +109,7 @@ async function _uploadReportAsync(
   extensionManager,
   trackedStudy,
   trackedSeries,
-  userTask,
+  currentTask,
   reportInfo
 ) {
   const { measurementService, userAuthenticationService, uiNotificationService, uiDialogService } =
@@ -125,8 +125,8 @@ async function _uploadReportAsync(
   });
 
   try {
-    // check userTask exist
-    if (!userTask) {
+    // check currentTask exist
+    if (!currentTask) {
       console.log('no tasks found', StudyInstanceUID, username);
       throw new Error(`no tasks found, can't upload report`);
     }
@@ -148,8 +148,8 @@ async function _uploadReportAsync(
     const StudyInstanceUID = trackedMeasurements[0]['StudyInstanceUID'];
 
     // post report api
-    const taskId = userTask._id;
-    const taskType = userTask.type;
+    const taskId = currentTask._id;
+    const taskType = currentTask.type;
     const uploadReportUrl = _appConfig['evibased']['report_upload_url'];
     const uploadReportBody = {
       StudyInstanceUID: StudyInstanceUID,

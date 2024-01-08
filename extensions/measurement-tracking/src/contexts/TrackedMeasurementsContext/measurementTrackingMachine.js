@@ -32,7 +32,7 @@ const machineConfiguration = {
     // evibased
     username: undefined,
     userRoles: undefined,
-    userTask: undefined,
+    currentTask: undefined,
     successSaveReport: false,
     currentTimepoint: undefined,
     baselineTimepoint: undefined,
@@ -88,9 +88,9 @@ const machineConfiguration = {
             userRoles: (_, event) => event.userRoles,
           }),
         },
-        UPDATE_USER_TASK: {
+        UPDATE_CURRENT_TASK: {
           actions: assign({
-            userTask: (_, event) => event.userTask,
+            currentTask: (_, event) => event.currentTask,
           }),
         },
         UPDATE_TASK_INFO: {
@@ -415,6 +415,8 @@ const defaultOptions = {
       prevTrackedStudy: '',
       prevTrackedSeries: [],
       prevIgnoredSeries: [],
+      // evibased
+      currentReportInfo: undefined, // reset loaded report info
     }),
     // Promise resolves w/ `evt.data.*`
     setTrackedStudyAndSeries: assign((ctx, evt) => {
