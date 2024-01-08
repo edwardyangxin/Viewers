@@ -17,6 +17,7 @@ const { formatDate, performAuditLog } = utils;
  * @param {*} param0
  */
 function PanelStudyBrowserTracking({
+  commandsManager,
   extensionManager,
   servicesManager,
   getImageSrc,
@@ -119,6 +120,10 @@ function PanelStudyBrowserTracking({
         sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
           currentTask: currentTask,
         });
+        // set ifReadonlyMode to commandsManager CORNERSTONE context
+        // TODO: readonly mode refactor
+        const ifReadonlyMode = ['QC', 'arbitration'].includes(currentTask.type);
+        commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
       }
 
       // current study qido

@@ -333,6 +333,8 @@ export default function CreateReportDialogPrompt(
   if (currentTask) {
     taskType = currentTask.type;
   }
+  const ifReadingTask = taskType === 'reading';
+  const ifArbitrationTask = taskType === 'arbitration';
   const measurements = measurementService.getMeasurements();
   const filteredMeasurements = measurements.filter(
     m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
@@ -484,7 +486,7 @@ export default function CreateReportDialogPrompt(
           nonTargetResponse: currentReportInfo ? currentReportInfo.nonTargetResponse : 'Baseline',
           response: currentReportInfo ? currentReportInfo.response : 'Baseline',
           comment: currentReportInfo ? currentReportInfo.comment : '',
-          arbitrationComment: currentReportInfo?.arbitrationComment ? currentReportInfo.arbitrationComment : '',
+          arbitrationComment: currentReportInfo?.arbitrationComment ? currentReportInfo.arbitrationComment : null,
         },
         noCloseButton: true,
         onClose: _handleClose,
@@ -542,6 +544,7 @@ export default function CreateReportDialogPrompt(
                         value={value.SOD}
                         onChange={onSODInputChangeHandler}
                         onKeyUp={onSODInputKeyUpHandler}
+                        disabled={!ifReadingTask}
                       />
                     </div>
                     <div className="w-1/3">
@@ -571,7 +574,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, targetResponse: newSelection?.value }));
                         }}
                         options={targetResponseOptions}
-                        isDisabled={ifBaseline}
+                        isDisabled={!ifReadingTask || ifBaseline}
                       />
                     </div>
                   </div>
@@ -588,7 +591,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, nonTargetResponse: newSelection?.value }));
                         }}
                         options={nonTargetResponseOptions}
-                        isDisabled={ifBaseline}
+                        isDisabled={!ifReadingTask || ifBaseline}
                       />
                     </div>
                     <div className="w-1/3">
@@ -603,7 +606,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, response: newSelection?.value }));
                         }}
                         options={responseOptions}
-                        isDisabled={ifBaseline}
+                        isDisabled={!ifReadingTask || ifBaseline}
                       />
                     </div>
                   </div>
@@ -628,35 +631,40 @@ export default function CreateReportDialogPrompt(
                             setValue(value => ({ ...value, comment: event.target.value }));
                           }
                         }}
+                        disabled={!ifReadingTask}
                       />
                     </div>
                   </div>
-                  {taskType === 'arbitration' && (
-                    <div className="flex grow flex-row justify-evenly">
-                      <div className="w-1/2">
-                        <Input
-                          className="border-primary-main bg-black"
-                          type="text"
-                          id="arbitration_comment"
-                          label="仲裁备注"
-                          labelClassName="text-white text-[12px] leading-[1.2] mt-2"
-                          smallInput={false}
-                          placeholder="仲裁备注"
-                          value={value.arbitrationComment}
-                          onChange={event => {
-                            event.persist();
-                            setValue(value => ({ ...value, arbitrationComment: event.target.value }));
-                          }}
-                          onKeyUp={event => {
-                            event.persist();
-                            if (event.key === 'Enter') {
+                  {
+                    // 如果是仲裁任务，或者读取到了仲裁备注，显示仲裁备注输入框
+                    (taskType === 'arbitration' || value.arbitrationComment) && (
+                      <div className="flex grow flex-row justify-evenly">
+                        <div className="w-1/2">
+                          <Input
+                            className="border-primary-main bg-black"
+                            type="text"
+                            id="arbitration_comment"
+                            label="仲裁备注"
+                            labelClassName="text-white text-[12px] leading-[1.2] mt-2"
+                            smallInput={false}
+                            placeholder="仲裁备注"
+                            value={value.arbitrationComment}
+                            onChange={event => {
+                              event.persist();
                               setValue(value => ({ ...value, arbitrationComment: event.target.value }));
-                            }
-                          }}
-                        />
+                            }}
+                            onKeyUp={event => {
+                              event.persist();
+                              if (event.key === 'Enter') {
+                                setValue(value => ({ ...value, arbitrationComment: event.target.value }));
+                              }
+                            }}
+                            disabled={!ifArbitrationTask}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )
+                  }
                 </div>
               </div>
             </>

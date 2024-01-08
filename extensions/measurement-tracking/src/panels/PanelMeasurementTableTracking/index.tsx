@@ -215,6 +215,12 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   // TODO: evibased, 重构，和extension cornerstone callInputDialog统一代码
   const onMeasurementItemEditHandler = ({ uid, isActive }) => {
     const measurement = measurementService.getMeasurement(uid);
+    // if readonly mode, not editable
+    if (commandsManager.getContext('CORNERSTONE').ifReadonlyMode) {
+      measurement.readonly = true;
+      return;
+    }
+
     const dialogId = 'enter-annotation';
     jumpToImage({ uid, isActive });
     const dialogTitle = t('Dialog:Annotation');

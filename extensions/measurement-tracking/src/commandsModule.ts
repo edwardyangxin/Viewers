@@ -44,6 +44,12 @@ function commandsModule({
     setIRCMeasurementLabel: ({ uid }) => {
       const measurement = measurementService.getMeasurement(uid);
 
+      // if readonly mode, no editing
+      if (commandsManager.getContext('CORNERSTONE').ifReadonlyMode) {
+        measurement.readonly = true;
+        return;
+      }
+
       callInputDialog(
         uiDialogService,
         measurement,
