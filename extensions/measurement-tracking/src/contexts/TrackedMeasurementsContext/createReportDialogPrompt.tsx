@@ -424,9 +424,7 @@ export default function CreateReportDialogPrompt(
           if (taskType === 'arbitration') {
             // 仲裁
             returnVal.reportInfo.arbitrationComment = value.arbitrationComment;
-            returnVal.reportInfo.reportRef = {
-              $oid: currentReportInfo._id,
-            };
+            returnVal.reportInfo.reportRef = currentReportInfo._id;
           }
           resolve({
             action: CREATE_REPORT_DIALOG_RESPONSE.CREATE_REPORT,
