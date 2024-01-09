@@ -1,64 +1,56 @@
 import React from 'react';
-import { ThumbnailNoImage } from '@ohif/ui';
+import { TaskMapping } from '../../utils/mappings';
+import ReportThumbnail from '../ReportThumbnail';
 
-const ReportThumbnailList = ({
-  reports,
-  onReportThumbnailClick,
-  onReportThumbnailDoubleClick,
-}) => {
+const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnailDoubleClick }) => {
   return (
     <div
       id="ohif-thumbnail-list"
-      className="ohif-scrollbar min-h-[150px] overflow-y-hidden bg-black py-3"
+      className="ohif-scrollbar min-h-[150px] overflow-y-hidden bg-secondary-main"
     >
-      {reports.map(
-        ({
-          report_name,
-          create_time,
-          username,
-          user_report_version,
-          report_template,
-          report_template_version,
-          measurements,
-        }, index) => {
-          // Convert ISO time string to Date object
-          const dateObject = new Date(create_time);
-          // Format local date as 'yyyy-MM-DD'
-          const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-          const createDate = dateObject.toLocaleDateString('en-CA', options);
-          const key = username + createDate;
-          let reportName = report_name ? report_name: `${username}报告(${createDate})`
-          // evibased, dragData for drag data to viewport?
-          const dragData = {
-            type: 'displayset',
-            displaySetInstanceUID: key,
-            report: reports[index],
-          };
-          switch ('thumbnailNoImage') {
-            case 'thumbnailNoImage':
-              return (
-                <ThumbnailNoImage
-                  isActive={false}
-                  key={key}
-                  displaySetInstanceUID={key}
-                  dragData={dragData}
-                  modality={'报告'}
-                  modalityTooltip={'已提交报告'}
-                  messages={undefined}
-                  seriesDate={createDate}
-                  description={reportName}
-                  canReject={false}
-                  onReject={undefined}
-                  onClick={() => onReportThumbnailClick(key)}
-                  onDoubleClick={() => onReportThumbnailDoubleClick(reports[index])}
-                  isHydratedForDerivedDisplaySet={undefined}
-                />
-              );
-            default:
-              return <></>;
-          }
+      {reports.map(({ create_time, username, measurements, task, reportRes }, index) => {
+        const taskType = task?.type;
+        const taskTypeStr = taskType ? TaskMapping[taskType] : '未知类型';
+        // Convert ISO time string to Date object
+        const dateObject = new Date(create_time);
+        // Format local date as 'yyyy-MM-DD'
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        const createDate = dateObject.toLocaleDateString('en-CA', options);
+        const key = username + createDate;
+        let reportName = '';
+        if (taskType === 'arbitration') {
+          reportName = `仲裁人:${username}(选择报告:${reportRes?.username})`;
+        } else {
+          reportName = `提交人:${username}`;
         }
-      )}
+        // evibased, dragData for drag data to viewport?
+        const dragData = {
+          type: 'displayset',
+          displaySetInstanceUID: key,
+          report: reports[index],
+        };
+        switch ('thumbnailNoImage') {
+          case 'thumbnailNoImage':
+            return (
+              <ReportThumbnail
+                isActive={false}
+                key={key}
+                displaySetInstanceUID={key}
+                dragData={dragData}
+                modality={taskTypeStr}
+                modalityTooltip={'报告类型'}
+                seriesDate={createDate}
+                description={reportName}
+                canReject={false}
+                onReject={undefined}
+                onClick={() => onReportThumbnailClick(key)}
+                onDoubleClick={() => onReportThumbnailDoubleClick(reports[index])}
+              />
+            );
+          default:
+            return <></>;
+        }
+      })}
     </div>
   );
 };
