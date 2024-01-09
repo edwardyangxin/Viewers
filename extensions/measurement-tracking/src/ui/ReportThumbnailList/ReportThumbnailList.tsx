@@ -8,7 +8,7 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
       id="ohif-thumbnail-list"
       className="ohif-scrollbar min-h-[150px] overflow-y-hidden bg-secondary-main"
     >
-      {reports.map(({ create_time, username, measurements, task, reportRes }, index) => {
+      {reports.map(({ create_time, username, measurements, task, reportRef }, index) => {
         const taskType = task?.type;
         const taskTypeStr = taskType ? TaskMapping[taskType] : '未知类型';
         // Convert ISO time string to Date object
@@ -19,9 +19,9 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
         const key = username + createDate;
         let reportName = '';
         if (taskType === 'arbitration') {
-          reportName = `仲裁人:${username}(选择报告:${reportRes?.username})`;
+          reportName = `仲裁人:${username}(选择阅片人:${reportRef?.username})`;
         } else {
-          reportName = `提交人:${username}`;
+          reportName = `阅片人:${username}`;
         }
         // evibased, dragData for drag data to viewport?
         const dragData = {
