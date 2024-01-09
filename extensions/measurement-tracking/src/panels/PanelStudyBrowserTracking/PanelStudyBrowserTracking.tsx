@@ -211,7 +211,25 @@ function PanelStudyBrowserTracking({
         navigate(`/viewer?StudyInstanceUIDs=${currentTimepoint.studyInstanceUid}&StudyInstanceUIDs=${lastTimepointStudy.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`, '_self');
       }
 
-      //  TODO: task check point, 如果不通过就暂停所有任务, if no baselineTimepoint or lowestSODTimepoint ...., show error and 联系管理员
+      function ifTaskValid() {
+        if (!currentTimepoint || !baselineStudy) {
+          return false;
+        }
+
+        if (!currentTimepoint.ifBaseline) {
+          if (!lowestSODStudy || !lastTimepointStudy || !comparedTimepoint) {
+            return false;
+          }
+        }
+        // TODO: evibased, task check point, 如果不通过就暂停所有任务, if no baselineTimepoint or lowestSODTimepoint ...., show error and 联系管理员
+        return true;
+      }
+
+      // 发生数据错误，联系管理员
+      if (!ifTaskValid()) {
+        // pop warning dialog
+        popContactAdminDialog(uiDialogService);
+      }
 
       sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT', {
         currentTimepoint: currentTimepoint,
@@ -806,6 +824,29 @@ function _mapDisplaySets(
 }
 
 const thumbnailNoImageModalities = ['SR', 'SEG', 'SM', 'RTSTRUCT', 'RTPLAN', 'RTDOSE', 'DOC', 'OT'];
+
+function popContactAdminDialog(uiDialogService) {
+  uiDialogService.create({
+    id: 'dl-contact-admin',
+    centralize: true,
+    isDraggable: false,
+    showOverlay: true,
+    content: Dialog,
+    contentProps: {
+      title: '发生数据错误，请联系管理员',
+      body: () => (
+        <div className="bg-primary-dark p-4 text-white">
+          <p>发生数据错误，请联系管理员</p>
+          {/* <p className="mt-2">This action cannot be undone.</p> */}
+        </div>
+      ),
+      actions: [],
+      onClose: () => uiDialogService.dismiss({ id: 'dl-contact-admin' }),
+      onShow: () => {},
+      onSubmit: () => {},
+    },
+  });
+}
 
 function _getComponentType(ds) {
   if (thumbnailNoImageModalities.includes(ds.Modality) || ds?.unsupported) {
