@@ -9,14 +9,15 @@ const ReportThumbnail = ({
   displaySetInstanceUID,
   description,
   seriesDate,
-  modality,
-  modalityTooltip,
+  taskType,
+  taskTypeTooltip,
   onClick,
   onDoubleClick,
   canReject,
   onReject,
   dragData,
   isActive,
+  isArbitration,
 }) => {
   const [collectedProps, drag, dragPreview] = useDrag({
     type: 'displayset',
@@ -54,17 +55,15 @@ const ReportThumbnail = ({
             />
             <Tooltip
               position="bottom"
-              content={<Typography>{modalityTooltip}</Typography>}
+              content={<Typography>{taskTypeTooltip}</Typography>}
             >
               <div
                 className={classnames(
                   'rounded-sm px-3  text-lg',
-                  isActive
-                    ? 'bg-primary-light text-black'
-                    : 'bg-primary-main text-white'
+                  isArbitration ? 'bg-primary-light text-black' : 'bg-primary-main text-white'
                 )}
               >
-                {modality}
+                {taskType}
               </div>
             </Tooltip>
             <span className="ml-4 text-base text-blue-300">{seriesDate}</span>
@@ -100,9 +99,9 @@ ReportThumbnail.propTypes = {
     type: PropTypes.string,
   }),
   description: PropTypes.string,
-  modality: PropTypes.string,
-  /* Tooltip message to display when modality text is hovered */
-  modalityTooltip: PropTypes.string,
+  taskType: PropTypes.string,
+  /* Tooltip message to display when taskType text is hovered */
+  taskTypeTooltip: PropTypes.string,
   seriesDate: PropTypes.string,
   onClick: PropTypes.func,
   onDoubleClick: PropTypes.func,

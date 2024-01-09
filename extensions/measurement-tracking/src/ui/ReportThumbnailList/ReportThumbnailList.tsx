@@ -10,6 +10,7 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
     >
       {reports.map(({ create_time, username, measurements, task, reportRef }, index) => {
         const taskType = task?.type;
+        const isArbitration = taskType === 'arbitration';
         const taskTypeStr = taskType ? TaskMapping[taskType] : '未知类型';
         // Convert ISO time string to Date object
         const dateObject = new Date(create_time);
@@ -18,7 +19,7 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
         const createDate = dateObject.toLocaleDateString('en-CA', options);
         const key = username + createDate;
         let reportName = '';
-        if (taskType === 'arbitration') {
+        if (isArbitration) {
           reportName = `仲裁人:${username}(选择阅片人:${reportRef?.username})`;
         } else {
           reportName = `阅片人:${username}`;
@@ -37,8 +38,9 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
                 key={key}
                 displaySetInstanceUID={key}
                 dragData={dragData}
-                modality={taskTypeStr}
-                modalityTooltip={'报告类型'}
+                taskType={taskTypeStr}
+                taskTypeTooltip={'报告类型'}
+                isArbitration={isArbitration}
                 seriesDate={createDate}
                 description={reportName}
                 canReject={false}
