@@ -90,6 +90,7 @@ const organLateralMapping = {
   NA: '不可选',
   Left: '左',
   Right: '右',
+  Both: '双侧',
 };
 
 const organLocationMapping = {

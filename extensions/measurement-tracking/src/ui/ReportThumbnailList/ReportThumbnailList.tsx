@@ -11,7 +11,7 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
       {reports.map(({ create_time, username, measurements, task, reportRef }, index) => {
         const taskType = task?.type;
         const isArbitration = taskType === 'arbitration';
-        const taskTypeStr = taskType ? TaskMapping[taskType] : '未知类型';
+        const taskTypeStr = taskType ? `${TaskMapping[taskType]}报告` : '未知类型';
         // Convert ISO time string to Date object
         const dateObject = new Date(create_time);
         // Format local date as 'yyyy-MM-DD'

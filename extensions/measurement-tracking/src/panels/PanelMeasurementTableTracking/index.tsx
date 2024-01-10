@@ -514,65 +514,67 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
   return (
     <>
-      <div
-        className="invisible-scrollbar overflow-y-visible overflow-x-visible"
-        ref={measurementsPanelRef}
-        data-cy={'trackedMeasurements-panel'}
-      >
-        {displayStudySummary.taskInfo && (
-          <TimePointSummary
-            // evibased
-            currentTask={displayStudySummary.currentTask}
-            taskInfo={displayStudySummary.taskInfo}
-            timepoint={displayStudySummary.timepoint ? displayStudySummary.timepoint.slice(1) : undefined}
-            lastTimepointInfo={lastTimepoint}
-            currentLabels={targetFindings.length + nonTargetFindings.length}
-          />
-        )}
-        <MeasurementTable
-          title={`${t('MeasurementTable:Target Findings')}(最多5个)`}
-          ifTarget={true}
-          data={targetFindings}
-          servicesManager={servicesManager}
-          onClick={jumpToImage}
-          onEdit={onMeasurementItemEditHandler}
-        />
-        <MeasurementTable
-          title={t('MeasurementTable:Non-Target Findings')}
-          data={nonTargetFindings}
-          servicesManager={servicesManager}
-          onClick={jumpToImage}
-          onEdit={onMeasurementItemEditHandler}
-        />
-        {otherFindings.length > 0 && (
+      <div className="ohif-scrollbar invisible-scrollbar flex flex-1 flex-col overflow-auto">
+        <div
+          className="invisible-scrollbar overflow-y-visible overflow-x-visible"
+          ref={measurementsPanelRef}
+          data-cy={'trackedMeasurements-panel'}
+        >
+          {displayStudySummary.taskInfo && (
+            <TimePointSummary
+              // evibased
+              currentTask={displayStudySummary.currentTask}
+              taskInfo={displayStudySummary.taskInfo}
+              timepoint={displayStudySummary.timepoint ? displayStudySummary.timepoint.slice(1) : undefined}
+              lastTimepointInfo={lastTimepoint}
+              currentLabels={targetFindings.length + nonTargetFindings.length}
+            />
+          )}
           <MeasurementTable
-            title={t('MeasurementTable:Other Findings')}
-            data={otherFindings}
+            title={`${t('MeasurementTable:Target Findings')}(最多5个)`}
+            ifTarget={true}
+            data={targetFindings}
             servicesManager={servicesManager}
             onClick={jumpToImage}
             onEdit={onMeasurementItemEditHandler}
           />
+          <MeasurementTable
+            title={t('MeasurementTable:Non-Target Findings')}
+            data={nonTargetFindings}
+            servicesManager={servicesManager}
+            onClick={jumpToImage}
+            onEdit={onMeasurementItemEditHandler}
+          />
+          {otherFindings.length > 0 && (
+            <MeasurementTable
+              title={t('MeasurementTable:Other Findings')}
+              data={otherFindings}
+              servicesManager={servicesManager}
+              onClick={jumpToImage}
+              onEdit={onMeasurementItemEditHandler}
+            />
+          )}
+        </div>
+        <div className="flex justify-center p-4">
+          <ActionButtons
+            userRoles={userRoles}
+            onExportClick={exportReport}
+            onCreateReportClick={() => {
+              sendTrackedMeasurementsEvent('SAVE_REPORT', {
+                viewportId: viewportGrid.activeViewportId,
+                isBackupSave: true,
+              });
+            }}
+            disabled={
+              (targetFindings.length === 0 &&
+              nonTargetFindings.length === 0) || successSaveReport
+            }
+          />
+        </div>
+        {comparedTimepoint && (
+          getComparedTimepointReport()
         )}
       </div>
-      <div className="flex justify-center p-4">
-        <ActionButtons
-          userRoles={userRoles}
-          onExportClick={exportReport}
-          onCreateReportClick={() => {
-            sendTrackedMeasurementsEvent('SAVE_REPORT', {
-              viewportId: viewportGrid.activeViewportId,
-              isBackupSave: true,
-            });
-          }}
-          disabled={
-            (targetFindings.length === 0 &&
-            nonTargetFindings.length === 0) || successSaveReport
-          }
-        />
-      </div>
-      {comparedTimepoint && (
-        getComparedTimepointReport()
-      )}
     </>
   );
 }
