@@ -240,7 +240,7 @@ function TrackedCornerstoneViewport(props) {
           currentSeries: SeriesNumber, // TODO - switch entire currentSeries to be UID based or actual position based
           seriesDescription: SeriesDescription,
           patientInformation: {
-            patientName: PatientName ? OHIF.utils.formatPN(PatientName) : '',
+            patientName: PatientID || '', //evibaesd, use patientID instead of patientName
             patientSex: PatientSex || '',
             patientAge: PatientAge || '',
             MRN: PatientID || '',
