@@ -23,6 +23,8 @@ const PROXY_DOMAIN = process.env.PROXY_DOMAIN;
 const ENTRY_TARGET = process.env.ENTRY_TARGET || `${SRC_DIR}/index.js`;
 const Dotenv = require('dotenv-webpack');
 const writePluginImportFile = require('./writePluginImportsFile.js');
+// evibased
+const StringReplacePlugin = require("string-replace-webpack-plugin");
 
 const copyPluginFromExtensions = writePluginImportFile(SRC_DIR, DIST_DIR);
 
@@ -70,6 +72,28 @@ module.exports = (env, argv) => {
         path.resolve(__dirname, '../../../node_modules'),
         SRC_DIR,
       ],
+    },
+    module: {
+      rules: [
+        {
+          test: /\.js(\.map)?$/,
+          use: [
+            {
+              loader: StringReplacePlugin.replace({
+                replacements: [
+                  {
+                    pattern: /https:\/\/unpkg.com/g,
+                    replacement: function (match, p1, offset, string) {
+                      log('replacing unpkg.com with cdn.jsdelivr.net/npm');
+                      return 'https://cdn.jsdelivr.net/npm';
+                    },
+                  },
+                ],
+              }),
+            }
+          ]
+        }
+      ]
     },
     plugins: [
       new Dotenv(),
@@ -134,6 +158,7 @@ module.exports = (env, argv) => {
         // Cache large files for the manifests to avoid warning messages
         maximumFileSizeToCacheInBytes: 1024 * 1024 * 50,
       }),
+      new StringReplacePlugin(),
     ],
     // https://webpack.js.org/configuration/dev-server/
     devServer: {
