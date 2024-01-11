@@ -66,9 +66,11 @@ function PastReports({ servicesManager, extensionManager }) {
       const otherFindings = [];
       let SOD = undefined;
       let response = undefined;
-      let username = undefined;
+      let username = null;
+      let userAlias = null;
       if (report) {
         username = report.username;
+        userAlias = report.task?.userAlias;
         SOD = report.SOD;
         response = report.response;
         const displayMeasurements = report.measurements.map((m, index) =>
@@ -105,7 +107,7 @@ function PastReports({ servicesManager, extensionManager }) {
           <PastReportItem
             studyInstanceUid={studyInstanceUid}
             trialTimePointInfo={trialTimePointInfo}
-            username={username}
+            username={userAlias ? userAlias : username}
             SOD={SOD}
             response={response}
             isActive={isExpanded}
