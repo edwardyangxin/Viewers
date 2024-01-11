@@ -84,7 +84,6 @@ module.exports = (env, argv) => {
                   {
                     pattern: /https:\/\/unpkg.com/g,
                     replacement: function (match, p1, offset, string) {
-                      log('replacing unpkg.com with cdn.jsdelivr.net/npm');
                       return 'https://cdn.jsdelivr.net/npm';
                     },
                   },

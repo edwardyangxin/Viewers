@@ -198,7 +198,7 @@ const responseMapping = {
   NCR_NPD: '非CR/非PD',
   PD: '疾病进展(PD)',
   NE: '不可评估(NE)',
-  Data_Unsatisfied: '影响质量问题(不可评估)',
+  Data_Unsatisfied: '影像质量问题(不可评估)',
 };
 
 // options

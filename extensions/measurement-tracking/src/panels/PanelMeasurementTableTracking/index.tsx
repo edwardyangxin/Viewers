@@ -567,10 +567,11 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
                 isBackupSave: true,
               });
             }}
-            disabled={
-              (targetFindings.length === 0 &&
-              nonTargetFindings.length === 0) || successSaveReport
-            }
+            // can create report when no measurement
+            // disabled={
+            //   (targetFindings.length === 0 &&
+            //   nonTargetFindings.length === 0) || successSaveReport
+            // }
           />
         </div>
         {comparedTimepoint && (

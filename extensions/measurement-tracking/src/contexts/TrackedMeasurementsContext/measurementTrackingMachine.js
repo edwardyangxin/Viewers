@@ -136,6 +136,7 @@ const machineConfiguration = {
             comparedViewportId: (_, event) => event.comparedViewportId,
           }),
         },
+        SAVE_REPORT: 'promptSaveReport',
       },
     },
     promptBeginTracking: {

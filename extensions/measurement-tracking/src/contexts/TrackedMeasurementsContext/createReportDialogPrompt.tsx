@@ -604,7 +604,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, response: newSelection?.value }));
                         }}
                         options={responseOptions}
-                        isDisabled={!ifReadingTask || ifBaseline}
+                        isDisabled={!ifReadingTask}
                       />
                     </div>
                   </div>
