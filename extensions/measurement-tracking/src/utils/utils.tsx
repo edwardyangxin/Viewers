@@ -39,6 +39,14 @@ function getTimepointName(timepointId) {
   return parseInt(timepointId) === 0 ? '基线' : `访视${timepointId}`;
 }
 
+function buildWadorsImageId(measurenemt, appConfig) {
+  let { StudyInstanceUID, SeriesInstanceUID, SOPInstanceUID, frame } = measurenemt;
+  const { dataSources } = appConfig;
+  const pacsConfig = dataSources[0];
+  frame = frame || 1;
+  return `wadors:${pacsConfig.configuration.wadoRoot}/studies/${StudyInstanceUID}/series/${SeriesInstanceUID}/instances/${SOPInstanceUID}/frames/${frame}`;
+}
+
 function getViewportId(viewports, viewportName = 'default') {
   let targetViewportId = null;
   for (const viewport of viewports.values()) {
@@ -397,6 +405,7 @@ export {
   getUserName,
   getUserRoles,
   getTimepointName,
+  buildWadorsImageId,
   getViewportId,
   locationStrBuilder,
   parseMeasurementLabelInfo,

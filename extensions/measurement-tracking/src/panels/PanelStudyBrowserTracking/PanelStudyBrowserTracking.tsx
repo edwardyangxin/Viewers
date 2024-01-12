@@ -251,6 +251,7 @@ function PanelStudyBrowserTracking({
       sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {
         measurementService: measurementService,
         comparedTimepoint: comparedTimepoint,
+        appConfig: _appConfig,
       });
 
       setStudyDisplayList(prevArray => {

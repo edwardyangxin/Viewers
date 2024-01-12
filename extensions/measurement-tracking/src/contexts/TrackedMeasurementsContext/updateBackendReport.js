@@ -1,4 +1,5 @@
 import { utils } from '@ohif/core';
+import { buildWadorsImageId } from '../../utils/utils';
 
 const RESPONSE = {
   NO_NEVER: -1,
@@ -50,7 +51,8 @@ function updateBackendReport({ servicesManager, extensionManager, appConfig }, c
     // get AnnotationType, measurement["AnnotationType"] = "Cornerstone:Bidirectional"
     const annotationType = AnnotationType.split(':')[1];
     // get annotation
-    const referencedImageId = `wadors:https://test.evi-based.com/pacs/dicom-web/studies/${StudyInstanceUID}/series/${SeriesInstanceUID}/instances/${SOPInstanceUID}/frames/1`;
+    // evibased: 注意这里imageId如果不对应的话，会导致annotation无法显示，这里参考了getWADORSImageId.js extension-default
+    const referencedImageId = buildWadorsImageId(measurement, appConfig);
     const imageId = 'imageId:' + referencedImageId;
     const cachedStats = {
       [imageId]: {

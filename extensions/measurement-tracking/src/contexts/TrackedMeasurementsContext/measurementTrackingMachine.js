@@ -1,6 +1,7 @@
 import { hydrateStructuredReport } from '@ohif/extension-cornerstone-dicom-sr';
 import { assign } from 'xstate';
 import { utils } from '@ohif/core';
+import { buildWadorsImageId } from '../../utils/utils';
 
 const RESPONSE = {
   NO_NEVER: -1,
@@ -515,6 +516,7 @@ const defaultOptions = {
       console.log("measurementTrackingMachine action(updateComparedTimepointInfo): ", evt.type, evt);
       const measurementService = evt.measurementService;
       const comparedViewportId = evt.comparedViewportId ? evt.comparedViewportId : 'default';
+      const appConfig = evt.appConfig;
       // check comparedTimepoint studyInstanceUid
       if (!evt.comparedTimepoint || ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid) {
         // no comparedTimepoint or same studyInstanceUid
@@ -567,7 +569,8 @@ const defaultOptions = {
         // get AnnotationType, measurement["AnnotationType"] = "Cornerstone:Bidirectional"
         const annotationType = AnnotationType.split(':')[1];
         // get annotation
-        const referencedImageId = `wadors:https://test.evi-based.com/pacs/dicom-web/studies/${StudyInstanceUID}/series/${SeriesInstanceUID}/instances/${SOPInstanceUID}/frames/1`; 
+        // evibased: 注意这里imageId如果不对应的话，会导致annotation无法显示，这里参考了getWADORSImageId.js extension-default
+        const referencedImageId = buildWadorsImageId(measurement, appConfig);
         const imageId = 'imageId:' + referencedImageId;
         const cachedStats = {
           [imageId]: {
