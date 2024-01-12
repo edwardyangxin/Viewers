@@ -567,7 +567,7 @@ const defaultOptions = {
         // get AnnotationType, measurement["AnnotationType"] = "Cornerstone:Bidirectional"
         const annotationType = AnnotationType.split(':')[1];
         // get annotation
-        const referencedImageId = `wadors:/dicom-web/studies/${StudyInstanceUID}/series/${SeriesInstanceUID}/instances/${SOPInstanceUID}/frames/1`; 
+        const referencedImageId = `wadors:https://test.evi-based.com/pacs/dicom-web/studies/${StudyInstanceUID}/series/${SeriesInstanceUID}/instances/${SOPInstanceUID}/frames/1`; 
         const imageId = 'imageId:' + referencedImageId;
         const cachedStats = {
           [imageId]: {
