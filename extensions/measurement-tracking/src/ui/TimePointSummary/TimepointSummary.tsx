@@ -1,10 +1,23 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import PropTypes from 'prop-types';
 
 import { targetKeyGroup, nonTargetKeyGroup, TaskMapping } from '../../utils/mappings';
+import { Icon } from '@ohif/ui';
 
-const TimePointSummary = ({ currentTask, taskInfo, timepoint, lastTimepointInfo, currentLabels }) => {
+const TimePointSummary = ({
+  extensionManager,
+  currentTask,
+  taskInfo,
+  timepoint,
+  lastTimepointInfo,
+  currentLabels,
+}) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const taskType = currentTask?.type;
+  const hasTask = taskType ? true : false;
   const ifBaseline = timepoint && parseInt(timepoint) > 1 ? false : true;
   const ifFinished = taskInfo.totalTask === undefined || taskInfo.totalTask === 0;
   const reports = lastTimepointInfo?.reports;
@@ -34,6 +47,31 @@ const TimePointSummary = ({ currentTask, taskInfo, timepoint, lastTimepointInfo,
     }
     validPercent = true;
   }
+
+  const onClickReturnButton = () => {
+    const { pathname } = location;
+    const dataSourceIdx = pathname.indexOf('/', 1);
+    const query = new URLSearchParams(window.location.search);
+    const configUrl = query.get('configUrl');
+
+    const dataSourceName = pathname.substring(dataSourceIdx + 1);
+    const existingDataSource = extensionManager.getDataSources(dataSourceName);
+
+    const searchQuery = new URLSearchParams();
+    if (dataSourceIdx !== -1 && existingDataSource) {
+      searchQuery.append('datasources', pathname.substring(dataSourceIdx + 1));
+    }
+
+    if (configUrl) {
+      searchQuery.append('configUrl', configUrl);
+    }
+
+    navigate({
+      pathname: '/',
+      search: decodeURIComponent(searchQuery.toString()),
+    });
+  };
+
   return (
     <div className="flex justify-between p-2">
       <div>
@@ -54,29 +92,52 @@ const TimePointSummary = ({ currentTask, taskInfo, timepoint, lastTimepointInfo,
         </div>
       </div>
       {/* progress */}
-      {!ifBaseline && (
+      {(!ifBaseline && hasTask) && (
         <div className="flex items-center">
           <div className="flex-1">
             <div className="flex items-center">
-              <h4 className="font-medium text-sm mr-auto text-white flex items-center" >
+              <h4 className="mr-auto flex items-center text-sm font-medium text-white">
                 当前任务完成
               </h4>
               {validPercent ? (
-                <span className={`px-1 rounded-lg text-sm ${
-                  currentLabels >= todoLabels ? 'bg-green-900 text-green-500' : 'bg-red-900 text-red-500'}`}>
+                <span
+                  className={`rounded-lg px-1 text-sm ${
+                    currentLabels >= todoLabels
+                      ? 'bg-green-900 text-green-500'
+                      : 'bg-red-900 text-red-500'
+                  }`}
+                >
                   {currentLabels + '/' + todoLabels}
                 </span>
               ) : (
-                <span className="px-1 rounded-lg bg-red-900 text-red-500 text-sm">
-                  N/A
-                </span>
+                <span className="rounded-lg bg-red-900 px-1 text-sm text-red-500">N/A</span>
               )}
             </div>
-            <div className="overflow-hidden bg-blue-900 h-1.5 rounded-full w-full">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-900">
               <span
-                className="h-full bg-blue-500 w-full block rounded-full"
-                style={{width: `${validPercent ? percent*100 : 100}%`}}
+                className="block h-full w-full rounded-full bg-blue-500"
+                style={{ width: `${validPercent ? percent * 100 : 100}%` }}
               ></span>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* no task go to next task or go to timepoint list */}
+      {!hasTask && (
+        <div className="flex items-center">
+          <div className="flex-1">
+            <div
+              className="flex items-center cursor-pointer"
+              onClick={onClickReturnButton}
+              data-cy="return-to-work-list"
+            >
+              <h4 className="mr-auto ml-4 flex items-center text-lg font-medium text-white">
+                下一任务<br />任务列表
+              </h4>
+              <Icon
+                name="chevron-right"
+                className="text-primary-active w-8"
+              />
             </div>
           </div>
         </div>

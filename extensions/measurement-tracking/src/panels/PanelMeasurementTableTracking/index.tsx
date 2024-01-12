@@ -525,6 +525,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           {displayStudySummary.taskInfo && (
             <TimePointSummary
               // evibased
+              extensionManager={extensionManager}
               currentTask={displayStudySummary.currentTask}
               taskInfo={displayStudySummary.taskInfo}
               timepoint={displayStudySummary.timepoint ? displayStudySummary.timepoint.slice(1) : undefined}
