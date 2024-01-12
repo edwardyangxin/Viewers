@@ -108,7 +108,7 @@ function PanelStudyBrowserTracking({
       // get user task
       const authHeader = userAuthenticationService.getAuthorizationHeader();
       const username = getUserName(userAuthenticationService);
-      const tasks = await getTaskByUserAndUID(_appConfig['evibased']['task_get_url'], authHeader.Authorization, username, currentStudyInstanceUID);
+      const tasks = await getTaskByUserAndUID(_appConfig['evibased']['task_get_url'], authHeader?.Authorization, username, currentStudyInstanceUID);
       let currentTask = null;
       tasks.forEach(task => {
         // find the first task with status 'create' and type in ['reading'--阅片, 'arbitration'--裁判, 'QC'--质控']
@@ -665,7 +665,7 @@ async function _fetchBackendReports(_appConfig, userAuthenticationService, curre
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: authHeader.Authorization,
+          Authorization: authHeader?.Authorization,
         },
       });
       if (!response.ok) {

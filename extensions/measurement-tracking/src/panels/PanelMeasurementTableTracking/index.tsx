@@ -57,7 +57,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     sendTrackedMeasurementsEvent,
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
-  const { trackedStudy, trackedSeries, taskInfo, successSaveReport, currentReportInfo, 
+  const { trackedStudy, trackedSeries, taskInfo, successSaveReport, currentReportInfo,
     currentTimepoint, lastTimepoint, comparedTimepoint, username, userRoles, currentTask } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
@@ -328,7 +328,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: authHeader.Authorization,
+          Authorization: authHeader?.Authorization,
         },
       });
       if (!getTaskResponse.ok) {
@@ -343,7 +343,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         const body = await getTaskResponse.json();
         tasks = Array.isArray(body) ? body : [body];
       }
-      
+
       // loop tasks and filter
       const filteredTasks = [];
       for (const task of tasks) {

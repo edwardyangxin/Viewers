@@ -165,7 +165,7 @@ async function _uploadReportAsync(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: authHeader.Authorization,
+        Authorization: authHeader?.Authorization,
       },
       body: JSON.stringify(uploadReportBody),
     });
@@ -188,7 +188,7 @@ async function _uploadReportAsync(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: authHeader.Authorization,
+        Authorization: authHeader?.Authorization,
       },
       body: JSON.stringify(putTaskBody),
     });

@@ -27,7 +27,7 @@ async function performAuditLog(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: authHeader.Authorization,
+        Authorization: authHeader?.Authorization,
       },
       body: JSON.stringify(auditLogBody),
     });
