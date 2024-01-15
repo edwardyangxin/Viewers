@@ -1,10 +1,12 @@
-import { hotkeys } from '@ohif/core';
+import { hotkeys, utils } from '@ohif/core';
 import toolbarButtons from './toolbarButtons';
 import { id } from './id';
 import initToolGroups from './initToolGroups';
 import moreTools from './moreTools';
 import moreToolsMpr from './moreToolsMpr';
 import i18n from 'i18next';
+
+const { performAuditLog } = utils;
 
 // Allow this mode by excluding non-imaging modalities such as SR, SEG
 // Also, SM is not a simple imaging modalities, so exclude it.
@@ -21,6 +23,7 @@ const ohif = {
 
 const tracked = {
   measurements: '@ohif/extension-measurement-tracking.panelModule.trackedMeasurements',
+  pastReports: '@ohif/extension-measurement-tracking.panelModule.pastReports',
   thumbnailList: '@ohif/extension-measurement-tracking.panelModule.seriesList',
   viewport: '@ohif/extension-measurement-tracking.viewportModule.cornerstone-tracked',
 };
@@ -74,7 +77,7 @@ function modeFactory({ modeConfiguration }) {
     /**
      * Lifecycle hooks
      */
-    onModeEnter: ({ servicesManager, extensionManager, commandsManager }) => {
+    onModeEnter: async ({ servicesManager, extensionManager, commandsManager }) => {
       const {
         measurementService,
         toolbarService,
@@ -87,6 +90,11 @@ function modeFactory({ modeConfiguration }) {
 
       // Init Default and SR ToolGroups
       initToolGroups(extensionManager, toolGroupService, commandsManager);
+
+      // init customizations
+      customizationService.addModeCustomizations([
+        '@ohif/extension-measurement-tracking.customizationModule.custom-context-menu',
+      ]);
 
       let unsubscribe;
       toolbarService.setDefaultTool({
@@ -121,6 +129,7 @@ function modeFactory({ modeConfiguration }) {
 
       toolbarService.init(extensionManager);
       toolbarService.addButtons([...toolbarButtons, ...moreTools, ...moreToolsMpr]);
+      // default button section is for the top level toolbar
       toolbarService.createButtonSection(DEFAULT_TOOL_GROUP_ID, [
         'MeasurementTools',
         'Zoom',
@@ -128,6 +137,7 @@ function modeFactory({ modeConfiguration }) {
         'Pan',
         'Capture',
         'Layout',
+        'StackImageSync',
         'MPR',
         'MoreTools',
       ]);
@@ -171,8 +181,23 @@ function modeFactory({ modeConfiguration }) {
       //     },
       //   ]),
       // ];
+
+      // evibased, audit log
+      const { userAuthenticationService } = servicesManager.services;
+      const { _appConfig } = extensionManager;
+      // get StudyInstanceUIDs from URL, assume only one study uids
+      const urlParams = new URLSearchParams(window.location.search);
+      const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
+
+      const auditMsg = 'entering viewer mode';
+      const auditLogBodyMeta = {
+        StudyInstanceUID: StudyInstanceUIDs,
+        action: auditMsg,
+        action_result: 'success',
+      };
+      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
     },
-    onModeExit: ({ servicesManager }) => {
+    onModeExit: async ({ servicesManager, extensionManager }) => {
       const {
         toolGroupService,
         syncGroupService,
@@ -188,6 +213,20 @@ function modeFactory({ modeConfiguration }) {
       syncGroupService.destroy();
       segmentationService.destroy();
       cornerstoneViewportService.destroy();
+
+      // evibased, audit log, no studyUID available
+      const { userAuthenticationService } = servicesManager.services;
+      const { _appConfig } = extensionManager;
+      // get StudyInstanceUIDs from URL, assume only one study uids
+      const urlParams = new URLSearchParams(window.location.search);
+      const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
+      const auditMsg = 'leave viewer mode';
+      const auditLogBodyMeta = {
+        StudyInstanceUID: StudyInstanceUIDs,
+        action: auditMsg,
+        action_result: 'success',
+      };
+      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
     },
     validationTags: {
       study: [],
@@ -212,8 +251,9 @@ function modeFactory({ modeConfiguration }) {
             id: ohif.layout,
             props: {
               leftPanels: [tracked.thumbnailList],
-              rightPanels: [dicomSeg.panel, tracked.measurements],
-              rightPanelDefaultClosed: true,
+              // rightPanels: [tracked.measurements, dicomSeg.panel], // evibased, disable dicomSeg panel
+              rightPanels: [tracked.measurements, tracked.pastReports],
+              rightPanelDefaultClosed: false,
               viewports: [
                 {
                   namespace: tracked.viewport,

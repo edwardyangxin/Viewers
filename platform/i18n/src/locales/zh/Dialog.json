@@ -1,6 +1,8 @@
 {
-  "Enter your annotation": "$t(Common:Enter your annotation)",
+  "Annotation": "编辑",
   "Cancel": "$t(Common:Cancel)",
+  "Do you want to continue tracking measurements for this study?": "是否加载测量数据？",
+  "Enter your annotation": "$t(Common:Enter your annotation)",
   "Save": "$t(Common:Save)",
   "Provide a name for your report": "输入报告名称"
 }

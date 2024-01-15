@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { ButtonEnums, Dialog, Input, Select } from '@ohif/ui';
+import i18n from '@ohif/i18n';
 
 export const CREATE_REPORT_DIALOG_RESPONSE = {
   CANCEL: 0,
@@ -10,6 +11,12 @@ export const CREATE_REPORT_DIALOG_RESPONSE = {
 export default function CreateReportDialogPrompt(uiDialogService, { extensionManager }) {
   return new Promise(function (resolve, reject) {
     let dialogId = undefined;
+    // evibased, get username, timestamp and comment for default report name
+    const { userAuthenticationService } = extensionManager._servicesManager.services;
+    const userInfo = userAuthenticationService.getUser();
+    let labelTemplate = userInfo ? userInfo.profile.preferred_username : 'unknown_user';
+    labelTemplate += '|' + new Date().toISOString().slice(0, 16).replace(/-/g, '');
+    labelTemplate += '|请在这里填写注释等信息';
 
     const _handleClose = () => {
       // Dismiss dialog
@@ -68,16 +75,16 @@ export default function CreateReportDialogPrompt(uiDialogService, { extensionMan
       useLastPosition: false,
       showOverlay: true,
       contentProps: {
-        title: 'Create Report',
+        title: i18n.t('MeasurementTable:Create Report'),
         value: {
-          label: '',
+          label: labelTemplate,
           dataSourceName: extensionManager.activeDataSource,
         },
         noCloseButton: true,
         onClose: _handleClose,
         actions: [
-          { id: 'cancel', text: 'Cancel', type: ButtonEnums.type.secondary },
-          { id: 'save', text: 'Save', type: ButtonEnums.type.primary },
+          { id: 'cancel', text: i18n.t('MeasurementTable:Cancel'), type: ButtonEnums.type.secondary },
+          { id: 'save', text: i18n.t('MeasurementTable:Save'), type: ButtonEnums.type.primary },
         ],
         // TODO: Should be on button press...
         onSubmit: _handleFormSubmit,
@@ -97,6 +104,7 @@ export default function CreateReportDialogPrompt(uiDialogService, { extensionMan
           };
           return (
             <>
+              {/* evibased, multi datasource but same backend api */}
               {dataSourcesOpts.length > 1 && window.config?.allowMultiSelectExport && (
                 <div>
                   <label className="text-[14px] leading-[1.2] text-white">Data Source</label>
@@ -116,19 +124,21 @@ export default function CreateReportDialogPrompt(uiDialogService, { extensionMan
                   />
                 </div>
               )}
-              <div className="mt-3">
-                <Input
-                  autoFocus
-                  label="Enter the report name"
-                  labelClassName="text-white text-[14px] leading-[1.2]"
-                  className="border-primary-main bg-black"
-                  type="text"
-                  value={value.label}
-                  onChange={onChangeHandler}
-                  onKeyPress={onKeyPressHandler}
-                  required
-                />
-              </div>
+              {!extensionManager._appConfig.evibased['use_report_api'] && (
+                <div className="mt-3">
+                  <Input
+                    autoFocus
+                    label="Enter the report name"
+                    labelClassName="text-white text-[14px] leading-[1.2]"
+                    className="border-primary-main bg-black"
+                    type="text"
+                    value={value.label}
+                    onChange={onChangeHandler}
+                    onKeyPress={onKeyPressHandler}
+                    required
+                  />
+                </div>
+              )}
             </>
           );
         },

@@ -53,6 +53,7 @@ const Length = {
     const mappedAnnotations = getMappedAnnotations(annotation, displaySetService);
 
     const displayText = getDisplayText(mappedAnnotations, displaySet);
+    const getReport = () => _getReport(mappedAnnotations, points, FrameOfReferenceUID);
 
     return {
       uid: annotationUID,
@@ -66,13 +67,12 @@ const Length = {
       frameNumber: mappedAnnotations[0]?.frameNumber || 1,
       toolName: metadata.toolName,
       displaySetInstanceUID: displaySet.displaySetInstanceUID,
-      label: data.text,
+      label: data.text ? data.text : data.label, // if no text, use label
       displayText: displayText,
       data: data.cachedStats,
       type: getValueTypeFromToolType(toolName),
-      getReport: () => {
-        throw new Error('Not implemented');
-      },
+      getReport,
+      measurementLabelInfo: data.measurementLabelInfo, // evibased
     };
   },
 };
@@ -106,6 +106,46 @@ function getMappedAnnotations(annotation, displaySetService) {
   return annotations;
 }
 
+/*
+evibased, to support report upload or csv report
+This function is used to convert the measurement data to a format that is
+suitable for the report generation (e.g. for the csv report). The report
+returns a list of columns and corresponding values.
+*/
+function _getReport(mappedAnnotations, points, FrameOfReferenceUID) {
+  const columns = [];
+  const values = [];
+
+  // Add Type
+  columns.push('AnnotationType');
+  values.push('Cornerstone:ArrowAnnotate');
+
+  // text no need
+  // mappedAnnotations.forEach(annotation => {
+  // const { text } = annotation;
+  // columns.push(`Text`);
+  // values.push(text);
+  // });
+
+  if (FrameOfReferenceUID) {
+    columns.push('FrameOfReferenceUID');
+    values.push(FrameOfReferenceUID);
+  }
+
+  if (points) {
+    columns.push('points');
+    // points has the form of [[x1, y1, z1], [x2, y2, z2], ...]
+    // convert it to string of [[x1 y1 z1];[x2 y2 z2];...]
+    // so that it can be used in the csv report
+    values.push(points.map(p => p.join(' ')).join(';'));
+  }
+
+  return {
+    columns,
+    values,
+  };
+}
+
 function getDisplayText(mappedAnnotations, displaySet) {
   if (!mappedAnnotations) {
     return '';
@@ -125,8 +165,10 @@ function getDisplayText(mappedAnnotations, displaySet) {
 
   const instanceText = InstanceNumber ? ` I: ${InstanceNumber}` : '';
   const frameText = displaySet.isMultiFrame ? ` F: ${frameNumber}` : '';
-
-  displayText.push(`(S: ${SeriesNumber}${instanceText}${frameText})`);
+  
+  // TODO: evibased, IRC related tools, 放到IRC extension 
+  // displayText.push(`(S: ${SeriesNumber}${instanceText}${frameText})`);
+  displayText.push(`(太小:5mm,消失:0mm)`);
 
   return displayText;
 }

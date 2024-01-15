@@ -4,27 +4,44 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, ButtonEnums } from '@ohif/ui';
 
-function ActionButtons({ onExportClick, onCreateReportClick, disabled }) {
+function ActionButtons({ onExportClick, onUploadClick, onCreateReportClick, userRoles, disabled }) {
   const { t } = useTranslation('MeasurementTable');
+
+  let reportButtonName = t('Create Report');
+  if (userRoles && userRoles.length > 0) {
+    if (userRoles.includes('QC')) {
+      reportButtonName = '查看报告';
+    }
+  }
 
   return (
     <React.Fragment>
-      <Button
+      {/* evibased disable export CSV */}
+      {/* <Button
         onClick={onExportClick}
         disabled={disabled}
         type={ButtonEnums.type.secondary}
         size={ButtonEnums.size.small}
       >
         {t('Export')}
-      </Button>
+      </Button> */}
+      {/* upload report to backend */}
+      {/* <Button
+        onClick={onUploadClick}
+        disabled={disabled}
+        type={ButtonEnums.type.secondary}
+        size={ButtonEnums.size.small}
+      >
+        {t('Upload')}
+      </Button> */}
       <Button
         className="ml-2"
         onClick={onCreateReportClick}
         type={ButtonEnums.type.secondary}
-        size={ButtonEnums.size.small}
+        size={ButtonEnums.size.large}
         disabled={disabled}
       >
-        {t('Create Report')}
+        {reportButtonName}
       </Button>
     </React.Fragment>
   );

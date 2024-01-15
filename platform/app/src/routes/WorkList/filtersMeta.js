@@ -1,9 +1,17 @@
 import i18n from 'i18next';
 
 const filtersMeta = [
+  // evibased
+  // {
+  //   name: 'patientName',
+  //   displayName: i18n.t('StudyList:PatientName'),
+  //   inputType: 'Text',
+  //   isSortable: true,
+  //   gridCol: 4,
+  // },
   {
-    name: 'patientName',
-    displayName: i18n.t('StudyList:PatientName'),
+    name: 'trialProtocolDescription',
+    displayName: i18n.t('StudyList:TrialProtocolDescription'),
     inputType: 'Text',
     isSortable: true,
     gridCol: 4,
@@ -16,17 +24,32 @@ const filtersMeta = [
     gridCol: 3,
   },
   {
+    name: 'trialTimePointInfo',
+    displayName: i18n.t('StudyList:TrialTimePointInfo'),
+    inputType: 'Text',
+    isSortable: true,
+    gridCol: 4,
+  },
+  {
     name: 'studyDate',
     displayName: i18n.t('StudyList:StudyDate'),
     inputType: 'DateRange',
     isSortable: true,
     gridCol: 5,
   },
+  // {
+  //   name: 'description',
+  //   displayName: i18n.t('StudyList:Description'),
+  //   inputType: 'Text',
+  //   isSortable: true,
+  //   gridCol: 4,
+  // },
+  // evibased, task info
   {
-    name: 'description',
-    displayName: i18n.t('StudyList:Description'),
-    inputType: 'Text',
-    isSortable: true,
+    name: 'taskInfo',
+    displayName: i18n.t('StudyList:TaskInfo'),
+    inputType: 'None',
+    isSortable: false,
     gridCol: 4,
   },
   {
@@ -110,20 +133,20 @@ const filtersMeta = [
     isSortable: true,
     gridCol: 3,
   },
-  {
-    name: 'accession',
-    displayName: i18n.t('StudyList:AccessionNumber'),
-    inputType: 'Text',
-    isSortable: true,
-    gridCol: 3,
-  },
-  {
-    name: 'instances',
-    displayName: i18n.t('StudyList:Instances'),
-    inputType: 'None',
-    isSortable: false,
-    gridCol: 2,
-  },
+  // {
+  //   name: 'accession',
+  //   displayName: i18n.t('StudyList:AccessionNumber'),
+  //   inputType: 'Text',
+  //   isSortable: true,
+  //   gridCol: 3,
+  // },
+  // {
+  //   name: 'instances',
+  //   displayName: i18n.t('StudyList:Instances'),
+  //   inputType: 'None',
+  //   isSortable: false,
+  //   gridCol: 2,
+  // },
 ];
 
 export default filtersMeta;

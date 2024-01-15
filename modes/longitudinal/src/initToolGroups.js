@@ -27,17 +27,17 @@ function initDefaultToolGroup(extensionManager, toolGroupService, commandsManage
         toolName: toolNames.ArrowAnnotate,
         configuration: {
           getTextCallback: (callback, eventDetails) =>
-            commandsManager.runCommand('arrowTextCallback', {
+            commandsManager.runCommand('IRCArrowTextCallback', {
               callback,
               eventDetails,
-            }),
+            }, 'CORNERSTONE'),
 
           changeTextCallback: (data, eventDetails, callback) =>
-            commandsManager.runCommand('arrowTextCallback', {
+            commandsManager.runCommand('IRCArrowTextCallback', {
               callback,
               data,
               eventDetails,
-            }),
+            }, 'CORNERSTONE'),
         },
       },
       { toolName: toolNames.Bidirectional },
@@ -157,17 +157,17 @@ function initMPRToolGroup(extensionManager, toolGroupService, commandsManager) {
         toolName: toolNames.ArrowAnnotate,
         configuration: {
           getTextCallback: (callback, eventDetails) =>
-            commandsManager.runCommand('arrowTextCallback', {
+            commandsManager.runCommand('IRCArrowTextCallback', {
               callback,
               eventDetails,
-            }),
+            }, 'IRC_CORNERSTONE'),
 
           changeTextCallback: (data, eventDetails, callback) =>
-            commandsManager.runCommand('arrowTextCallback', {
+            commandsManager.runCommand('IRCArrowTextCallback', {
               callback,
               data,
               eventDetails,
-            }),
+            }, 'IRC_CORNERSTONE'),
         },
       },
       { toolName: toolNames.Bidirectional },

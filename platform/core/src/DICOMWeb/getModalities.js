@@ -11,6 +11,7 @@ export default function getModalities(Modality, ModalitiesInStudy) {
   // Rare case, depending on the DICOM server we are using, but sometimes,
   // modalities.Value is undefined or null.
   modalities.Value = modalities.Value || [];
+  ModalitiesInStudy.Value = ModalitiesInStudy.Value || [];
 
   if (ModalitiesInStudy) {
     if (modalities.vr && modalities.vr === ModalitiesInStudy.vr) {

@@ -19,6 +19,7 @@ const getTrackedSeries = displaySets => {
   return trackedSeries;
 };
 
+// TODO: evibased, deprecated, rollback to original
 const StudyBrowser = ({
   tabs,
   activeTabName,
@@ -27,6 +28,7 @@ const StudyBrowser = ({
   onClickStudy,
   onClickThumbnail,
   onDoubleClickThumbnail,
+  onDoubleClickReportThumbnail,
   onClickUntrack,
   activeDisplaySetInstanceUIDs,
   servicesManager,
@@ -37,12 +39,23 @@ const StudyBrowser = ({
   const getTabContent = () => {
     const tabData = tabs.find(tab => tab.name === activeTabName);
     return tabData.studies.map(
-      ({ studyInstanceUid, date, description, numInstances, modalities, displaySets }) => {
+      ({
+        studyInstanceUid,
+        date,
+        description,
+        numInstances,
+        modalities,
+        displaySets,
+        trialTimePointId,
+        reports,
+        ifPrimary,
+      }) => {
         const isExpanded = expandedStudyInstanceUIDs.includes(studyInstanceUid);
+        const trialTimePointInfo = date;
         return (
           <React.Fragment key={studyInstanceUid}>
             <StudyItem
-              date={date}
+              date={trialTimePointInfo}
               description={description}
               numInstances={numInstances}
               modalities={modalities}
@@ -122,6 +135,7 @@ StudyBrowser.propTypes = {
   onClickStudy: PropTypes.func,
   onClickThumbnail: PropTypes.func,
   onDoubleClickThumbnail: PropTypes.func,
+  onDoubleClickReportThumbnail: PropTypes.func,
   onClickUntrack: PropTypes.func,
   activeTabName: PropTypes.string.isRequired,
   expandedStudyInstanceUIDs: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -176,6 +190,7 @@ StudyBrowser.defaultProps = {
   onClickStudy: noop,
   onClickThumbnail: noop,
   onDoubleClickThumbnail: noop,
+  onDoubleClickReportThumbnail: noop,
   onClickUntrack: noop,
 };
 

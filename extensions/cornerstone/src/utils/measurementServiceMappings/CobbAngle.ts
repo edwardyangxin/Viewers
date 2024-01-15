@@ -74,6 +74,7 @@ const CobbAngle = {
       data: data.cachedStats,
       type: getValueTypeFromToolType(toolName),
       getReport,
+      measurementLabelInfo: data.measurementLabelInfo, // evibased
     };
   },
 };

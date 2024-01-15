@@ -105,6 +105,11 @@ const commandsModule = props => {
           dicomDict = onBeforeDicomStore({ measurementData, naturalizedReport });
         }
 
+        // evibased, compliant with Orthanc PatientName
+        naturalizedReport.PatientName = naturalizedReport.PatientName[0]
+          ? naturalizedReport.PatientName[0].Alphabetic
+          : naturalizedReport.PatientName;
+
         await dataSource.store.dicom(naturalizedReport, null, dicomDict);
 
         if (StudyInstanceUID) {

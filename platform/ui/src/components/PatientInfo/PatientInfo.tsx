@@ -71,7 +71,8 @@ function PatientInfo({
                       {patientAge}
                     </span>
                   </div>
-                  <div className={classnames(classes.row)}>
+                  {/* evibased, comment */}
+                  {/* <div className={classnames(classes.row)}>
                     <span className={classnames(classes.infoHeader)}>{t('MRN')}</span>
                     <span
                       className={classnames(classes.infoText)}
@@ -79,7 +80,7 @@ function PatientInfo({
                     >
                       {MRN}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="flex">
                   <div className={classnames(classes.firstRow)}>

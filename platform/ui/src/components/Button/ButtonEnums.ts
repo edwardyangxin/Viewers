@@ -3,6 +3,7 @@ enum type {
   secondary = 'secondary',
 }
 enum size {
+  large = 'large',
   medium = 'medium',
   small = 'small',
 }

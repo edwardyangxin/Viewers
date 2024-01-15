@@ -1,4 +1,6 @@
 {
+  "Cancel": "取消",
+  "Enter your annotation": "输入测量信息",
   "Image": "图像",
   "Layout": "显示窗口",
   "Measurements": "测量值",
@@ -8,6 +10,7 @@
   "Previous": "上一个",
   "Reset": "复原",
   "RowsPerPage": "每页条数",
+  "Save": "保存",
   "Series": "序列",
   "Show": "显示",
   "Stop": "停止",

@@ -1,11 +1,14 @@
 {
+  "Create Report": "Create Report",
   "Criteria nonconformities": "Criteria nonconformities",
   "Delete": "Delete",
   "Description": "Description",
+  "Export": "Export",
   "MAX": "MAX",
   "Measurements": "Measurements",
   "No, do not ask again": "No, do not ask again",
   "NonTargets": "NonTargets",
+  "No tracked measurements": "No tracked measurements",
   "Relabel": "Relabel",
   "Targets": "Targets",
   "Track measurements for this series?": "Track measurements for this series?"

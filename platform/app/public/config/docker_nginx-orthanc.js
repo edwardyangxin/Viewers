@@ -1,5 +1,23 @@
 window.config = {
   routerBasename: '/',
+  whiteLabeling: {
+    createLogoComponentFn: function(React) {
+      return React.createElement(
+        'a',
+        {
+          target: '_self',
+          rel: 'noopener noreferrer',
+          className: 'text-2xl text-common-light',
+          href: '/',
+        },
+        React.createElement('img', {
+          src: './xunzheng-logo.svg',
+          className: 'inline',
+        }),
+        React.createElement('a', {}, '浔正医疗 EVI-BASED')
+      );
+    },
+  },
   showStudyList: true,
   extensions: [],
   modes: [],
@@ -41,4 +59,31 @@ window.config = {
       },
     },
   ],
+  // This is an array, but we'll only use the first entry for now
+  oidc: [
+    {
+      // ~ REQUIRED
+      // Authorization Server URL
+      authority: 'http://localhost:3000/auth/realms/ohif',
+      client_id: 'ohif-viewer',
+      redirect_uri: 'http://localhost:3000/callback', // `OHIFStandaloneViewer.js`
+      // "Authorization Code Flow"
+      // Resource: https://medium.com/@darutk/diagrams-of-all-the-openid-connect-flows-6968e3990660
+      response_type: 'code',
+      scope: 'openid', // email profile openid
+      // ~ OPTIONAL
+      post_logout_redirect_uri: '/logout-redirect.html',
+    },
+  ],
+  // evibased, config
+  evibased: {
+    use_report_api: true,
+    ping_url: 'http://localhost:3000/api/ping',
+    audit_log_url: 'http://localhost:3000/api/log',
+    report_upload_url: 'http://localhost:3000/api/report',
+    report_fetch_url: 'http://localhost:3000/api/report',
+    task_get_url: 'http://localhost:3000/api/task',
+    task_update_url: 'http://localhost:3000/api/task',
+    task_post_url: 'http://localhost:3000/api/task',
+  },
 };

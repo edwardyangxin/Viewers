@@ -2,22 +2,24 @@ import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import OHIF, { utils } from '@ohif/core';
 
-import { ViewportActionBar, Tooltip, Icon } from '@ohif/ui';
+import { ViewportActionBar, Tooltip, Icon, useImageViewer } from '@ohif/ui';
 
 import { useTranslation } from 'react-i18next';
 
 import { annotation } from '@cornerstonejs/tools';
 import { useTrackedMeasurements } from './../getContextModule';
 import { BaseVolumeViewport, Enums } from '@cornerstonejs/core';
+import { getTimepointName } from '../utils/utils';
 
 const { formatDate } = utils;
 
 function TrackedCornerstoneViewport(props) {
   const { displaySets, viewportId, viewportLabel, servicesManager, extensionManager } = props;
+  const { StudyInstanceUIDs } = useImageViewer();
 
   const { t } = useTranslation('Common');
 
-  const { measurementService, cornerstoneViewportService, viewportGridService } =
+  const { measurementService, cornerstoneViewportService, viewportGridService, uiNotificationService } =
     servicesManager.services;
 
   // Todo: handling more than one displaySet on the same viewport
@@ -29,7 +31,7 @@ function TrackedCornerstoneViewport(props) {
   const [trackedMeasurementUID, setTrackedMeasurementUID] = useState(null);
   const [viewportElem, setViewportElem] = useState(null);
 
-  const { trackedSeries } = trackedMeasurements.context;
+  const { trackedSeries, currentTimepoint, comparedTimepoint } = trackedMeasurements.context;
 
   const { SeriesDate, SeriesDescription, SeriesInstanceUID, SeriesNumber } = displaySet;
 
@@ -42,6 +44,9 @@ function TrackedCornerstoneViewport(props) {
     SpacingBetweenSlices,
     StudyDate,
     ManufacturerModelName,
+    // evibased
+    StudyInstanceUID,
+    ClinicalTrialTimePointID,
   } = displaySet.images[0];
 
   const updateIsTracked = useCallback(() => {
@@ -143,15 +148,24 @@ function TrackedCornerstoneViewport(props) {
     [added, addedRaw].forEach(evt => {
       subscriptions.push(
         measurementService.subscribe(evt, ({ source, measurement }) => {
+          // evibased, check if the measurement is for the current timepoint
+          const { referenceStudyUID: StudyInstanceUID, referenceSeriesUID: SeriesInstanceUID } =
+            measurement;
+          if (currentTimepoint && currentTimepoint.studyInstanceUid !== StudyInstanceUID) {
+            uiNotificationService.show({
+              title: '添加标注',
+              message: `非当前访视，不进入报告`,
+              type: 'warning',
+            });
+            return;
+          }
+
           const { activeViewportId } = viewportGridService.getState();
 
           // Each TrackedCornerstoneViewport receives the MeasurementService's events.
           // Only send the tracked measurements event for the active viewport to avoid
           // sending it more than once.
           if (viewportId === activeViewportId) {
-            const { referenceStudyUID: StudyInstanceUID, referenceSeriesUID: SeriesInstanceUID } =
-              measurement;
-
             sendTrackedMeasurementsEvent('SET_DIRTY', { SeriesInstanceUID });
             sendTrackedMeasurementsEvent('TRACK_SERIES', {
               viewportId,
@@ -168,7 +182,7 @@ function TrackedCornerstoneViewport(props) {
         unsub();
       });
     };
-  }, [measurementService, sendTrackedMeasurementsEvent, viewportId, viewportGridService]);
+  }, [currentTimepoint, measurementService, sendTrackedMeasurementsEvent, viewportId, viewportGridService]);
 
   function switchMeasurement(direction) {
     const newTrackedMeasurementUID = _getNextMeasurementUID(
@@ -201,6 +215,14 @@ function TrackedCornerstoneViewport(props) {
     );
   };
 
+  // evibased, format ClinicalTrialTimePointID
+  const currentStudyInstanceUID = StudyInstanceUIDs[0];
+  const comparedStudyInstanceUID = comparedTimepoint ? comparedTimepoint.studyInstanceUid : null;
+  const clinicalTrialTimePointID =
+    ClinicalTrialTimePointID &&
+    getTimepointName(ClinicalTrialTimePointID.slice(1)) +
+      (currentStudyInstanceUID === StudyInstanceUID ? '(当前)' : '') +
+      (comparedStudyInstanceUID === StudyInstanceUID ? '(对比)' : '');
   return (
     <>
       <ViewportActionBar
@@ -213,11 +235,12 @@ function TrackedCornerstoneViewport(props) {
         getStatusComponent={() => _getStatusComponent(isTracked)}
         studyData={{
           label: viewportLabel,
-          studyDate: formatDate(SeriesDate) || formatDate(StudyDate) || t('NoStudyDate'),
+          // evibased, use ClinicalTrialTimePointID instead of SeriesDate
+          studyDate:  clinicalTrialTimePointID || formatDate(SeriesDate) || formatDate(StudyDate) || t('NoStudyDate'),
           currentSeries: SeriesNumber, // TODO - switch entire currentSeries to be UID based or actual position based
           seriesDescription: SeriesDescription,
           patientInformation: {
-            patientName: PatientName ? OHIF.utils.formatPN(PatientName) : '',
+            patientName: PatientID || '', //evibaesd, use patientID instead of patientName
             patientSex: PatientSex || '',
             patientAge: PatientAge || '',
             MRN: PatientID || '',

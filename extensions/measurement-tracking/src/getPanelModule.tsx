@@ -1,5 +1,5 @@
 import { Types } from '@ohif/core';
-import { PanelMeasurementTableTracking, PanelStudyBrowserTracking } from './panels';
+import { PanelMeasurementTableTracking, PanelStudyBrowserTracking, PastReports } from './panels';
 import i18n from 'i18next';
 
 // TODO:
@@ -12,7 +12,7 @@ function getPanelModule({ commandsManager, extensionManager, servicesManager }):
       name: 'seriesList',
       iconName: 'tab-studies',
       iconLabel: 'Studies',
-      label: i18n.t('SidePanel:Studies'),
+      label: i18n.t('StudyBrowser:Studies'),
       component: PanelStudyBrowserTracking.bind(null, {
         commandsManager,
         extensionManager,
@@ -22,10 +22,22 @@ function getPanelModule({ commandsManager, extensionManager, servicesManager }):
 
     {
       name: 'trackedMeasurements',
-      iconName: 'tab-linear',
+      iconName: 'tab-patient-info',
       iconLabel: 'Measure',
-      label: i18n.t('SidePanel:Measurements'),
+      label: '报告',
       component: PanelMeasurementTableTracking.bind(null, {
+        commandsManager,
+        extensionManager,
+        servicesManager,
+      }),
+    },
+
+    {
+      name: 'pastReports',
+      iconName: 'tab-studies',
+      iconLabel: 'pastReports',
+      label: '往期报告',
+      component: PastReports.bind(null, {
         commandsManager,
         extensionManager,
         servicesManager,

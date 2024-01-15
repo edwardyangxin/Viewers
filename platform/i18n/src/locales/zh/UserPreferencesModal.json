@@ -1,6 +1,12 @@
 {
   "Cancel": "取消",
-  "Reset to defaults": "返回默认",
+  "General": "常规",
+  "Hotkeys": "快捷键",
+  "Language": "语言",
+  "No hotkeys found": "未设置快捷键",
+  "Reset to defaults": "返回默认设置",
+  "ResetDefaultMessage": "偏好重置成功 <br /> 请点击 <strong>保存</strong> 按钮",
   "Save": "保存",
-  "User preferences": "用户偏好"
+  "SaveMessage": "设置已保存",
+  "User preferences": "用户设置"
 }

@@ -37,8 +37,20 @@ const { availableLanguages, defaultLanguage, currentLanguage } = i18n;
 
 const seriesInStudiesMap = new Map();
 
+// evibased, task info mapping
+const taskTypeMap = {
+  reading: '判读',
+  arbitration: '仲裁',
+  QC: '质控',
+};
+
+const taskStatusMap = {
+  create: '待处理',
+  done: '已完成',
+};
+
 /**
- * TODO:
+ * TODO: evibased, 重构到IRC的extension？
  * - debounce `setFilterValues` (150ms?)
  */
 function WorkList({
@@ -183,6 +195,10 @@ function WorkList({
         }
       } else if (key === 'modalities' && currValue.length) {
         queryString.modalities = currValue.join(',');
+      } else if (key === 'trialTimePointInfo') {
+        // evibased, extract trialTimePointInfo number to 'TX'
+        const match = currValue.match(/\d+/);
+        queryString.trialTimePointId = match ? `T${match[0]}` : '';
       } else if (currValue !== defaultValue) {
         queryString[key] = currValue;
       }
@@ -250,7 +266,24 @@ function WorkList({
       patientName,
       date,
       time,
+      trialTimePointId,
+      trialTimePointDescription,
+      trialSubjectId,
+      trialProtocolId,
+      trialProtocolDescription,
+      trialSiteId,
+      trialSiteDescription,
+      tasks,
     } = study;
+    // evibased, add trial info
+    let trialTimePointInfo = trialTimePointId ? trialTimePointId.slice(1) : date;
+    trialTimePointInfo = parseInt(trialTimePointInfo) === 0 ? '基线' : `访视${trialTimePointInfo}`;
+    // task info
+    let taskInfo = '';
+    for (const task of tasks) {
+      taskInfo += `${taskTypeMap[task.type]}(${task.username}): ${taskStatusMap[task.status]} <br>`;
+    }
+
     const studyDate =
       date &&
       moment(date, ['YYYYMMDD', 'YYYY.MM.DD'], true).isValid() &&
@@ -263,18 +296,28 @@ function WorkList({
     return {
       dataCY: `studyRow-${studyInstanceUid}`,
       row: [
+        // {
+        //   key: 'patientName',
+        //   content: patientName ? (
+        //     <TooltipClipboard>{patientName}</TooltipClipboard>
+        //   ) : (
+        //     <span className="text-gray-700">(Empty)</span>
+        //   ),
+        //   gridCol: 4,
+        // },
         {
-          key: 'patientName',
-          content: patientName ? (
-            <TooltipClipboard>{patientName}</TooltipClipboard>
-          ) : (
-            <span className="text-gray-700">(Empty)</span>
-          ),
+          key: 'trialProtocolDescription',
+          content: <TooltipClipboard>{trialProtocolDescription}</TooltipClipboard>,
           gridCol: 4,
         },
         {
           key: 'mrn',
           content: <TooltipClipboard>{mrn}</TooltipClipboard>,
+          gridCol: 3,
+        },
+        {
+          key: 'trialTimePointInfo',
+          content: <TooltipClipboard>{trialTimePointInfo}</TooltipClipboard>,
           gridCol: 3,
         },
         {
@@ -288,9 +331,14 @@ function WorkList({
           title: `${studyDate || ''} ${studyTime || ''}`,
           gridCol: 5,
         },
+        // {
+        //   key: 'description',
+        //   content: <TooltipClipboard>{description}</TooltipClipboard>,
+        //   gridCol: 4,
+        // },
         {
-          key: 'description',
-          content: <TooltipClipboard>{description}</TooltipClipboard>,
+          key: 'taskInfo',
+          content: <span dangerouslySetInnerHTML={{ __html: taskInfo }}></span>,
           gridCol: 4,
         },
         {
@@ -299,28 +347,28 @@ function WorkList({
           title: modalities,
           gridCol: 3,
         },
-        {
-          key: 'accession',
-          content: <TooltipClipboard>{accession}</TooltipClipboard>,
-          gridCol: 3,
-        },
-        {
-          key: 'instances',
-          content: (
-            <>
-              <Icon
-                name="group-layers"
-                className={classnames('mr-2 inline-flex w-4', {
-                  'text-primary-active': isExpanded,
-                  'text-secondary-light': !isExpanded,
-                })}
-              />
-              {instances}
-            </>
-          ),
-          title: (instances || 0).toString(),
-          gridCol: 4,
-        },
+        // {
+        //   key: 'accession',
+        //   content: <TooltipClipboard>{accession}</TooltipClipboard>,
+        //   gridCol: 3,
+        // },
+        // {
+        //   key: 'instances',
+        //   content: (
+        //     <>
+        //       <Icon
+        //         name="group-layers"
+        //         className={classnames('mr-2 inline-flex w-4', {
+        //           'text-primary-active': isExpanded,
+        //           'text-secondary-light': !isExpanded,
+        //         })}
+        //       />
+        //       {instances}
+        //     </>
+        //   ),
+        //   title: (instances || 0).toString(),
+        //   gridCol: 2,
+        // },
       ],
       // Todo: This is actually running for all rows, even if they are
       // not clicked on.
@@ -410,16 +458,17 @@ function WorkList({
   const commitHash = process.env.COMMIT_HASH;
 
   const menuOptions = [
-    {
-      title: t('Header:About'),
-      icon: 'info',
-      onClick: () =>
-        show({
-          content: AboutModal,
-          title: t('AboutModal:About OHIF Viewer'),
-          contentProps: { versionNumber, commitHash },
-        }),
-    },
+    // evibased, add evibased about? or just remove it.
+    // {
+    //   title: t('Header:About'),
+    //   icon: 'info',
+    //   onClick: () =>
+    //     show({
+    //       content: AboutModal,
+    //       title: t('AboutModal:About OHIF Viewer'),
+    //       contentProps: { versionNumber, commitHash },
+    //     }),
+    // },
     {
       title: t('Header:Preferences'),
       icon: 'settings',
@@ -552,6 +601,9 @@ WorkList.propTypes = {
 
 const defaultFilterValues = {
   patientName: '',
+  // evibased, add trial info
+  trialProtocolDescription: '',
+  trialTimePointInfo: '',
   mrn: '',
   studyDate: {
     startDate: null,

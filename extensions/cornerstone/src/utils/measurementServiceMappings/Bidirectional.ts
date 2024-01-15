@@ -69,6 +69,7 @@ const Bidirectional = {
       data: data.cachedStats,
       type: getValueTypeFromToolType(toolName),
       getReport,
+      measurementLabelInfo: data.measurementLabelInfo, // evibased
     };
   },
 };
@@ -178,9 +179,11 @@ function getDisplayText(mappedAnnotations, displaySet) {
   const frameText = displaySet.isMultiFrame ? ` F: ${frameNumber}` : '';
 
   displayText.push(
-    `L: ${roundedLength} ${getDisplayUnit(unit)} (S: ${SeriesNumber}${instanceText}${frameText})`
+    // TODO: evibased, IRC related tools, 放到IRC extension. unit default to mm
+    // `L: ${roundedLength} ${getDisplayUnit(unit)} (S: ${SeriesNumber}${instanceText}${frameText})`
+    `${roundedLength} x ${roundedWidth} ${unit ? unit : 'mm'}`
   );
-  displayText.push(`W: ${roundedWidth} ${getDisplayUnit(unit)}`);
+  // displayText.push(`W: ${roundedWidth} ${getDisplayUnit(unit)}`);
 
   return displayText;
 }

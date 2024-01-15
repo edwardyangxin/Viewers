@@ -5,6 +5,7 @@ import Common from './Common.json';
 import DataSourceConfiguration from './DataSourceConfiguration.json';
 import DatePicker from './DatePicker.json';
 import ErrorBoundary from './ErrorBoundary.json';
+import Dialog from './Dialog.json';
 import Header from './Header.json';
 import HotkeysValidators from './HotkeysValidators.json';
 import MeasurementTable from './MeasurementTable.json';
@@ -30,6 +31,7 @@ export default {
     DataSourceConfiguration,
     DatePicker,
     ErrorBoundary,
+    Dialog,
     Header,
     HotkeysValidators,
     MeasurementTable,

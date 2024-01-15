@@ -32,17 +32,17 @@ const StudyItem = ({
       <div className="flex flex-1 flex-col px-4 pb-2">
         <div className="flex flex-row items-center justify-between pt-2 pb-2">
           <div className="text-base text-white">{date}</div>
-          <div className="flex flex-row items-center text-base text-blue-300">
+          {/* <div className="flex flex-row items-center text-base text-blue-300">
             <Icon
               name="group-layers"
               className="mx-2 w-4 text-blue-300"
             />
             {numInstances}
-          </div>
+          </div> */}
         </div>
         <div className="flex flex-row py-1">
           <div className="pr-5 text-xl text-blue-300">{modalities}</div>
-          <div className="truncate-2-lines break-words text-base text-blue-300">{description}</div>
+          {/* <div className="truncate-2-lines break-words text-base text-blue-300">{description}</div> */}
         </div>
       </div>
       {!!trackedSeries && (
@@ -59,7 +59,7 @@ const StudyItem = ({
               name="tracked"
               className="text-primary-light mr-2 w-4"
             />
-            {t('Tracked series', {trackedSeries: trackedSeries})}
+            {t('Tracked series', { trackedSeries: trackedSeries })}
           </div>
         </div>
       )}

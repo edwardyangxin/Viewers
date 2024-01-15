@@ -316,6 +316,14 @@ function createDicomWebApi(dicomWebConfig, servicesManager) {
             SOPClassUID: instance.SOPClassUID,
             ProtocolName: instance.ProtocolName,
             Modality: instance.Modality,
+            // evibased, trial info
+            ClinicalTrialProtocolID: instance.ClinicalTrialProtocolID,
+            ClinicalTrialProtocolName: instance.ClinicalTrialProtocolName,
+            ClinicalTrialSiteID: instance.ClinicalTrialSiteID,
+            ClinicalTrialSiteName: instance.ClinicalTrialSiteName,
+            ClinicalTrialSubjectID: instance.ClinicalTrialSubjectID,
+            ClinicalTrialTimePointID: instance.ClinicalTrialTimePointID,
+            ClinicalTrialTimePointDescription: instance.ClinicalTrialTimePointDescription,
           };
         }
 

@@ -64,28 +64,27 @@ const toolbarButtons: Button[] = [
       isRadio: true, // ?
       // Switch?
       primary: ToolbarService._createToolButton(
-        'Length',
-        'tool-length',
-        'Length',
+        'Bidirectional',
+        'tool-bidirectional',
+        'Bidirectional',
         [
           {
             commandName: 'setToolActive',
             commandOptions: {
-              toolName: 'Length',
+              toolName: 'Bidirectional',
             },
             context: 'CORNERSTONE',
           },
           {
             commandName: 'setToolActive',
             commandOptions: {
-              toolName: 'SRLength',
+              toolName: 'SRBidirectional',
               toolGroupId: 'SRToolGroup',
             },
-            // we can use the setToolActive command for this from Cornerstone commandsModule
             context: 'CORNERSTONE',
           },
         ],
-        'Length'
+        'Bidirectional Tool'
       ),
       secondary: {
         icon: 'chevron-down',
@@ -94,30 +93,6 @@ const toolbarButtons: Button[] = [
         tooltip: 'More Measure Tools',
       },
       items: [
-        ToolbarService._createToolButton(
-          'Length',
-          'tool-length',
-          'Length',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'Length',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SRLength',
-                toolGroupId: 'SRToolGroup',
-              },
-              // we can use the setToolActive command for this from Cornerstone commandsModule
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Length Tool'
-        ),
         ToolbarService._createToolButton(
           'Bidirectional',
           'tool-bidirectional',
@@ -164,52 +139,77 @@ const toolbarButtons: Button[] = [
           ],
           'Arrow Annotate'
         ),
-        ToolbarService._createToolButton(
-          'EllipticalROI',
-          'tool-elipse',
-          'Ellipse',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'EllipticalROI',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SREllipticalROI',
-                toolGroupId: 'SRToolGroup',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Ellipse Tool'
-        ),
-        ToolbarService._createToolButton(
-          'CircleROI',
-          'tool-circle',
-          'Circle',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'CircleROI',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SRCircleROI',
-                toolGroupId: 'SRToolGroup',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Circle Tool'
-        ),
+        // evibased, 2021-09-22, commented out, move to more tools
+        // ToolbarService._createToolButton(
+        //   'Length',
+        //   'tool-length',
+        //   'Length',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'Length',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'SRLength',
+        //         toolGroupId: 'SRToolGroup',
+        //       },
+        //       // we can use the setToolActive command for this from Cornerstone commandsModule
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Length Tool'
+        // ),
+        // ToolbarService._createToolButton(
+        //   'EllipticalROI',
+        //   'tool-elipse',
+        //   'Ellipse',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'EllipticalROI',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'SREllipticalROI',
+        //         toolGroupId: 'SRToolGroup',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Ellipse Tool'
+        // ),
+        // ToolbarService._createToolButton(
+        //   'CircleROI',
+        //   'tool-circle',
+        //   'Circle',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'CircleROI',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'SRCircleROI',
+        //         toolGroupId: 'SRToolGroup',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Circle Tool'
+        // ),
       ],
     },
   },
@@ -254,11 +254,12 @@ const toolbarButtons: Button[] = [
       isAction: true, // ?
       renderer: WindowLevelMenuItem,
       items: [
-        _createWwwcPreset(1, 'Soft tissue', '400 / 40'),
-        _createWwwcPreset(2, 'Lung', '1500 / -600'),
-        _createWwwcPreset(3, 'Liver', '150 / 90'),
-        _createWwwcPreset(4, 'Bone', '2500 / 480'),
-        _createWwwcPreset(5, 'Brain', '80 / 40'),
+        _createWwwcPreset(1, 'Soft tissue(软组织)', '400 / 40'),
+        _createWwwcPreset(2, 'Lung(肺)', '1500 / -600'),
+        _createWwwcPreset(3, 'Liver(肝脏)', '150 / 90'),
+        _createWwwcPreset(4, 'Bone(骨)', '2500 / 480'),
+        _createWwwcPreset(5, 'Brain(脑)', '80 / 40'),
+        _createWwwcPreset(6, 'Mediastinum(纵隔)', '350 / 50'),
       ],
     },
   },
@@ -295,6 +296,24 @@ const toolbarButtons: Button[] = [
     props: {
       rows: 3,
       columns: 3,
+    },
+  },
+  {
+    id: 'StackImageSync',
+    type: 'ohif.radioGroup',
+    props: {
+      type: 'toggle',
+      icon: 'link',
+      label: 'Stack Image Sync',
+      commands: [
+        {
+          commandName: 'toggleIRCImageSync',
+          commandOptions: {
+            toggledState: true,
+          },
+          context: 'CORNERSTONE', // command context
+        },
+      ],
     },
   },
   {

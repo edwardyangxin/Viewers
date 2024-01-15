@@ -151,6 +151,7 @@ const DialogProvider = ({ children, service }) => {
         onDrag,
         onClickOutside,
         showOverlay,
+        dialogWidth = '350px', //evibased, control width of dialog
       } = dialog;
 
       let position = (preservePosition && lastDialogPosition) || defaultPosition;
@@ -201,7 +202,7 @@ const DialogProvider = ({ children, service }) => {
               isDragging && 'dragging',
               isDraggable && 'draggable'
             )}
-            style={{ zIndex: '999', position: 'absolute', width: '350px' }}
+            style={{ zIndex: '999', position: 'absolute', width: dialogWidth }}
             onClick={() => _bringToFront(id)}
           >
             <DialogContent

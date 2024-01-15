@@ -7,8 +7,10 @@ import { extensionManager } from '../App.tsx';
 import { useParams, useLocation } from 'react-router';
 import { useNavigate } from 'react-router-dom';
 import useSearchParams from '../hooks/useSearchParams.ts';
+import { utils } from '@ohif/core';
 
 const { TimingEnum } = Types;
+const { performAuditLog } = utils;
 
 /**
  * Determines if two React Router location objects are the same.
@@ -31,7 +33,9 @@ const areLocationsTheSame = (location0, location1) => {
  */
 function DataSourceWrapper(props) {
   const navigate = useNavigate();
-  const { children: LayoutTemplate, ...rest } = props;
+  const { children: LayoutTemplate, servicesManager, extensionManager, ...rest } = props;
+  const { userAuthenticationService } = servicesManager.services;
+  const { _appConfig } = extensionManager;
   const params = useParams();
   const location = useLocation();
   const lowerCaseSearchParams = useSearchParams({ lowerCaseKeys: true });
@@ -125,6 +129,14 @@ function DataSourceWrapper(props) {
   }, [dataSource]);
 
   useEffect(() => {
+    // evibased, audit log, enter task list page
+    const auditMsg = 'enter task list page';
+    const auditLogBodyMeta = {
+      action: auditMsg,
+      action_result: 'success',
+    };
+    performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+
     const dataSourceChangedCallback = () => {
       setIsLoading(false);
       setIsDataSourceInitialized(false);
@@ -138,7 +150,16 @@ function DataSourceWrapper(props) {
       ExtensionManager.EVENTS.ACTIVE_DATA_SOURCE_CHANGED,
       dataSourceChangedCallback
     );
-    return () => sub.unsubscribe();
+    return () => {
+      // audit log leave task list page
+      const auditMsg = 'leave task list page';
+      const auditLogBodyMeta = {
+        action: auditMsg,
+        action_result: 'success',
+      };
+      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+      sub.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -149,10 +170,102 @@ function DataSourceWrapper(props) {
     const queryFilterValues = _getQueryFilterValues(location.search, STUDIES_LIMIT);
 
     // 204: no content
+    // evibased, based on role from user.profile.realm_role, get task list and filter studies
     async function getData() {
       setIsLoading(true);
       log.time(TimingEnum.SEARCH_TO_LIST);
-      const studies = await dataSource.query.studies.search(queryFilterValues);
+
+      // get user role
+      let username = 'unknown';
+      const user = userAuthenticationService.getUser();
+      if (user) {
+        username = user.profile.preferred_username;
+      }
+      const realm_role = user?.profile?.realm_role;
+      // evibased, if role is doctor, filter studies by task list
+      const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
+      if (ifDoctor) {
+        try {
+          // get task list by username and status
+          const authHeader = userAuthenticationService.getAuthorizationHeader();
+          const filterTaskStatus = 'create';
+          const getTaskUrl = _appConfig['evibased']['task_get_url'];
+          const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&status=${filterTaskStatus}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: authHeader.Authorization,
+            }
+          });
+          if (!getTaskResponse.ok) {
+            const body = await getTaskResponse.text();
+            throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+          }
+          let tasks = [];
+          if (getTaskResponse.status === 204) {
+            // no content
+          } else {
+            const body = await getTaskResponse.json();
+            tasks = Array.isArray(body) ? body : [body];
+          }
+
+          // get studyUIDs list and add to filter
+          const studyUIDs = tasks.map(task => task.timepoint.UID);
+          queryFilterValues.studyInstanceUid = studyUIDs;
+
+          // auto go to 1st task page, else go to page with empty task list
+          if (studyUIDs.length > 0) {
+            navigate(`/viewer?StudyInstanceUIDs=${studyUIDs[0]}`);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      let studies = [];
+      if (!ifDoctor || 
+        (queryFilterValues.studyInstanceUid && queryFilterValues.studyInstanceUid.length > 0)) {
+        // if not doctor or studyUIDs list is not empty, get studies by studyUIDs list
+        studies = await dataSource.query.studies.search(queryFilterValues);
+      }
+
+      // evibased, get task info for each studies
+      for (const study of studies) {
+        try {
+          const StudyInstanceUID = study.studyInstanceUid;
+          const authHeader = userAuthenticationService.getAuthorizationHeader();
+          const getTaskUrl = _appConfig['evibased']['task_get_url'];
+          let fetchTaskUrl;
+          if (ifDoctor) {
+            // if doctor, fetch only doctor task info
+            fetchTaskUrl = `${getTaskUrl}?StudyInstanceUID=${StudyInstanceUID}&username=${username}`;
+          } else {
+            fetchTaskUrl = `${getTaskUrl}?StudyInstanceUID=${StudyInstanceUID}`;
+          }
+          const getTaskResponse = await fetch(fetchTaskUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: authHeader.Authorization,
+            },
+          });
+          if (!getTaskResponse.ok) {
+            study.tasks = [];
+            const body = await getTaskResponse.text();
+            throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+          }
+          let tasks = [];
+          if (getTaskResponse.status === 204) {
+            // no content
+          } else {
+            const body = await getTaskResponse.json();
+            tasks = Array.isArray(body) ? body : [body];
+          }
+          study.tasks = tasks;
+        } catch (e) {
+          console.error(e);
+        }
+      }
 
       setData({
         studies: studies || [],
@@ -211,6 +324,8 @@ function DataSourceWrapper(props) {
   return (
     <LayoutTemplate
       {...rest}
+      servicesManager={servicesManager}
+      extensionManager={extensionManager}
       data={data.studies}
       dataPath={dataSourcePath}
       dataTotal={data.total}
@@ -259,6 +374,9 @@ function _getQueryFilterValues(query, queryLimit) {
     // Offset...
     offset: Math.floor((pageNumber * resultsPerPage) / queryLimit) * (queryLimit - 1),
     config: query.get('configUrl'),
+    // evibased, trial info
+    trialProtocolDescription: query.get('trialProtocolDescription'),
+    trialTimePointId: query.get('trialTimePointId'),
   };
 
   // patientName: good

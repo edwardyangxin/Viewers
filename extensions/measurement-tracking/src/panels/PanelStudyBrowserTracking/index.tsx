@@ -37,6 +37,8 @@ function WrappedPanelStudyBrowserTracking({ commandsManager, extensionManager, s
 
   return (
     <PanelStudyBrowserTracking
+      commandsManager={commandsManager}
+      extensionManager={extensionManager}
       servicesManager={servicesManager}
       dataSource={dataSource}
       getImageSrc={_getImageSrcFromImageId}

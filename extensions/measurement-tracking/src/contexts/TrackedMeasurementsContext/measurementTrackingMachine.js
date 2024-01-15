@@ -1,5 +1,7 @@
 import { hydrateStructuredReport } from '@ohif/extension-cornerstone-dicom-sr';
 import { assign } from 'xstate';
+import { utils } from '@ohif/core';
+import { buildWadorsImageId } from '../../utils/utils';
 
 const RESPONSE = {
   NO_NEVER: -1,
@@ -16,6 +18,8 @@ const machineConfiguration = {
   initial: 'idle',
   context: {
     activeViewportId: null,
+    currentViewportId: null,
+    comparedViewportId: null,
     trackedStudy: '',
     trackedSeries: [],
     ignoredSeries: [],
@@ -26,6 +30,23 @@ const machineConfiguration = {
     //
     ignoredSRSeriesForHydration: [],
     isDirty: false,
+    // evibased
+    username: undefined,
+    userRoles: undefined,
+    currentTask: undefined,
+    successSaveReport: false,
+    currentTimepoint: undefined,
+    baselineTimepoint: undefined,
+    lastTimepoint: undefined,
+    lowestSODTimepoint: undefined,
+    comparedTimepoint: undefined,
+    pastTimepoints: undefined,
+    currentReportInfo: undefined,
+    taskInfo: {
+      nextTaskStudyUID: undefined,
+      totalTask: undefined,
+      userTasks: [],
+    },
   },
   states: {
     off: {
@@ -53,6 +74,70 @@ const machineConfiguration = {
             activeViewportId: (_, event) => event.activeViewportId,
           }),
         },
+        // evibased
+        // load report to measurements
+        UPDATE_BACKEND_REPORT: {
+          target: 'updateBackendReport',
+        },
+        UPDATE_USERNAME: {
+          actions: assign({
+            username: (_, event) => event.username,
+          }),
+        },
+        UPDATE_USERROLES: {
+          actions: assign({
+            userRoles: (_, event) => event.userRoles,
+          }),
+        },
+        UPDATE_CURRENT_TASK: {
+          actions: assign({
+            currentTask: (_, event) => event.currentTask,
+          }),
+        },
+        UPDATE_TASK_INFO: {
+          actions: assign({
+            taskInfo: (_, event) => event.taskInfo,
+          }),
+        },
+        UPDATE_CURRENT_TIMEPOINT: {
+          actions: assign({
+            currentTimepoint: (_, event) => event.currentTimepoint,
+          }),
+        },
+        UPDATE_BASELINE_TIMEPOINT: {
+          actions: assign({
+            baselineTimepoint: (_, event) => event.baselineTimepoint,
+          }),
+        },
+        UPDATE_LAST_TIMEPOINT: {
+          actions: assign({
+            lastTimepoint: (_, event) => event.lastTimepoint,
+          }),
+        },
+        UPDATE_LOWEST_SOD_TIMEPOINT: {
+          actions: assign({
+            lowestSODTimepoint: (_, event) => event.lowestSODTimepoint,
+          }),
+        },
+        UPDATE_COMPARED_TIMEPOINT: {
+          actions: ['updateComparedTimepointInfo'],
+        },
+        UPDATE_PAST_TIMEPOINTS: {
+          actions: assign({
+            pastTimepoints: (_, event) => event.pastTimepoints,
+          }),
+        },
+        UPDATE_CURRENT_VIEWPORT_ID: {
+          actions: assign({
+            currentViewportId: (_, event) => event.currentViewportId,
+          }),
+        },
+        UPDATE_COMPARED_VIEWPORT_ID: {
+          actions: assign({
+            comparedViewportId: (_, event) => event.comparedViewportId,
+          }),
+        },
+        SAVE_REPORT: 'promptSaveReport',
       },
     },
     promptBeginTracking: {
@@ -114,6 +199,18 @@ const machineConfiguration = {
           },
           {
             target: 'tracking',
+          },
+        ],
+        // evibased
+        UPDATE_TASK_INFO: {
+          actions: assign({
+            taskInfo: (_, event) => event.taskInfo,
+          }),
+        },
+        UNTRACK_ALL: [
+          {
+            target: 'idle',
+            actions: ['clearAllMeasurements'],
           },
         ],
       },
@@ -184,21 +281,28 @@ const machineConfiguration = {
       invoke: {
         src: 'promptSaveReport',
         onDone: [
+          // evibased, disable clear all measurements after save
           // "clicked the save button"
           // - should clear all measurements
           // - show DICOM SR
-          {
-            target: 'idle',
-            actions: ['clearAllMeasurements', 'showStructuredReportDisplaySetInActiveViewport'],
-            cond: 'shouldSaveAndContinueWithSameReport',
-          },
+          // {
+          //   target: 'idle',
+          //   actions: ['clearAllMeasurements', 'showStructuredReportDisplaySetInActiveViewport'],
+          //   cond: 'shouldSaveAndContinueWithSameReport',
+          // },
           // "starting a new report"
           // - remove "just saved" measurements
           // - start tracking a new study + report
+          // {
+          //   target: 'tracking',
+          //   actions: ['discardPreviouslyTrackedMeasurements', 'setTrackedStudyAndSeries'],
+          //   cond: 'shouldSaveAndStartNewReport',
+          // },
+          // update successSaveReport context variable
           {
             target: 'tracking',
-            actions: ['discardPreviouslyTrackedMeasurements', 'setTrackedStudyAndSeries'],
-            cond: 'shouldSaveAndStartNewReport',
+            actions: ['successSaveReport'],
+            cond: 'ifSuccessSaveReport',
           },
           // Cancel, back to tracking
           {
@@ -252,6 +356,28 @@ const machineConfiguration = {
         },
       },
     },
+    // evibased
+    // add update backend report
+    updateBackendReport: {
+      invoke: {
+        src: 'updateBackendReport',
+        onDone: [
+          {
+            target: 'tracking',
+            actions: [
+              'setTrackedStudyAndMultipleSeries',
+              'setCurrentReportInfo',
+              // 'jumpToFirstMeasurementInActiveViewport',
+              'jumpToFirstMeasurementInCurrentViewport', // evibased
+              'setIsDirtyToClean',
+            ],
+          },
+        ],
+        onError: {
+          target: 'idle',
+        },
+      },
+    },
   },
   strict: true,
 };
@@ -278,6 +404,9 @@ const defaultOptions = {
     jumpToFirstMeasurementInActiveViewport: (ctx, evt) => {
       console.warn('jumpToFirstMeasurementInActiveViewport: not implemented');
     },
+    jumpToFirstMeasurementInCurrentViewport: (ctx, evt) => {
+      console.warn('jumpToFirstMeasurementInCurrentViewport: not implemented');
+    },
     showStructuredReportDisplaySetInActiveViewport: (ctx, evt) => {
       console.warn('showStructuredReportDisplaySetInActiveViewport: not implemented');
     },
@@ -288,18 +417,24 @@ const defaultOptions = {
       prevTrackedStudy: '',
       prevTrackedSeries: [],
       prevIgnoredSeries: [],
+      // evibased
+      currentReportInfo: undefined, // reset loaded report info
     }),
     // Promise resolves w/ `evt.data.*`
-    setTrackedStudyAndSeries: assign((ctx, evt) => ({
-      prevTrackedStudy: ctx.trackedStudy,
-      prevTrackedSeries: ctx.trackedSeries.slice(),
-      prevIgnoredSeries: ctx.ignoredSeries.slice(),
-      //
-      trackedStudy: evt.data.StudyInstanceUID,
-      trackedSeries: [evt.data.SeriesInstanceUID],
-      ignoredSeries: [],
-    })),
+    setTrackedStudyAndSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(setTrackedStudyAndSeries): ", evt.type, evt);
+      return {
+        prevTrackedStudy: ctx.trackedStudy,
+        prevTrackedSeries: ctx.trackedSeries.slice(),
+        prevIgnoredSeries: ctx.ignoredSeries.slice(),
+        //
+        trackedStudy: evt.data.StudyInstanceUID,
+        trackedSeries: [evt.data.SeriesInstanceUID],
+        ignoredSeries: [],
+      };
+    }),
     setTrackedStudyAndMultipleSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(): ", evt.type, evt);
       const studyInstanceUID = evt.StudyInstanceUID || evt.data.StudyInstanceUID;
       const seriesInstanceUIDs = evt.SeriesInstanceUIDs || evt.data.SeriesInstanceUIDs;
 
@@ -313,30 +448,200 @@ const defaultOptions = {
         ignoredSeries: [],
       };
     }),
-    setIsDirtyToClean: assign((ctx, evt) => ({
-      isDirty: false,
-    })),
-    setIsDirty: assign((ctx, evt) => ({
-      isDirty: true,
-    })),
-    ignoreSeries: assign((ctx, evt) => ({
-      prevIgnoredSeries: [...ctx.ignoredSeries],
-      ignoredSeries: [...ctx.ignoredSeries, evt.data.SeriesInstanceUID],
-    })),
-    ignoreHydrationForSRSeries: assign((ctx, evt) => ({
-      ignoredSRSeriesForHydration: [
-        ...ctx.ignoredSRSeriesForHydration,
-        evt.data.srSeriesInstanceUID,
+    setIsDirtyToClean: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(setIsDirtyToClean): ", evt.type, evt);
+
+      return {
+        isDirty: false,
+      }
+    }),
+    setIsDirty: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(setIsDirty): ", evt.type, evt);
+
+      return {
+        isDirty: true,
+      }
+    }),
+    ignoreSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(ignoreSeries): ", evt.type, evt);
+
+      return {
+        prevIgnoredSeries: [...ctx.ignoredSeries],
+        ignoredSeries: [...ctx.ignoredSeries, evt.data.SeriesInstanceUID],
+      }
+    }),
+    ignoreHydrationForSRSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(ignoreHydrationForSRSeries): ", evt.type, evt);
+
+      return {
+        ignoredSRSeriesForHydration: [
+          ...ctx.ignoredSRSeriesForHydration,
+          evt.data.srSeriesInstanceUID,
       ],
-    })),
-    addTrackedSeries: assign((ctx, evt) => ({
-      prevTrackedSeries: [...ctx.trackedSeries],
-      trackedSeries: [...ctx.trackedSeries, evt.data.SeriesInstanceUID],
-    })),
-    removeTrackedSeries: assign((ctx, evt) => ({
-      prevTrackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
-      trackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
-    })),
+      }
+    }),
+    addTrackedSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(addTrackedSeries): ", evt.type, evt);
+
+      return {
+        prevTrackedSeries: [...ctx.trackedSeries],
+        trackedSeries: [...ctx.trackedSeries, evt.data.SeriesInstanceUID],
+      }
+    }),
+    removeTrackedSeries: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(removeTrackedSeries): ", evt.type, evt);
+
+      return {
+        prevTrackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
+        trackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
+      };
+    }),
+    // evibased, actions
+    setCurrentReportInfo: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(setCurrentReportInfo): ", evt.type, evt);
+
+      return {
+        currentReportInfo: evt.data.reportInfo,
+      };
+    }),
+    successSaveReport: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(successSaveReport): ", evt.type, evt);
+
+      return {
+        successSaveReport: true,
+      };
+    }),
+    // evibased, compared timepoint
+    updateComparedTimepointInfo: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(updateComparedTimepointInfo): ", evt.type, evt);
+      const measurementService = evt.measurementService;
+      const comparedViewportId = evt.comparedViewportId ? evt.comparedViewportId : 'default';
+      const appConfig = evt.appConfig;
+      // check comparedTimepoint studyInstanceUid
+      if (!evt.comparedTimepoint || ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid) {
+        // no comparedTimepoint or same studyInstanceUid
+        return {};
+      } else {
+        // different studyInstanceUid, clear all readonly measurements
+        measurementService.clearReadonlyMeasurements();
+      }
+
+      // create readonly measurements and annotations
+      // default load first report
+      let reportData = evt.comparedTimepoint.reports? evt.comparedTimepoint.reports[0]: undefined;
+      if (!reportData) {
+        // timepoint without report
+        return {
+          comparedTimepoint: evt.comparedTimepoint,
+        };
+      }
+      
+      // const reportInfo = reportData.report_info;
+      let measurements = reportData.measurements;
+
+      // loop through all measurements, and create readonly measurements and annotations
+      for (let i = 0; i < measurements.length; i++) {
+        let measurement = measurements[i];
+        const {
+          Patient_ID,
+          Patient_Name,
+          StudyInstanceUID,
+          SeriesInstanceUID,
+          SOPInstanceUID,
+          Label,
+          AnnotationType,
+          Length,
+          Width,
+          Unit,
+          FrameOfReferenceUID,
+          points,
+          label_info,
+        } = measurement;
+        // based on hydrateStructuredReport in cornerstone-dicom-sr extension
+        // use measurementService.addRawMeasurement to add measurement
+        // get source
+        const CORNERSTONE_3D_TOOLS_SOURCE_NAME = 'Cornerstone3DTools';
+        const CORNERSTONE_3D_TOOLS_SOURCE_VERSION = '0.1';
+        const source = measurementService.getSource(
+          CORNERSTONE_3D_TOOLS_SOURCE_NAME,
+          CORNERSTONE_3D_TOOLS_SOURCE_VERSION
+        );
+        // get AnnotationType, measurement["AnnotationType"] = "Cornerstone:Bidirectional"
+        const annotationType = AnnotationType.split(':')[1];
+        // get annotation
+        // evibased: 注意这里imageId如果不对应的话，会导致annotation无法显示，这里参考了getWADORSImageId.js extension-default
+        const referencedImageId = buildWadorsImageId(measurement, appConfig);
+        const imageId = 'imageId:' + referencedImageId;
+        const cachedStats = {
+          [imageId]: {
+            length: parseFloat(Length),
+            width: parseFloat(Width),
+          },
+        };
+        // turn points string to array [[x y z]]
+        let handlesPoints = points.split(';');
+        for (let i = 0; i < handlesPoints.length; i++) {
+          handlesPoints[i] = handlesPoints[i].split(' ');
+          for (let j = 0; j < handlesPoints[i].length; j++) {
+            handlesPoints[i][j] = parseFloat(handlesPoints[i][j]);
+          }
+        }
+        const annotationData = {
+          handles: {
+            points: handlesPoints,
+            activeHandleIndex: 0,
+            textBox: {
+              hasMoved: false,
+            },
+          },
+          cachedStats: cachedStats,
+          frameNumber: undefined,
+          label: Label,
+          text: Label, // to support CornerstoneTools ArrowAnnotate
+          finding: undefined,
+          findingSites: undefined,
+          site: undefined,
+          measurementLabelInfo: label_info,
+        };
+
+        const annotation = {
+          annotationUID: utils.guid(),
+          data: annotationData,
+          metadata: {
+            toolName: annotationType,
+            referencedImageId: referencedImageId,
+            FrameOfReferenceUID,
+          },
+        };
+
+        const mappings = measurementService.getSourceMappings(
+          CORNERSTONE_3D_TOOLS_SOURCE_NAME,
+          CORNERSTONE_3D_TOOLS_SOURCE_VERSION
+        );
+        const matchingMapping = mappings.find(m => m.annotationType === annotationType);
+
+        // add measurement
+        const newReadonlyMeasurementUID = measurementService.addReadonlyMeasurement(
+          source,
+          annotationType,
+          { annotation },
+          matchingMapping.toMeasurementSchema,
+          extensionManager.getActiveDataSource()[0]
+        );
+        console.log("newReadonlyMeasurementUID: ", newReadonlyMeasurementUID);
+        measurement.uid = newReadonlyMeasurementUID;
+        // do we need to get measurement?
+        // const NewReadmonlyMeasurement = measurementService.getReadonlyMeasurement(newReadonlyMeasurementUID);
+      }
+
+      // auto jump to first measurement in compared viewport
+      const firstMeasurementUid = measurements[0].uid;
+      measurementService.jumpToReadonlyMeasurement(comparedViewportId, firstMeasurementUid);
+
+      return {
+        comparedTimepoint: evt.comparedTimepoint,
+      };
+    }),
   },
   guards: {
     // We set dirty any time we performan an action that:
@@ -364,8 +669,12 @@ const defaultOptions = {
     },
     shouldKillMachine: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.NO_NEVER,
     shouldAddSeries: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.ADD_SERIES,
-    shouldSetStudyAndSeries: (ctx, evt) =>
-      evt.data && evt.data.userResponse === RESPONSE.SET_STUDY_AND_SERIES,
+    shouldSetStudyAndSeries: (ctx, evt) => {
+      if (ctx.currentTimepoint && ctx.currentTimepoint.studyInstanceUid !== evt.data.StudyInstanceUID) {
+        return false;
+      }
+      return evt.data && evt.data.userResponse === RESPONSE.SET_STUDY_AND_SERIES;
+    },
     shouldAddIgnoredSeries: (ctx, evt) =>
       evt.data && evt.data.userResponse === RESPONSE.NO_NOT_FOR_SERIES,
     shouldPromptSaveReport: (ctx, evt) =>
@@ -394,6 +703,8 @@ const defaultOptions = {
     isNewSeries: (ctx, evt) =>
       !ctx.ignoredSeries.includes(evt.SeriesInstanceUID) &&
       !ctx.trackedSeries.includes(evt.SeriesInstanceUID),
+    // evibased, cond on success save report
+    ifSuccessSaveReport: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.CREATE_REPORT && evt.data.successSaveReport,
   },
 };
 

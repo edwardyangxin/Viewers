@@ -23,6 +23,8 @@ const PROXY_DOMAIN = process.env.PROXY_DOMAIN;
 const ENTRY_TARGET = process.env.ENTRY_TARGET || `${SRC_DIR}/index.js`;
 const Dotenv = require('dotenv-webpack');
 const writePluginImportFile = require('./writePluginImportsFile.js');
+// evibased
+const StringReplacePlugin = require("string-replace-webpack-plugin");
 
 const copyPluginFromExtensions = writePluginImportFile(SRC_DIR, DIST_DIR);
 
@@ -70,6 +72,27 @@ module.exports = (env, argv) => {
         path.resolve(__dirname, '../../../node_modules'),
         SRC_DIR,
       ],
+    },
+    module: {
+      rules: [
+        {
+          test: /\.js(\.map)?$/,
+          use: [
+            {
+              loader: StringReplacePlugin.replace({
+                replacements: [
+                  {
+                    pattern: /https:\/\/unpkg.com/g,
+                    replacement: function (match, p1, offset, string) {
+                      return 'https://evi-based.com/static';
+                    },
+                  },
+                ],
+              }),
+            }
+          ]
+        }
+      ]
     },
     plugins: [
       new Dotenv(),
@@ -134,6 +157,7 @@ module.exports = (env, argv) => {
         // Cache large files for the manifests to avoid warning messages
         maximumFileSizeToCacheInBytes: 1024 * 1024 * 50,
       }),
+      new StringReplacePlugin(),
     ],
     // https://webpack.js.org/configuration/dev-server/
     devServer: {
@@ -142,13 +166,27 @@ module.exports = (env, argv) => {
       // compress: true,
       // http2: true,
       // https: true,
-      open: true,
+      open: false,
       port: 3000,
       client: {
         overlay: { errors: true, warnings: false },
       },
       proxy: {
         '/dicomweb': 'http://localhost:5000',
+        '/auth': {
+          target: 'http://localhost:8080',
+          secure: false,
+          headers: {
+            'X-Forwarded-For': 'localhost',
+            'X-Real-IP': 'localhost',
+            'Host': 'localhost:3000',
+          }
+        },
+        '/api': {
+          target: 'https://api.evi-based.com',
+          pathRewrite: { '^/api': '' },
+          changeOrigin: true,
+        },
       },
       static: [
         {
