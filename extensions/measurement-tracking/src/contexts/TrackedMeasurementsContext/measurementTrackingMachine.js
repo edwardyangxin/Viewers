@@ -1,7 +1,11 @@
 import { hydrateStructuredReport } from '@ohif/extension-cornerstone-dicom-sr';
 import { assign } from 'xstate';
 import { utils } from '@ohif/core';
+import { annotation as CsAnnotation } from '@cornerstonejs/tools';
 import { buildWadorsImageId } from '../../utils/utils';
+
+const { locking } = CsAnnotation;
+const annotationManager = CsAnnotation.state.getAnnotationManager();
 
 const RESPONSE = {
   NO_NEVER: -1,
@@ -628,6 +632,10 @@ const defaultOptions = {
           matchingMapping.toMeasurementSchema,
           extensionManager.getActiveDataSource()[0]
         );
+        // disable editing, lock cornerstone annotation
+        const addedAnnotation = annotationManager.getAnnotation(newReadonlyMeasurementUID);
+        locking.setAnnotationLocked(addedAnnotation, true);
+
         console.log("newReadonlyMeasurementUID: ", newReadonlyMeasurementUID);
         measurement.uid = newReadonlyMeasurementUID;
         // do we need to get measurement?
