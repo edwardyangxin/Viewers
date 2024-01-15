@@ -254,11 +254,12 @@ const toolbarButtons: Button[] = [
       isAction: true, // ?
       renderer: WindowLevelMenuItem,
       items: [
-        _createWwwcPreset(1, 'Soft tissue', '400 / 40'),
-        _createWwwcPreset(2, 'Lung', '1500 / -600'),
-        _createWwwcPreset(3, 'Liver', '150 / 90'),
-        _createWwwcPreset(4, 'Bone', '2500 / 480'),
-        _createWwwcPreset(5, 'Brain', '80 / 40'),
+        _createWwwcPreset(1, 'Soft tissue(软组织)', '400 / 40'),
+        _createWwwcPreset(2, 'Lung(肺)', '1500 / -600'),
+        _createWwwcPreset(3, 'Liver(肝脏)', '150 / 90'),
+        _createWwwcPreset(4, 'Bone(骨)', '2500 / 480'),
+        _createWwwcPreset(5, 'Brain(脑)', '80 / 40'),
+        _createWwwcPreset(6, 'Mediastinum(纵隔)', '350 / 50'),
       ],
     },
   },
@@ -295,6 +296,24 @@ const toolbarButtons: Button[] = [
     props: {
       rows: 3,
       columns: 3,
+    },
+  },
+  {
+    id: 'StackImageSync',
+    type: 'ohif.radioGroup',
+    props: {
+      type: 'toggle',
+      icon: 'link',
+      label: 'Stack Image Sync',
+      commands: [
+        {
+          commandName: 'toggleIRCImageSync',
+          commandOptions: {
+            toggledState: true,
+          },
+          context: 'CORNERSTONE', // command context
+        },
+      ],
     },
   },
   {

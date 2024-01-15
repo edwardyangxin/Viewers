@@ -129,6 +129,7 @@ function modeFactory({ modeConfiguration }) {
 
       toolbarService.init(extensionManager);
       toolbarService.addButtons([...toolbarButtons, ...moreTools, ...moreToolsMpr]);
+      // default button section is for the top level toolbar
       toolbarService.createButtonSection(DEFAULT_TOOL_GROUP_ID, [
         'MeasurementTools',
         'Zoom',
@@ -136,6 +137,7 @@ function modeFactory({ modeConfiguration }) {
         'Pan',
         'Capture',
         'Layout',
+        'StackImageSync',
         'MPR',
         'MoreTools',
       ]);

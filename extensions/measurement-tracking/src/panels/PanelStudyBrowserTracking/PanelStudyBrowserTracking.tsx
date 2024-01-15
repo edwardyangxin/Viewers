@@ -526,6 +526,7 @@ function PanelStudyBrowserTracking({
         measurementService: measurementService,
         comparedTimepoint: newComparedTimepoint,
         comparedViewportId: getViewportId(viewports, 'comparedDisplaySetId'),
+        appConfig: _appConfig,
       });
     }
   }

@@ -82,25 +82,26 @@ const moreTools = [
           ],
           'Flip Horizontal'
         ),
-        ToolbarService._createToggleButton(
-          'StackImageSync',
-          'link',
-          'Stack Image Sync',
-          [
-            {
-              commandName: 'toggleIRCImageSync',
-            },
-          ],
-          'Enable position synchronization on stack viewports',
-          {
-            listeners: {
-              [EVENTS.STACK_VIEWPORT_NEW_STACK]: {
-                commandName: 'toggleIRCImageSync',
-                commandOptions: { toggledState: true },
-              },
-            },
-          }
-        ),
+        // move to top level
+        // ToolbarService._createToggleButton(
+        //   'StackImageSync',
+        //   'link',
+        //   'Stack Image Sync',
+        //   [
+        //     {
+        //       commandName: 'toggleIRCImageSync',
+        //     },
+        //   ],
+        //   'Enable position synchronization on stack viewports',
+        //   {
+        //     listeners: {
+        //       [EVENTS.STACK_VIEWPORT_NEW_STACK]: {
+        //         commandName: 'toggleIRCImageSync',
+        //         commandOptions: { toggledState: true },
+        //       },
+        //     },
+        //   }
+        // ),
         ToolbarService._createToggleButton(
           'ReferenceLines',
           'tool-referenceLines', // change this with the new icon
