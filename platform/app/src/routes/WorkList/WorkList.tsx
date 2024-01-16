@@ -98,14 +98,20 @@ function WorkList({
   const shouldUseDefaultSort = sortBy === '' || !sortBy;
   const sortModifier = sortDirection === 'descending' ? 1 : -1;
   const defaultSortValues =
-    shouldUseDefaultSort && canSort ? { sortBy: 'studyDate', sortDirection: 'ascending' } : {};
+    shouldUseDefaultSort && canSort ? { sortBy: 'studyDate', sortDirection: 'descending' } : {};
   const sortedStudies = studies;
 
   if (canSort) {
     studies.sort((s1, s2) => {
       if (shouldUseDefaultSort) {
-        const ascendingSortModifier = -1;
-        return _sortStringDates(s1, s2, ascendingSortModifier);
+        // evibased, modifier depends on defaultSortValues.sortDirection
+        let defaultSortModifier;
+        if (defaultSortValues.sortDirection === 'descending') {
+          defaultSortModifier = 1;
+        } else {
+          defaultSortModifier = -1;
+        }
+        return _sortStringDates(s1, s2, defaultSortModifier);
       }
 
       const s1Prop = s1[sortBy];

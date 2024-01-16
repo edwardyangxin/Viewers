@@ -213,10 +213,11 @@ function DataSourceWrapper(props) {
           const studyUIDs = tasks.map(task => task.timepoint.UID);
           queryFilterValues.studyInstanceUid = studyUIDs;
 
+          // evibased, go to task list for now
           // auto go to 1st task page, else go to page with empty task list
-          if (studyUIDs.length > 0) {
-            navigate(`/viewer?StudyInstanceUIDs=${studyUIDs[0]}`);
-          }
+          // if (studyUIDs.length > 0) {
+          //   navigate(`/viewer?StudyInstanceUIDs=${studyUIDs[0]}`);
+          // }
         } catch (e) {
           console.error(e);
         }
