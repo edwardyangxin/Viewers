@@ -7,7 +7,7 @@ const TargetListExpandedRow = ({
   tableTitle,
   tableColumns,
   tableDataSource,
-  tabelBgColor = 'bg-black',
+  tabelBgColor = 'bg-primary-dark',
 }) => {
   const cellsNum = Object.keys(tableColumns).length;
   return (

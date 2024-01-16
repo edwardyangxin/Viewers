@@ -5,7 +5,7 @@ import TargetListTableRow from './TargetListTableRow.tsx';
 
 const TargetListTable = ({ tableDataSource }) => {
   return (
-    <div className="bg-black">
+    <div className="bg-primary-dark">
       <div className="container relative m-auto">
         <table className="w-full text-white">
           <tbody>
