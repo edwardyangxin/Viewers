@@ -393,7 +393,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
   function _mapComparedMeasurementToDisplay(measurement, index) {
     const {
-      uid,
+      readonlyMeasurementUID,
       Width,
       Length,
       Unit,
@@ -407,7 +407,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const displayText = Width && Length ? [`${Length.toFixed(2)} x ${Width.toFixed(2)} ${Unit}`] : ['无测量信息'];
 
     return {
-      uid: uid,
+      uid: readonlyMeasurementUID,
       label,
       baseLabel,
       measurementType: type.split(':')[1],

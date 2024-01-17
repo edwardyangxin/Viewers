@@ -1,5 +1,6 @@
 import React from 'react';
 import { Input, Dialog, ButtonEnums, Select, CheckBox } from '@ohif/ui';
+import { annotation as CsAnnotation } from '@cornerstonejs/tools';
 import i18n from '@ohif/i18n';
 
 import {
@@ -13,6 +14,10 @@ import {
   targetKeyGroup,
   lesionOptions,
 } from './mappings';
+import { utils } from '@ohif/core';
+
+const { locking } = CsAnnotation;
+const annotationManager = CsAnnotation.state.getAnnotationManager();
 
 function getUserName(userAuthenticationService) {
   let username = 'unknown';
@@ -73,6 +78,112 @@ function locationStrBuilder(measurementLabelInfo) {
     ? `(${measurementLabelInfo.organDescription})`
     : '';
   return lesionLocationStr;
+}
+
+function reportMeasurementToReadonlyMeasurement(
+  extensionManager,
+  measurementService,
+  appConfig,
+  measurement
+) {
+  const {
+    readonlyMeasurementUID, // if readonlyMeasurementUID exists, means this measurement could has been added
+    Patient_ID,
+    Patient_Name,
+    StudyInstanceUID,
+    SeriesInstanceUID,
+    SOPInstanceUID,
+    Label,
+    AnnotationType,
+    Length,
+    Width,
+    Unit,
+    FrameOfReferenceUID,
+    points,
+    label_info,
+  } = measurement;
+
+  if (readonlyMeasurementUID && measurementService.getReadonlyMeasurement(readonlyMeasurementUID)) {
+    return readonlyMeasurementUID;
+  }
+
+  // based on hydrateStructuredReport in cornerstone-dicom-sr extension
+  // use measurementService.addRawMeasurement to add measurement
+  // get source
+  const CORNERSTONE_3D_TOOLS_SOURCE_NAME = 'Cornerstone3DTools';
+  const CORNERSTONE_3D_TOOLS_SOURCE_VERSION = '0.1';
+  const source = measurementService.getSource(
+    CORNERSTONE_3D_TOOLS_SOURCE_NAME,
+    CORNERSTONE_3D_TOOLS_SOURCE_VERSION
+  );
+  // get AnnotationType, measurement["AnnotationType"] = "Cornerstone:Bidirectional"
+  const annotationType = AnnotationType.split(':')[1];
+  // get annotation
+  // evibased: 注意这里imageId如果不对应的话，会导致annotation无法显示，这里参考了getWADORSImageId.js extension-default
+  const referencedImageId = buildWadorsImageId(measurement, appConfig);
+  const imageId = 'imageId:' + referencedImageId;
+  const cachedStats = {
+    [imageId]: {
+      length: parseFloat(Length),
+      width: parseFloat(Width),
+    },
+  };
+  // turn points string to array [[x y z]]
+  let handlesPoints = points.split(';');
+  for (let i = 0; i < handlesPoints.length; i++) {
+    handlesPoints[i] = handlesPoints[i].split(' ');
+    for (let j = 0; j < handlesPoints[i].length; j++) {
+      handlesPoints[i][j] = parseFloat(handlesPoints[i][j]);
+    }
+  }
+  const annotationData = {
+    handles: {
+      points: handlesPoints,
+      activeHandleIndex: 0,
+      textBox: {
+        hasMoved: false,
+      },
+    },
+    cachedStats: cachedStats,
+    frameNumber: undefined,
+    label: Label,
+    text: Label, // to support CornerstoneTools ArrowAnnotate
+    finding: undefined,
+    findingSites: undefined,
+    site: undefined,
+    measurementLabelInfo: label_info,
+  };
+
+  const annotation = {
+    annotationUID: utils.guid(),
+    data: annotationData,
+    metadata: {
+      toolName: annotationType,
+      referencedImageId: referencedImageId,
+      FrameOfReferenceUID,
+    },
+  };
+
+  const mappings = measurementService.getSourceMappings(
+    CORNERSTONE_3D_TOOLS_SOURCE_NAME,
+    CORNERSTONE_3D_TOOLS_SOURCE_VERSION
+  );
+  const matchingMapping = mappings.find(m => m.annotationType === annotationType);
+
+  // add measurement
+  const newReadonlyMeasurementUID = measurementService.addReadonlyMeasurement(
+    source,
+    annotationType,
+    { annotation },
+    matchingMapping.toMeasurementSchema,
+    extensionManager.getActiveDataSource()[0]
+  );
+  // disable editing, lock cornerstone annotation
+  const addedAnnotation = annotationManager.getAnnotation(newReadonlyMeasurementUID);
+  locking.setAnnotationLocked(addedAnnotation, true);
+
+  console.log('newReadonlyMeasurementUID: ', newReadonlyMeasurementUID);
+  return newReadonlyMeasurementUID;
 }
 
 function parseMeasurementLabelInfo(measurement) {
@@ -408,6 +519,7 @@ export {
   buildWadorsImageId,
   getViewportId,
   locationStrBuilder,
+  reportMeasurementToReadonlyMeasurement,
   parseMeasurementLabelInfo,
   getEditMeasurementLabelDialog,
 };

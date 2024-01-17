@@ -1,11 +1,7 @@
 import { hydrateStructuredReport } from '@ohif/extension-cornerstone-dicom-sr';
 import { assign } from 'xstate';
-import { utils } from '@ohif/core';
 import { annotation as CsAnnotation } from '@cornerstonejs/tools';
-import { buildWadorsImageId } from '../../utils/utils';
-
-const { locking } = CsAnnotation;
-const annotationManager = CsAnnotation.state.getAnnotationManager();
+import { reportMeasurementToReadonlyMeasurement } from '../../utils/utils';
 
 const RESPONSE = {
   NO_NEVER: -1,
@@ -518,6 +514,7 @@ const defaultOptions = {
     // evibased, compared timepoint
     updateComparedTimepointInfo: assign((ctx, evt) => {
       console.log("measurementTrackingMachine action(updateComparedTimepointInfo): ", evt.type, evt);
+      const extensionManager = evt.extensionManager;
       const measurementService = evt.measurementService;
       const comparedViewportId = evt.comparedViewportId ? evt.comparedViewportId : 'default';
       const appConfig = evt.appConfig;
@@ -526,8 +523,8 @@ const defaultOptions = {
         // no comparedTimepoint or same studyInstanceUid
         return {};
       } else {
-        // different studyInstanceUid, clear all readonly measurements
-        measurementService.clearReadonlyMeasurements();
+        // deprecated, different studyInstanceUid, clear all readonly measurements
+        // measurementService.clearReadonlyMeasurements();
       }
 
       // create readonly measurements and annotations
@@ -546,100 +543,13 @@ const defaultOptions = {
       // loop through all measurements, and create readonly measurements and annotations
       for (let i = 0; i < measurements.length; i++) {
         let measurement = measurements[i];
-        const {
-          Patient_ID,
-          Patient_Name,
-          StudyInstanceUID,
-          SeriesInstanceUID,
-          SOPInstanceUID,
-          Label,
-          AnnotationType,
-          Length,
-          Width,
-          Unit,
-          FrameOfReferenceUID,
-          points,
-          label_info,
-        } = measurement;
-        // based on hydrateStructuredReport in cornerstone-dicom-sr extension
-        // use measurementService.addRawMeasurement to add measurement
-        // get source
-        const CORNERSTONE_3D_TOOLS_SOURCE_NAME = 'Cornerstone3DTools';
-        const CORNERSTONE_3D_TOOLS_SOURCE_VERSION = '0.1';
-        const source = measurementService.getSource(
-          CORNERSTONE_3D_TOOLS_SOURCE_NAME,
-          CORNERSTONE_3D_TOOLS_SOURCE_VERSION
+        const newReadonlyMeasurementUID = reportMeasurementToReadonlyMeasurement(
+          extensionManager,
+          measurementService,
+          appConfig,
+          measurement
         );
-        // get AnnotationType, measurement["AnnotationType"] = "Cornerstone:Bidirectional"
-        const annotationType = AnnotationType.split(':')[1];
-        // get annotation
-        // evibased: 注意这里imageId如果不对应的话，会导致annotation无法显示，这里参考了getWADORSImageId.js extension-default
-        const referencedImageId = buildWadorsImageId(measurement, appConfig);
-        const imageId = 'imageId:' + referencedImageId;
-        const cachedStats = {
-          [imageId]: {
-            length: parseFloat(Length),
-            width: parseFloat(Width),
-          },
-        };
-        // turn points string to array [[x y z]]
-        let handlesPoints = points.split(';');
-        for (let i = 0; i < handlesPoints.length; i++) {
-          handlesPoints[i] = handlesPoints[i].split(' ');
-          for (let j = 0; j < handlesPoints[i].length; j++) {
-            handlesPoints[i][j] = parseFloat(handlesPoints[i][j]);
-          }
-        }
-        const annotationData = {
-          handles: {
-            points: handlesPoints,
-            activeHandleIndex: 0,
-            textBox: {
-              hasMoved: false,
-            },
-          },
-          cachedStats: cachedStats,
-          frameNumber: undefined,
-          label: Label,
-          text: Label, // to support CornerstoneTools ArrowAnnotate
-          finding: undefined,
-          findingSites: undefined,
-          site: undefined,
-          measurementLabelInfo: label_info,
-        };
-
-        const annotation = {
-          annotationUID: utils.guid(),
-          data: annotationData,
-          metadata: {
-            toolName: annotationType,
-            referencedImageId: referencedImageId,
-            FrameOfReferenceUID,
-          },
-        };
-
-        const mappings = measurementService.getSourceMappings(
-          CORNERSTONE_3D_TOOLS_SOURCE_NAME,
-          CORNERSTONE_3D_TOOLS_SOURCE_VERSION
-        );
-        const matchingMapping = mappings.find(m => m.annotationType === annotationType);
-
-        // add measurement
-        const newReadonlyMeasurementUID = measurementService.addReadonlyMeasurement(
-          source,
-          annotationType,
-          { annotation },
-          matchingMapping.toMeasurementSchema,
-          extensionManager.getActiveDataSource()[0]
-        );
-        // disable editing, lock cornerstone annotation
-        const addedAnnotation = annotationManager.getAnnotation(newReadonlyMeasurementUID);
-        locking.setAnnotationLocked(addedAnnotation, true);
-
-        console.log("newReadonlyMeasurementUID: ", newReadonlyMeasurementUID);
-        measurement.uid = newReadonlyMeasurementUID;
-        // do we need to get measurement?
-        // const NewReadmonlyMeasurement = measurementService.getReadonlyMeasurement(newReadonlyMeasurementUID);
+         measurement.readonlyMeasurementUID = newReadonlyMeasurementUID;
       }
 
       // auto jump to first measurement in compared viewport

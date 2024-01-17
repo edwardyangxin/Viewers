@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAppConfig } from '@state';
 import PropTypes from 'prop-types';
 import { utils } from '@ohif/core';
 import { useImageViewer, useViewportGrid, Dialog, ButtonEnums } from '@ohif/ui';
@@ -25,7 +26,7 @@ function PanelStudyBrowserTracking({
   requestDisplaySetCreationForStudy,
   dataSource,
 }) {
-  const { _appConfig } = extensionManager;
+  const [appConfig] = useAppConfig();
   const {
     displaySetService,
     uiDialogService,
@@ -108,7 +109,7 @@ function PanelStudyBrowserTracking({
       // get user task
       const authHeader = userAuthenticationService.getAuthorizationHeader();
       const username = getUserName(userAuthenticationService);
-      const tasks = await getTaskByUserAndUID(_appConfig['evibased']['task_get_url'], authHeader?.Authorization, username, currentStudyInstanceUID);
+      const tasks = await getTaskByUserAndUID(appConfig['evibased']['task_get_url'], authHeader?.Authorization, username, currentStudyInstanceUID);
       let currentTask = null;
       tasks.forEach(task => {
         // find the first task with status 'create' and type in ['reading'--阅片, 'arbitration'--裁判, 'QC'--质控']
@@ -147,9 +148,9 @@ function PanelStudyBrowserTracking({
       }
 
       let mappedStudies = _mapDataSourceStudies(qidoStudiesForPatient);
-      if (_appConfig.evibased['use_report_api']) {
+      if (appConfig.evibased['use_report_api']) {
         mappedStudies = await _fetchBackendReports(
-          _appConfig,
+          appConfig,
           userAuthenticationService,
           currentTask,
           mappedStudies
@@ -249,9 +250,11 @@ function PanelStudyBrowserTracking({
       });
 
       sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {
+        extensionManager: extensionManager,
         measurementService: measurementService,
         comparedTimepoint: comparedTimepoint,
-        appConfig: _appConfig,
+        // comparedViewportId: getViewportId(viewports, 'comparedDisplaySetId'),
+        appConfig: appConfig,
       });
 
       setStudyDisplayList(prevArray => {
@@ -336,7 +339,7 @@ function PanelStudyBrowserTracking({
         action: auditMsg,
         action_result: 'success',
       };
-      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+      performAuditLog(appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
 
       sendTrackedMeasurementsEvent('UPDATE_BACKEND_REPORT', {
         reportInfo: reportInfo,
@@ -523,10 +526,11 @@ function PanelStudyBrowserTracking({
       // need metadata fetched before update compared timepoint, so await here
       await requestDisplaySetCreationForStudy(displaySetService, StudyInstanceUID, true);
       sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {
+        extensionManager: extensionManager,
         measurementService: measurementService,
         comparedTimepoint: newComparedTimepoint,
         comparedViewportId: getViewportId(viewports, 'comparedDisplaySetId'),
-        appConfig: _appConfig,
+        appConfig: appConfig,
       });
     }
   }
@@ -642,11 +646,11 @@ function _mapDataSourceStudies(studies) {
 }
 
 // evibased, fetch data from API backend
-async function _fetchBackendReports(_appConfig, userAuthenticationService, currentTask, mappedStudies) {
+async function _fetchBackendReports(appConfig, userAuthenticationService, currentTask, mappedStudies) {
   console.log('fetching Backend reports for: ', mappedStudies);
 
   try {
-    const reportFetchUrl = _appConfig.evibased['report_fetch_url'];
+    const reportFetchUrl = appConfig.evibased['report_fetch_url'];
     // get username from userAuthenticationService
     const authHeader = userAuthenticationService.getAuthorizationHeader();
     const username = getUserName(userAuthenticationService);

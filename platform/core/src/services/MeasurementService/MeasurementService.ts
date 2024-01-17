@@ -553,6 +553,10 @@ class MeasurementService extends PubSubService {
     return newMeasurement.uid;
   }
 
+  public getReadonlyMeasurement(measurementUID: string) {
+    return this.readonlyMeasurements.get(measurementUID);
+  }
+
   /**
    * Adds or update persisted measurements.
    *
