@@ -13,8 +13,14 @@ import {
   organLocationOptions,
   targetKeyGroup,
   lesionOptions,
+  newLesionKeyGroup,
+  nonTargetKeyGroup,
+  targetResponseOptions,
+  nonTargetResponseOptions,
+  responseOptions,
 } from './mappings';
 import { utils } from '@ohif/core';
+import TargetListTable, { TargetListExpandedRow } from '../ui/TargetListTable';
 
 const { locking } = CsAnnotation;
 const annotationManager = CsAnnotation.state.getAnnotationManager();
@@ -249,6 +255,445 @@ function parseMeasurementLabelInfo(measurement) {
     measurementLabelInfo: measurementLabelInfo,
     label: label,
   };
+}
+
+function reportToReportFindings(report) {
+  const measurements = report.measurements;
+  const targetFindings = [];
+  const nonTargetFindings = [];
+  const newLesionFindings = [];
+  const otherFindings = [];
+  for (const dm of measurements) {
+    // get target info
+    const lesionValue = dm.Label.split('|')[1];
+    if (!(lesionValue in LesionMapping)) {
+      // not in LesionMapping, just show and allow edit in other group
+      otherFindings.push(dm);
+    } else if (targetKeyGroup.includes(lesionValue)) {
+      targetFindings.push(dm);
+    } else if (newLesionKeyGroup.includes(lesionValue)) {
+      newLesionFindings.push(dm);
+    } else if (nonTargetKeyGroup.includes(lesionValue)) {
+      nonTargetFindings.push(dm);
+    } else {
+      otherFindings.push(dm);
+    }
+  }
+  // sort by index, get index from label, TODO: get index from measurementLabelInfo
+  targetFindings.sort((a, b) => parseInt(a.Label.split('|')[0]) - parseInt(b.Label.split('|')[0]));
+  newLesionFindings.sort(
+    (a, b) => parseInt(a.Label.split('|')[0]) - parseInt(b.Label.split('|')[0])
+  );
+  nonTargetFindings.sort(
+    (a, b) => parseInt(a.Label.split('|')[0]) - parseInt(b.Label.split('|')[0])
+  );
+  // do not show otherFindings in report?
+  otherFindings.sort((a, b) => parseInt(a.Label.split('|')[0]) - parseInt(b.Label.split('|')[0]));
+
+  return {
+    targetFindings: targetFindings,
+    newLesionFindings: newLesionFindings,
+    nonTargetFindings: nonTargetFindings,
+    otherFindings: otherFindings,
+  };
+}
+
+function getTargetExpandedContent(targetFindings) {
+  // target info split into non-Nymph nodes and Nymph nodes
+  const nonNymphNodes = [];
+  const NymphNodes = [];
+  for (const dm of targetFindings) {
+    const organ = dm.label_info.organ.value;
+    if (organ === 'Lymph_Node') {
+      NymphNodes.push(dm);
+    } else {
+      nonNymphNodes.push(dm);
+    }
+  }
+
+  return (
+    <>
+      <TargetListExpandedRow
+        tableTitle="非淋巴结靶病灶"
+        tableColumns={{
+          index: '序号',
+          lesionType: '靶病灶类型',
+          lesionLocation: '靶病灶位置',
+          diameter: '长径(单位:mm)',
+          comment: '备注',
+        }}
+        tableDataSource={nonNymphNodes.map((dm, index) => {
+          const lesionIndex = dm.label_info.lesionIndex;
+          const lesion = dm.label_info.lesion;
+          const lesionLocationStr = locationStrBuilder(dm.label_info);
+          // get diameter
+          let diameter = 0.0;
+          // get long and short axis
+          if (dm.AnnotationType.split(':')[1] === 'Bidirectional') {
+            // bi-dimensional tool
+            // get long axis
+            diameter = dm.Length;
+          } else {
+            // no axis info
+            if (lesion.value === 'Target_NM') {
+              // Target_NM 太小无法测量，计5mm
+              diameter = 5.0;
+            }
+          }
+
+          return {
+            index: lesionIndex.label,
+            lesionType: lesion.label,
+            lesionLocation: lesionLocationStr,
+            diameter: `${diameter.toFixed(2)} mm`,
+            comment: dm.label_info.comment ? dm.label_info.comment : '',
+          };
+        })}
+      />
+      {NymphNodes.length > 0 && (
+        <TargetListExpandedRow
+          tableTitle="淋巴结靶病灶"
+          tableColumns={{
+            index: '序号',
+            lesionType: '靶病灶类型',
+            lesionLocation: '靶病灶位置',
+            diameter: '短径(单位:mm)',
+            comment: '备注',
+          }}
+          tableDataSource={NymphNodes.map((dm, index) => {
+            const lesionIndex = dm.label_info.lesionIndex;
+            const lesion = dm.label_info.lesion;
+            const lesionLocationStr = locationStrBuilder(dm.label_info);
+            // get diameter
+            let diameter = 0.0;
+            // get long and short axis
+            if (dm.AnnotationType.split(':')[1] === 'Bidirectional') {
+              // bi-dimensional tool
+              // get short axis
+              diameter = dm.Width;
+            } else {
+              // no axis info
+              if (lesion.value === 'Target_NM') {
+                // Target_NM 太小无法测量，计5mm
+                diameter = 5.0;
+              }
+            }
+
+            return {
+              index: lesionIndex.label,
+              lesionType: lesion.label,
+              lesionLocation: lesionLocationStr,
+              diameter: `${diameter.toFixed(2)} mm`,
+              comment: dm.label_info.comment ? dm.label_info.comment : '',
+            };
+          })}
+        />
+      )}
+    </>
+  );
+}
+
+function getNonTargetExpandedContent(nonTargetFindings) {
+  return (
+    <>
+      <TargetListExpandedRow
+        // tableTitle="非靶病灶"
+        tableColumns={{
+          index: '序号',
+          lesionType: '非靶病灶类型',
+          lesionLocation: '非靶病灶位置',
+          displayText: '描述信息',
+          comment: '备注',
+        }}
+        tableDataSource={nonTargetFindings.map((dm, index) => {
+          const lesionIndex = dm.label_info.lesionIndex;
+          const lesion = dm.label_info.lesion;
+          const lesionLocationStr = locationStrBuilder(dm.label_info);
+          return {
+            index: lesionIndex.label,
+            lesionType: lesion.label,
+            lesionLocation: lesionLocationStr,
+            displayText: '',
+            comment: dm.label_info.comment ? dm.label_info.comment : '',
+          };
+        })}
+      />
+    </>
+  );
+}
+
+function getNewLesionExpandedContent(newLesionFindings) {
+  // target info split into possible new and new lesions
+  const possibleNews = [];
+  const newLeisions = [];
+  for (const dm of newLesionFindings) {
+    const lesionValue = dm.label_info.lesion.value;
+    if (lesionValue === 'New_Lesion') {
+      newLeisions.push(dm);
+    } else {
+      possibleNews.push(dm);
+    }
+  }
+
+  return (
+    <>
+      <TargetListExpandedRow
+        tableTitle="疑似新发病灶"
+        tabelBgColor="bg-red-800"
+        tableColumns={{
+          index: '序号',
+          lesionType: '新发病灶类型',
+          lesionLocation: '新发病灶位置',
+          displayText: '描述信息',
+          comment: '备注',
+        }}
+        tableDataSource={possibleNews.map((dm, index) => {
+          const lesionIndex = dm.label_info.lesionIndex;
+          const lesion = dm.label_info.lesion;
+          const lesionLocationStr = locationStrBuilder(dm.label_info);
+          return {
+            index: lesionIndex.label,
+            lesionType: lesion.label,
+            lesionLocation: lesionLocationStr,
+            displayText: '',
+            comment: dm.label_info.comment ? dm.label_info.comment : '',
+          };
+        })}
+      />
+      {newLeisions.length > 0 && (
+        <TargetListExpandedRow
+          tableTitle="确认新发病灶"
+          tabelBgColor="bg-red-500"
+          tableColumns={{
+            index: '序号',
+            lesionType: '新发病灶类型',
+            lesionLocation: '新发病灶位置',
+            displayText: '描述信息',
+          }}
+          tableDataSource={newLeisions.map((dm, index) => {
+            const lesionIndex = dm.label_info.lesionIndex;
+            const lesion = dm.label_info.lesion;
+            const organStr =
+              dm.label_info.organ.label +
+              (dm.label_info.organDescription ? `(${dm.label_info.organDescription})` : '');
+            return {
+              index: lesionIndex.label,
+              lesionType: lesion.label,
+              lesionLocation: organStr,
+              displayText: '',
+              comment: dm.label_info.comment ? dm.label_info.comment : '',
+            };
+          })}
+        />
+      )}
+    </>
+  );
+}
+
+function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings, SOD) {
+  const tableDataSource = [];
+  // target
+  tableDataSource.push({
+    row: [
+      {
+        key: 'targetGroup',
+        content: <span>靶病灶</span>,
+        gridCol: 4,
+      },
+      {
+        key: 'count',
+        content: <span>{`数量:${targetFindings.length}`}</span>,
+        gridCol: 3,
+      },
+      {
+        key: 'SOD',
+        content: <span>{`径线和(SOD):${SOD} mm`}</span>,
+        gridCol: 3,
+      },
+    ],
+    expandedContent: getTargetExpandedContent(targetFindings),
+  });
+  // non-target
+  tableDataSource.push({
+    row: [
+      {
+        key: 'nonTargetGroup',
+        content: <span>非靶病灶</span>,
+        gridCol: 4,
+      },
+      {
+        key: 'count',
+        content: <span>{`数量:${nonTargetFindings.length}`}</span>,
+        gridCol: 3,
+      },
+    ],
+    expandedContent: getNonTargetExpandedContent(nonTargetFindings),
+  });
+  // new lesion
+  if (newLesionFindings.length > 0) {
+    tableDataSource.push({
+      row: [
+        {
+          key: 'newLesionGroup',
+          content: <span>新发病灶</span>,
+          gridCol: 4,
+        },
+        {
+          key: 'count',
+          content: <span>{`数量:${newLesionFindings.length}`}</span>,
+          gridCol: 3,
+        },
+      ],
+      expandedContent: getNewLesionExpandedContent(newLesionFindings),
+    });
+  }
+  return tableDataSource;
+}
+
+function getPastReportDialog(uiDialogService, report) {
+  let dialogId = undefined;
+  const _handleClose = () => {
+    // Dismiss dialog
+    uiDialogService.dismiss({ id: dialogId });
+  };
+  const _handleFormSubmit = ({ action, value }) => {
+    uiDialogService.dismiss({ id: dialogId });
+  };
+  const dialogActions = [
+    {
+      id: 'cancel',
+      text: '返回',
+      type: ButtonEnums.type.secondary,
+    },
+  ];
+
+  const { targetFindings, nonTargetFindings, newLesionFindings } = reportToReportFindings(report);
+  const tableDataSource = getTableDataSource(
+    targetFindings,
+    nonTargetFindings,
+    newLesionFindings,
+    report.SOD
+  );
+
+  dialogId = uiDialogService.create({
+    centralize: true,
+    isDraggable: false,
+    content: Dialog,
+    useLastPosition: false,
+    showOverlay: true,
+    dialogWidth: '1200px',
+    onClickOutside: _handleClose,
+    contentProps: {
+      title: '查看报告',
+      value: {
+        targetFindings: targetFindings,
+        nonTargetFindings: nonTargetFindings,
+        newLesionFindings: newLesionFindings,
+        SOD: report ? report.SOD : null,
+        targetResponse: report ? report.targetResponse : null,
+        nonTargetResponse: report ? report.nonTargetResponse : null,
+        response: report ? report.response : null,
+        comment: report ? report.comment : '',
+        arbitrationComment: report?.arbitrationComment ? report.arbitrationComment : null,
+      },
+      noCloseButton: false,
+      onClose: _handleClose,
+      actions: dialogActions,
+      onSubmit: _handleFormSubmit,
+      body: ({ value, setValue }) => {
+        return (
+          <>
+            <div className="bg-primary-dark flex h-full flex-col ">
+              <div className="flex grow flex-col overflow-visible">
+                <div className="flex grow flex-col">
+                  <TargetListTable tableDataSource={tableDataSource} />
+                </div>
+                <div className="mt-3 flex grow flex-row justify-evenly">
+                  <div className="w-1/3">
+                    <Input
+                      label="直径总和SOD(回车计算公式,单位mm)"
+                      labelClassName="text-white text-[14px] leading-[1.2]"
+                      className="border-primary-main bg-primary-dark"
+                      type="text"
+                      value={value.SOD}
+                      disabled={true}
+                    />
+                  </div>
+                  <div className="w-1/3">
+                    <label className="text-[14px] leading-[1.2] text-white">靶病灶评估</label>
+                    <Select
+                      id="targetResponse"
+                      isClearable={false}
+                      placeholder="靶病灶评估"
+                      value={[value.targetResponse]}
+                      options={targetResponseOptions}
+                      isDisabled={true}
+                    />
+                  </div>
+                </div>
+                <div className="flex grow flex-row justify-evenly">
+                  <div className="w-1/3">
+                    <label className="text-[14px] leading-[1.2] text-white">非靶病灶评估</label>
+                    <Select
+                      id="nonTargetResponse"
+                      isClearable={false}
+                      placeholder="非靶病灶评估"
+                      value={[value.nonTargetResponse]}
+                      options={nonTargetResponseOptions}
+                      isDisabled={true}
+                    />
+                  </div>
+                  <div className="w-1/3">
+                    <label className="text-[14px] leading-[1.2] text-white">总体评估</label>
+                    <Select
+                      id="response"
+                      isClearable={false}
+                      placeholder="总体评估"
+                      value={[value.response]}
+                      options={responseOptions}
+                      isDisabled={true}
+                    />
+                  </div>
+                </div>
+                <div className="flex grow flex-row justify-evenly">
+                  <div className="w-1/2">
+                    <Input
+                      className="border-primary-main bg-primary-dark"
+                      type="text"
+                      id="comment"
+                      label="备注信息"
+                      labelClassName="text-white text-[12px] leading-[1.2] mt-2"
+                      smallInput={false}
+                      placeholder="备注信息"
+                      value={value.comment}
+                      disabled={true}
+                    />
+                  </div>
+                </div>
+                {value.arbitrationComment && (
+                  <div className="flex grow flex-row justify-evenly">
+                    <div className="w-1/2">
+                      <Input
+                        className="border-primary-main bg-primary-dark"
+                        type="text"
+                        id="arbitration_comment"
+                        label="仲裁备注"
+                        labelClassName="text-white text-[12px] leading-[1.2] mt-2"
+                        smallInput={false}
+                        placeholder="仲裁备注"
+                        value={value.arbitrationComment}
+                        disabled={true}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        );
+      },
+    },
+  });
 }
 
 function getEditMeasurementLabelDialog(
@@ -521,5 +966,8 @@ export {
   locationStrBuilder,
   reportMeasurementToReadonlyMeasurement,
   parseMeasurementLabelInfo,
+  getTableDataSource,
+  reportToReportFindings,
+  getPastReportDialog,
   getEditMeasurementLabelDialog,
 };

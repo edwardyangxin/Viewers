@@ -175,6 +175,7 @@ const otherKeyGroup = ['Other'];
 
 const targetResponseMapping = {
   Baseline: '基线评估',
+  ND: '无疾病(ND)',
   CR: '完全缓解(CR)',
   PR: '部分缓解(PR)',
   SD: '疾病稳定(SD)',
@@ -184,6 +185,7 @@ const targetResponseMapping = {
 
 const nonTargetResponseMapping = {
   Baseline: '基线评估',
+  ND: '无疾病(ND)',
   CR: '完全缓解(CR)',
   NCR_NPD: '非CR/非PD',
   PD: '疾病进展(PD)',
@@ -192,6 +194,7 @@ const nonTargetResponseMapping = {
 
 const responseMapping = {
   Baseline: '基线评估',
+  ND: '无疾病(ND)',
   CR: '完全缓解(CR)',
   PR: '部分缓解(PR)',
   SD: '疾病稳定(SD)',

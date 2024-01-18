@@ -17,6 +17,7 @@ const PastReportItem = ({
   response,
   isActive,
   onClick,
+  onReportClick = () => {},
 }) => {
   const option = responseOptions.find(option => option.value === response);
   const responseLabel = option ? option.label : '未知';
@@ -39,6 +40,16 @@ const PastReportItem = ({
             <div className="flex flex-row items-center text-base text-blue-300">
               {`${responseLabel}(SOD:${SOD}mm)`}
             </div>
+            <LegacyButton
+                key={studyInstanceUid + '-report-button'}
+                className={'min-w-18 p-2 text-base text-white'}
+                size="initial"
+                color={'primaryActive'}
+                bgColor={'bg-primary-main'}
+                onClick={onReportClick}
+              >
+                {'查看报告'}
+            </LegacyButton>
           </div>
         ) : (
           <div className="flex flex-row items-center justify-between pt-2 pb-2">
@@ -62,30 +73,6 @@ const PastReportItem = ({
           {/* <div className="truncate-2-lines break-words text-base text-blue-300">{description}</div> */}
         {/* </div> */}
       </div>
-      {/* timepoint data detail */}
-      {/* {!!trackedSeries && (
-        <div className="flex-2 flex">
-          <div
-            className={classnames(
-              'bg-secondary-main mt-2 flex flex-row py-1 pl-2 pr-4 text-base text-white ',
-              isActive
-                ? 'border-secondary-light flex-1 justify-center border-t'
-                : 'mx-4 mb-4 rounded-sm'
-            )}
-          >
-            <Icon
-              name="tracked"
-              className="text-primary-light mr-2 w-4"
-            />
-            {i18n.t('StudyBrowser:Currently Tracking') +
-              '(' +
-              trackedSeries +
-              ' ' +
-              i18n.t('StudyBrowser:Series') +
-              ')'}
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { LesionMapping, targetKeyGroup, nonTargetKeyGroup } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
 import {
+  getPastReportDialog,
   getTimepointName,
   getViewportId,
   reportMeasurementToReadonlyMeasurement,
@@ -18,7 +19,7 @@ function PastReports({ servicesManager, extensionManager }) {
   const { t } = useTranslation();
   const [appConfig] = useAppConfig();
   const [viewportGrid] = useViewportGrid();
-  const { measurementService, displaySetService } = servicesManager.services;
+  const { measurementService, displaySetService, uiDialogService } = servicesManager.services;
   const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
   const { pastTimepoints } = trackedMeasurements.context;
@@ -164,6 +165,9 @@ function PastReports({ servicesManager, extensionManager }) {
             isActive={isExpanded}
             onClick={() => {
               _handlePastReportClick(studyInstanceUid, report);
+            }}
+            onReportClick={() => {
+              getPastReportDialog(uiDialogService, report);
             }}
             data-cy="past-report-list"
           />

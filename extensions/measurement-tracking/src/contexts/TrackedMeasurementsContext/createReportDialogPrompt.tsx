@@ -153,7 +153,7 @@ export default function CreateReportDialogPrompt(
     let dialogActions = [
       {
         id: 'cancel',
-        text: i18n.t('MeasurementTable:Cancel'),
+        text: '返回',
         type: ButtonEnums.type.secondary,
       },
     ];

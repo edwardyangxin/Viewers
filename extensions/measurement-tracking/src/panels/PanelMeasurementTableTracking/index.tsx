@@ -2,10 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   useImageViewer,
-  Dialog,
   Select,
   useViewportGrid,
-  ButtonEnums,
   Input,
 } from '@ohif/ui';
 import TimePointSummary from '../../ui/TimePointSummary';
@@ -16,11 +14,17 @@ import { useAppConfig } from '@state';
 import ActionButtons from './ActionButtons';
 import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LesionMapping, targetKeyGroup, nonTargetKeyGroup } from '../../utils/mappings';
+import { LesionMapping, targetKeyGroup, nonTargetKeyGroup} from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
-import { getEditMeasurementLabelDialog, getTimepointName, getViewportId, parseMeasurementLabelInfo } from '../../utils/utils';
+import {
+  getEditMeasurementLabelDialog,
+  getPastReportDialog,
+  getTimepointName,
+  getViewportId,
+  parseMeasurementLabelInfo,
+} from '../../utils/utils';
 
 const { downloadCSVReport } = utils;
 
@@ -52,7 +56,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     displaySetService,
     userAuthenticationService,
   } = servicesManager.services;
-  const { _appConfig } = extensionManager;
   const [
     trackedMeasurements,
     sendTrackedMeasurementsEvent,
@@ -323,7 +326,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     try {
       const authHeader = userAuthenticationService.getAuthorizationHeader();
       const username = userAuthenticationService.getUser().profile.preferred_username;
-      const getTaskUrl = _appConfig['evibased']['task_get_url'];
+      const getTaskUrl = appConfig['evibased']['task_get_url'];
       const taskStatus = 'create';
 
       const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&status=${taskStatus}`, {
@@ -479,6 +482,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           isActive={extendedComparedReport}
           onClick={() => {
             setExtentedComparedReport(!extendedComparedReport);
+          }}
+          onReportClick={() => {
+            getPastReportDialog(uiDialogService, report);
           }}
           data-cy="compared-report-list"
         />
