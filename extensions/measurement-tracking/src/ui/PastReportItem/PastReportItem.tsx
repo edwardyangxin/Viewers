@@ -17,7 +17,7 @@ const PastReportItem = ({
   response,
   isActive,
   onClick,
-  onReportClick = () => {},
+  onReportClick = event => {},
 }) => {
   const option = responseOptions.find(option => option.value === response);
   const responseLabel = option ? option.label : '未知';
@@ -41,14 +41,14 @@ const PastReportItem = ({
               {`${responseLabel}(SOD:${SOD}mm)`}
             </div>
             <LegacyButton
-                key={studyInstanceUid + '-report-button'}
-                className={'min-w-18 p-2 text-base text-white'}
-                size="initial"
-                color={'primaryActive'}
-                bgColor={'bg-primary-main'}
-                onClick={onReportClick}
-              >
-                {'查看报告'}
+              key={studyInstanceUid + '-report-button'}
+              className={'min-w-18 p-2 text-base text-white'}
+              size="initial"
+              color={'primaryActive'}
+              bgColor={'bg-primary-main'}
+              onClick={onReportClick}
+            >
+              {'查看报告'}
             </LegacyButton>
           </div>
         ) : (

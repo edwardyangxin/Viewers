@@ -25,9 +25,10 @@ function PastReports({ servicesManager, extensionManager }) {
   const { pastTimepoints } = trackedMeasurements.context;
   const [extendedReportItems, setExtentedReportItems] = useState([]);
 
-  async function _handlePastReportClick(StudyInstanceUID, report) {
+  async function _handlePastReportClick(StudyInstanceUID, report, reportIndex) {
     // handle extendedReportItems
-    const shouldCollapseStudy = extendedReportItems.includes(StudyInstanceUID);
+    const reportItemId = `${StudyInstanceUID}-${reportIndex}`;
+    const shouldCollapseStudy = extendedReportItems.includes(reportItemId);
     if (!shouldCollapseStudy) {
       // fetch data for study
       const madeInClient = true;
@@ -57,8 +58,8 @@ function PastReports({ servicesManager, extensionManager }) {
     }
 
     const updatedextendedReportItems = shouldCollapseStudy
-      ? [...extendedReportItems.filter(stdyUid => stdyUid !== StudyInstanceUID)]
-      : [...extendedReportItems, StudyInstanceUID];
+      ? [...extendedReportItems.filter(rId => rId !== reportItemId)]
+      : [...extendedReportItems, reportItemId];
     setExtentedReportItems(updatedextendedReportItems);
   }
 
@@ -105,26 +106,24 @@ function PastReports({ servicesManager, extensionManager }) {
   // past report ui
   const getTabContent = () => {
     return pastTimepoints.map(({ studyInstanceUid, trialTimePointId, reports }, timepointIndex) => {
-      // TODO: isExpanded dynamic
-      const isExpanded = extendedReportItems.includes(studyInstanceUid);
       const trialTimePointInfo = trialTimePointId
         ? getTimepointName(trialTimePointId.slice(1))
         : '';
-      // TODO: 现在只取第一个report，后续看是否需要针对展现所有人的report
-      const report = reports?.[0];
-
-      const targetFindings = [];
-      const nonTargetFindings = [];
-      const otherFindings = [];
-      let SOD = undefined;
-      let response = undefined;
-      let username = null;
-      let userAlias = null;
-      if (report) {
-        username = report.username;
-        userAlias = report.task?.userAlias;
-        SOD = report.SOD;
-        response = report.response;
+      // show all reports
+      return reports.map((report, reportIndex) => {
+        if (!report) {
+          return (
+            <React.Fragment key={`${studyInstanceUid}-pastReport-${reportIndex}`}></React.Fragment>
+          );
+        }
+        const isExpanded = extendedReportItems.includes(`${studyInstanceUid}-${reportIndex}`);
+        const targetFindings = [];
+        const nonTargetFindings = [];
+        const otherFindings = [];
+        const username = report.username;
+        const userAlias = report.task?.userAlias;
+        const SOD = report.SOD;
+        const response = report.response;
         const displayMeasurements = report.measurements.map((m, index) =>
           _mapMeasurementToDisplay(m, index)
         );
@@ -142,63 +141,64 @@ function PastReports({ servicesManager, extensionManager }) {
             otherFindings.push(dm);
           }
         }
-      }
-      // sort by index, get index from label, TODO: get index from measurementlabelInfo
-      targetFindings.sort(
-        (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
-      );
-      nonTargetFindings.sort(
-        (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
-      );
-      otherFindings.sort(
-        (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
-      );
+        // sort by index, get index from label, TODO: get index from measurementlabelInfo
+        targetFindings.sort(
+          (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+        );
+        nonTargetFindings.sort(
+          (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+        );
+        otherFindings.sort(
+          (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+        );
 
-      return (
-        <React.Fragment key={studyInstanceUid + '-pastReport'}>
-          <PastReportItem
-            studyInstanceUid={studyInstanceUid}
-            trialTimePointInfo={trialTimePointInfo}
-            username={userAlias ? userAlias : username}
-            SOD={SOD}
-            response={response}
-            isActive={isExpanded}
-            onClick={() => {
-              _handlePastReportClick(studyInstanceUid, report);
-            }}
-            onReportClick={() => {
-              getPastReportDialog(uiDialogService, report);
-            }}
-            data-cy="past-report-list"
-          />
-          {isExpanded && username && (
-            <>
-              <MeasurementTable
-                title={t('MeasurementTable:Target Findings')}
-                ifTarget={true}
-                data={targetFindings}
-                servicesManager={servicesManager}
-                onClick={jumpToComparedMeasurement}
-                canEdit={false}
-              />
-              <MeasurementTable
-                title={t('MeasurementTable:Non-Target Findings')}
-                data={nonTargetFindings}
-                servicesManager={servicesManager}
-                onClick={jumpToComparedMeasurement}
-                canEdit={false}
-              />
-              <MeasurementTable
-                title={t('MeasurementTable:Other Findings')}
-                data={otherFindings}
-                servicesManager={servicesManager}
-                onClick={jumpToComparedMeasurement}
-                canEdit={false}
-              />
-            </>
-          )}
-        </React.Fragment>
-      );
+        return (
+          <React.Fragment key={`${studyInstanceUid}-pastReport-${reportIndex}`}>
+            <PastReportItem
+              studyInstanceUid={studyInstanceUid}
+              trialTimePointInfo={trialTimePointInfo}
+              username={userAlias ? userAlias : username}
+              SOD={SOD}
+              response={response}
+              isActive={isExpanded}
+              onClick={() => {
+                _handlePastReportClick(studyInstanceUid, report, reportIndex);
+              }}
+              onReportClick={event => {
+                event.stopPropagation();
+                getPastReportDialog(uiDialogService, report);
+              }}
+              data-cy="past-report-list"
+            />
+            {isExpanded && username && (
+              <>
+                <MeasurementTable
+                  title={t('MeasurementTable:Target Findings')}
+                  ifTarget={true}
+                  data={targetFindings}
+                  servicesManager={servicesManager}
+                  onClick={jumpToComparedMeasurement}
+                  canEdit={false}
+                />
+                <MeasurementTable
+                  title={t('MeasurementTable:Non-Target Findings')}
+                  data={nonTargetFindings}
+                  servicesManager={servicesManager}
+                  onClick={jumpToComparedMeasurement}
+                  canEdit={false}
+                />
+                <MeasurementTable
+                  title={t('MeasurementTable:Other Findings')}
+                  data={otherFindings}
+                  servicesManager={servicesManager}
+                  onClick={jumpToComparedMeasurement}
+                  canEdit={false}
+                />
+              </>
+            )}
+          </React.Fragment>
+        );
+      });
     });
   };
 
