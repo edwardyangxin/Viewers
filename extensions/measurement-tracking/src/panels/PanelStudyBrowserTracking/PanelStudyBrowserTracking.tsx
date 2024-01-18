@@ -63,7 +63,7 @@ function PanelStudyBrowserTracking({
   const activeViewportDisplaySetInstanceUIDs =
     viewports.get(activeViewportId)?.displaySetInstanceUIDs;
 
-  const { trackedSeries, pastTimepoints, comparedTimepoint } =
+  const { trackedSeries, pastTimepoints, comparedTimepoint, currentTask } =
     trackedMeasurements.context;
 
   // one time useEffect
@@ -577,6 +577,7 @@ function PanelStudyBrowserTracking({
   return (
     <StudyBrowser
       ifCompareMode={ifCompareMode}
+      currentTask={currentTask}
       currentStudyInstanceUID={currentStudyInstanceUID}
       comparedStudyInstanceUID={comparedStudyInstanceUID}
       tabs={tabs}

@@ -11,6 +11,7 @@ const baseClasses =
 const StudyItem = ({
   studyInstanceUid,
   ifPrimary,
+  canOpenPastReportPage,
   canCompare,
   date,
   description,
@@ -64,7 +65,7 @@ const StudyItem = ({
         <div className="flex flex-row items-center justify-between py-1">
           <div className="pr-5 text-xl text-blue-300">{modalities}</div>
           {/* 允许打开过往访视 */}
-          {!ifPrimary && (
+          {canOpenPastReportPage && (
             <>
               <LegacyButton
                 key={studyInstanceUid + '-open-button'}

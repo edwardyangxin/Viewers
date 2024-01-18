@@ -23,6 +23,7 @@ const getTrackedSeries = displaySets => {
 
 const StudyBrowser = ({
   ifCompareMode,
+  currentTask,
   currentStudyInstanceUID,
   comparedStudyInstanceUID,
   tabs,
@@ -66,6 +67,7 @@ const StudyBrowser = ({
             <StudyItem
               studyInstanceUid={studyInstanceUid}
               ifPrimary={ifCurrentTimePoint}
+              canOpenPastReportPage={!(currentTask ? currentTask.type === 'reading' : false) && !ifPrimary}
               canCompare={!ifCurrentTimePoint && ifCompareMode && !ifComparedTimePoint}
               date={trialTimePointInfo}
               description={description}
