@@ -52,7 +52,8 @@ const variants = {
       'border bg-transparent border-primary-main text-white hover:opacity-80 active:opacity-100 focus:opacity-80',
   },
   contained: {
-    default: 'text-black hover:opacity-80 active:opacity-100 focus:opacity-80',
+    // evibased, default color text-white
+    default: 'text-white hover:opacity-80 active:opacity-100 focus:opacity-80',
     primary: 'text-white hover:opacity-80 active:opacity-100 focus:opacity-80',
     primaryDark: 'text-primary-active hover:opacity-80 active:opacity-100 focus:opacity-80',
     secondary: 'text-white hover:opacity-80 active:opacity-100 focus:opacity-80',

@@ -51,9 +51,9 @@ const StudyItem = ({
             {canCompare && (
               <LegacyButton
                 key={studyInstanceUid + '-compare-button'}
-                className={'min-w-18 p-2 text-base text-white'}
+                className={'min-w-18 p-2 text-base'}
                 size="initial"
-                color={'primaryActive'}
+                // color={'default'}
                 bgColor={'bg-primary-main'}
                 onClick={onCompareClick}
               >
@@ -69,9 +69,9 @@ const StudyItem = ({
             <>
               <LegacyButton
                 key={studyInstanceUid + '-open-button'}
-                className={'min-w-18 p-2 text-base text-white'}
+                className={'min-w-18 p-2 text-base'}
                 size="initial"
-                // color={color}
+                // color={'default'}
                 bgColor={'bg-primary-main'}
                 onClick={navigateToURLNewTab}
               >
