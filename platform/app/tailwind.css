@@ -2,3 +2,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* evibased added for .css file */
+@layer components {
+  .bg-slate-300 {
+    background-color: '#CBD5E1';
+  }
+}

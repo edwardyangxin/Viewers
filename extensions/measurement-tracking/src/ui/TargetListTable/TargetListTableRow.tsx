@@ -44,14 +44,14 @@ const TargetListTableRow = props => {
       <tr className="select-none">
         <td
           className={classnames('border-0 p-0', {
-            'border-secondary-light bg-primary-dark border-b': isExpanded,
+            'border-secondary-light bg-slate-300 border-b': isExpanded,
           })}
         >
           <div
             className={classnames(
               'w-full transition duration-300',
               {
-                'border-primary-light hover:border-secondary-light mb-2 overflow-hidden rounded border':
+                'border-secondary-light hover:border-secondary-light mb-2 overflow-hidden rounded border':
                   isExpanded,
               },
               {
@@ -65,9 +65,9 @@ const TargetListTableRow = props => {
                   className={classnames(
                     'hover:bg-secondary-main cursor-pointer transition duration-300',
                     {
-                      'bg-primary-dark': !isExpanded,
+                      'bg-slate-300': !isExpanded,
                     },
-                    { 'bg-secondary-dark': isExpanded }
+                    { 'bg-slate-300': isExpanded }
                   )}
                   onClick={() => setIsExpanded(!isExpanded)}
                 >
@@ -77,7 +77,7 @@ const TargetListTableRow = props => {
                       <td
                         key={index}
                         className={classnames(
-                          'truncate px-4 py-2 text-base',
+                          'truncate px-4 py-2 text-lg',
                           { 'border-secondary-light border-b': !isExpanded },
                           getGridWidthClass(gridCol) || ''
                         )}
@@ -109,7 +109,7 @@ const TargetListTableRow = props => {
                 </tr>
                 {isExpanded && (
                   // expanded row content below the row
-                  <tr className="max-h-0 w-full select-text overflow-hidden bg-black">
+                  <tr className="max-h-0 w-full select-text overflow-hidden bg-slate-300">
                     <td colSpan={row.length}>{expandedContent}</td>
                   </tr>
                 )}

@@ -1,0 +1,26 @@
+import React from 'react';
+import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import { Typography } from '@ohif/ui';
+
+const Body = ({ text, className }) => {
+  const theme = 'bg-slate-300';
+  return (
+    <div className={classNames('relative flex-auto', theme, className)}>
+      <Typography
+        variant="inherit"
+        color="initial"
+        className="text-[14px] !leading-[1.2]"
+      >
+        {text}
+      </Typography>
+    </div>
+  );
+};
+
+Body.propTypes = {
+  text: PropTypes.string,
+  className: PropTypes.string,
+};
+
+export default Body;

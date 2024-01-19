@@ -13,6 +13,7 @@ import {
 } from '../../utils/mappings';
 import TargetListTable, { TargetListExpandedRow } from '../../ui/TargetListTable';
 import { locationStrBuilder } from '../../utils/utils';
+import ReportDialog from '../../ui/ReportDialog';
 
 export const CREATE_REPORT_DIALOG_RESPONSE = {
   CANCEL: 0,
@@ -176,7 +177,7 @@ export default function CreateReportDialogPrompt(
     dialogId = uiDialogService.create({
       centralize: true,
       isDraggable: false,
-      content: Dialog,
+      content: ReportDialog,
       useLastPosition: false,
       showOverlay: true,
       dialogWidth: '1200px',
@@ -227,7 +228,7 @@ export default function CreateReportDialogPrompt(
 
           return (
             <>
-              <div className="flex h-full flex-col bg-primary-dark ">
+              <div className="flex h-full flex-col bg-slate-300 ">
                 <div className="flex grow flex-col overflow-visible">
                   <div className="flex grow flex-col">
                     <TargetListTable
@@ -243,8 +244,9 @@ export default function CreateReportDialogPrompt(
                     <div className="w-1/3">
                       <Input
                         label="直径总和SOD(回车计算公式,单位mm)"
-                        labelClassName="text-white text-[14px] leading-[1.2]"
-                        className="border-primary-main bg-primary-dark"
+                        labelClassName="text-black text-[14px] leading-[1.2]"
+                        className="border-primary-main bg-slate-300 text-black"
+                        transparent={true}
                         type="text"
                         value={value.SOD}
                         onChange={onSODInputChangeHandler}
@@ -254,9 +256,9 @@ export default function CreateReportDialogPrompt(
                     </div>
                     <div className="w-1/3">
                       {ifBaseline ? (
-                        <label className="text-[14px] leading-[1.2] text-white">靶病灶评估</label>
+                        <label className="text-[14px] leading-[1.2] text-black">靶病灶评估</label>
                       ) : (
-                        <label className="text-[14px] leading-[1.2] text-white">
+                        <label className="text-[14px] leading-[1.2] text-black">
                           {`靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${(
                             ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) *
                             100
@@ -285,7 +287,7 @@ export default function CreateReportDialogPrompt(
                   </div>
                   <div className="flex grow flex-row justify-evenly">
                     <div className="w-1/3">
-                      <label className="text-[14px] leading-[1.2] text-white">非靶病灶评估</label>
+                      <label className="text-[14px] leading-[1.2] text-black">非靶病灶评估</label>
                       <Select
                         id="nonTargetResponse"
                         isClearable={false}
@@ -300,7 +302,7 @@ export default function CreateReportDialogPrompt(
                       />
                     </div>
                     <div className="w-1/3">
-                      <label className="text-[14px] leading-[1.2] text-white">总体评估</label>
+                      <label className="text-[14px] leading-[1.2] text-black">总体评估</label>
                       <Select
                         id="response"
                         isClearable={false}
@@ -318,12 +320,12 @@ export default function CreateReportDialogPrompt(
                   <div className="flex grow flex-row justify-evenly">
                     <div className="w-1/2">
                       <Input
-                        className="border-primary-main bg-primary-dark"
                         type="text"
                         id="comment"
                         label="备注信息"
-                        labelClassName="text-white text-[12px] leading-[1.2] mt-2"
-                        smallInput={false}
+                        labelClassName="text-black text-[14px] leading-[1.2] mt-2"
+                        className="border-primary-main bg-slate-300 text-black"
+                        transparent={true}
                         placeholder="备注信息"
                         value={value.comment}
                         onChange={event => {
@@ -346,12 +348,12 @@ export default function CreateReportDialogPrompt(
                       <div className="flex grow flex-row justify-evenly">
                         <div className="w-1/2">
                           <Input
-                            className="border-primary-main bg-primary-dark"
+                            className="border-primary-main bg-slate-300 text-black"
                             type="text"
                             id="arbitration_comment"
                             label="仲裁备注"
-                            labelClassName="text-white text-[12px] leading-[1.2] mt-2"
-                            smallInput={false}
+                            labelClassName="text-black text-[14px] leading-[1.2] mt-2"
+                            transparent={true}
                             placeholder="仲裁备注"
                             value={value.arbitrationComment}
                             onChange={event => {

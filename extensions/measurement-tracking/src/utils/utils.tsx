@@ -21,6 +21,7 @@ import {
 } from './mappings';
 import { utils } from '@ohif/core';
 import TargetListTable, { TargetListExpandedRow } from '../ui/TargetListTable';
+import ReportDialog from '../ui/ReportDialog';
 
 const { locking } = CsAnnotation;
 const annotationManager = CsAnnotation.state.getAnnotationManager();
@@ -578,7 +579,7 @@ function getPastReportDialog(uiDialogService, report) {
   dialogId = uiDialogService.create({
     centralize: true,
     isDraggable: false,
-    content: Dialog,
+    content: ReportDialog,
     useLastPosition: false,
     showOverlay: true,
     dialogWidth: '1200px',
@@ -603,7 +604,7 @@ function getPastReportDialog(uiDialogService, report) {
       body: ({ value, setValue }) => {
         return (
           <>
-            <div className="bg-primary-dark flex h-full flex-col ">
+            <div className="bg-slate-300 flex h-full flex-col ">
               <div className="flex grow flex-col overflow-visible">
                 <div className="flex grow flex-col">
                   <TargetListTable tableDataSource={tableDataSource} />
@@ -612,15 +613,16 @@ function getPastReportDialog(uiDialogService, report) {
                   <div className="w-1/3">
                     <Input
                       label="直径总和SOD(回车计算公式,单位mm)"
-                      labelClassName="text-white text-[14px] leading-[1.2]"
-                      className="border-primary-main bg-primary-dark"
+                      labelClassName="text-black text-[14px] leading-[1.2]"
+                      className="border-primary-main bg-slate-300 text-black"
+                      transparent={true}
                       type="text"
                       value={value.SOD}
                       disabled={true}
                     />
                   </div>
                   <div className="w-1/3">
-                    <label className="text-[14px] leading-[1.2] text-white">靶病灶评估</label>
+                    <label className="text-[14px] leading-[1.2] text-black">靶病灶评估</label>
                     <Select
                       id="targetResponse"
                       isClearable={false}
@@ -633,7 +635,7 @@ function getPastReportDialog(uiDialogService, report) {
                 </div>
                 <div className="flex grow flex-row justify-evenly">
                   <div className="w-1/3">
-                    <label className="text-[14px] leading-[1.2] text-white">非靶病灶评估</label>
+                    <label className="text-[14px] leading-[1.2] text-black">非靶病灶评估</label>
                     <Select
                       id="nonTargetResponse"
                       isClearable={false}
@@ -644,7 +646,7 @@ function getPastReportDialog(uiDialogService, report) {
                     />
                   </div>
                   <div className="w-1/3">
-                    <label className="text-[14px] leading-[1.2] text-white">总体评估</label>
+                    <label className="text-[14px] leading-[1.2] text-black">总体评估</label>
                     <Select
                       id="response"
                       isClearable={false}
@@ -658,12 +660,12 @@ function getPastReportDialog(uiDialogService, report) {
                 <div className="flex grow flex-row justify-evenly">
                   <div className="w-1/2">
                     <Input
-                      className="border-primary-main bg-primary-dark"
+                      className="border-primary-main bg-slate-300 text-black"
                       type="text"
                       id="comment"
                       label="备注信息"
-                      labelClassName="text-white text-[12px] leading-[1.2] mt-2"
-                      smallInput={false}
+                      labelClassName="text-black text-[12px] leading-[1.2] mt-2"
+                      transparent={true}
                       placeholder="备注信息"
                       value={value.comment}
                       disabled={true}
@@ -671,15 +673,15 @@ function getPastReportDialog(uiDialogService, report) {
                   </div>
                 </div>
                 {value.arbitrationComment && (
-                  <div className="flex grow flex-row justify-evenly">
+                  <div className="flex grow flex-row justify-evenly text-black">
                     <div className="w-1/2">
                       <Input
-                        className="border-primary-main bg-primary-dark"
+                        className="border-primary-main bg-slate-300"
                         type="text"
                         id="arbitration_comment"
                         label="仲裁备注"
-                        labelClassName="text-white text-[12px] leading-[1.2] mt-2"
-                        smallInput={false}
+                        labelClassName="text-black text-[12px] leading-[1.2] mt-2"
+                        transparent={true}
                         placeholder="仲裁备注"
                         value={value.arbitrationComment}
                         disabled={true}

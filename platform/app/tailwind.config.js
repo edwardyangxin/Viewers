@@ -101,6 +101,20 @@ module.exports = {
         800: '#2d3748',
         900: '#1a202c',
       },
+      // evibased, added slate color
+      slate: {
+        50: '#F8FAFC',
+        100: '#F1F5F9',
+        200: '#E2E8F0',
+        300: '#CBD5E1',
+        400: '#94A3B8',
+        500: '#64748B',
+        600: '#475569',
+        700: '#334155',
+        800: '#1E293B',
+        900: '#0F172A',
+        950: '#020617',
+      },
       red: {
         100: '#fff5f5',
         200: '#fed7d7',
@@ -793,6 +807,7 @@ module.exports = {
   // evibased, 动态生成的class会丢失（例如w-x/y）
   safelist: [
     'w-1/5',
+    'bg-slate-300',
   ],
   corePlugins: {},
   plugins: [],
