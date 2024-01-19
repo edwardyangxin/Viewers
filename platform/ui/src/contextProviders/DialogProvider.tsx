@@ -323,9 +323,8 @@ function OutsideAlerter(props) {
      * Alert if clicked on outside of element
      */
     function handleInteractionOutside(event) {
-      // evibased, loose the condition to call onClickOutside for 查看过往报告
-      // if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-      if (wrapperRef.current) {
+      // evibased, fix click outside dialog condition
+      if (wrapperRef.current && (wrapperRef.current.firstChild === event.target || !wrapperRef.current.contains(event.target))) {
         props.onClickOutside();
       }
     }
