@@ -476,7 +476,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         <PastReportItem
           studyInstanceUid={studyInstanceUid}
           trialTimePointInfo={trialTimePointInfo}
-          username={userAlias ? userAlias : username}
+          // username={userAlias ? userAlias : username}
+          username={username} // only for reading task now, show username instead of userAlias
           SOD={SOD}
           response={response}
           isActive={extendedComparedReport}
@@ -585,7 +586,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             />
           </div>
         )}
-        {comparedTimepoint && (
+        {(currentTask?.type === 'reading' && comparedTimepoint) && (
           getComparedTimepointReport()
         )}
       </div>
