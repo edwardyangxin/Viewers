@@ -1,5 +1,5 @@
 window.config = {
-  routerBasename: '/',
+  routerBasename: '/deep-response',
   whiteLabeling: {
     createLogoComponentFn: function(React) {
       return React.createElement(
@@ -35,9 +35,9 @@ window.config = {
       configuration: {
         friendlyName: 'Orthanc Server',
         name: 'Orthanc',
-        wadoUriRoot: 'https://test.evi-based.com/pacs/dicom-web',
-        qidoRoot: 'https://test.evi-based.com/pacs/dicom-web',
-        wadoRoot: 'https://test.evi-based.com/pacs/dicom-web',
+        wadoUriRoot: 'https://evi-based.com/pacs/dicom-web',
+        qidoRoot: 'https://evi-based.com/pacs/dicom-web',
+        wadoRoot: 'https://evi-based.com/pacs/dicom-web',
         qidoSupportsIncludeField: true,
         supportsReject: true,
         imageRendering: 'wadors',
@@ -57,9 +57,9 @@ window.config = {
     {
       // ~ REQUIRED
       // Authorization Server URL
-      authority: 'https://test.evi-based.com/auth/realms/ohif',
+      authority: 'https://evi-based.com/auth/realms/ohif',
       client_id: 'ohif-viewer',
-      redirect_uri: 'https://test.evi-based.com/callback', // `OHIFStandaloneViewer.js`
+      redirect_uri: '/callback/', // `OHIFStandaloneViewer.js`
       // "Authorization Code Flow"
       // Resource: https://medium.com/@darutk/diagrams-of-all-the-openid-connect-flows-6968e3990660
       response_type: 'code',
@@ -71,12 +71,12 @@ window.config = {
   // evibased, config
   evibased: {
     use_report_api: true,
-    ping_url: 'https://test.evi-based.com/api/ping',
-    audit_log_url: 'https://test.evi-based.com/api/log',
-    report_upload_url: 'https://test.evi-based.com/api/report',
-    report_fetch_url: 'https://test.evi-based.com/api/report',
-    task_get_url: 'https://test.evi-based.com/api/task',
-    task_update_url: 'https://test.evi-based.com/api/task',
-    task_post_url: 'https://test.evi-based.com/api/task',
+    ping_url: 'https://evi-based.com/api/ping',
+    audit_log_url: 'https://evi-based.com/api/log',
+    report_upload_url: 'https://evi-based.com/api/report',
+    report_fetch_url: 'https://evi-based.com/api/report',
+    task_get_url: 'https://evi-based.com/api/task',
+    task_update_url: 'https://evi-based.com/api/task',
+    task_post_url: 'https://evi-based.com/api/task',
   },
 };
