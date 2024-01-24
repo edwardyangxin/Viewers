@@ -41,6 +41,8 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
 function PanelMeasurementTableTracking({ servicesManager, extensionManager, commandsManager }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const dataSources = extensionManager.getDataSources();
+  const dataSource = dataSources[0];
   const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(
@@ -278,9 +280,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   async function _refreshTaskInfo(navigateToNextTask = false) {
     // get taskInfo
     const userTasks = await _getUserTaskInfo();
-    let nextTaskStudyUID = undefined;
+    let nextTask = undefined;
     let taskInfo = {
-      nextTaskStudyUID: nextTaskStudyUID,
+      nextTask: nextTask,
       totalTask: undefined,
       userTasks: [],
     };
@@ -288,12 +290,12 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       // get next task study
       for (const task of userTasks) {
         if (task.timepoint.UID !== StudyInstanceUIDs[0]) {
-          nextTaskStudyUID = task.timepoint.UID;
+          nextTask = task;
           break;
         }
       }
       taskInfo = {
-        nextTaskStudyUID: nextTaskStudyUID,
+        nextTask: nextTask,
         totalTask: userTasks.length,
         userTasks: userTasks,
       };
@@ -301,7 +303,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
     if (navigateToNextTask) {
       // auto go to next task
-      _navigateToNextTask(nextTaskStudyUID);
+      _navigateToNextTask(nextTask);
     } else {
       // update taskInfo
       sendTrackedMeasurementsEvent('UPDATE_TASK_INFO', {
@@ -312,13 +314,36 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     return taskInfo;
   }
 
-  function _navigateToNextTask(nextTaskStudyUID) {
-    // auto go to next task
-    if (nextTaskStudyUID) {
-      navigate(`/viewer?StudyInstanceUIDs=${nextTaskStudyUID}`);
-    } else {
+  async function _navigateToNextTask(nextTask) {
+    if (!nextTask) {
       navigate('/');
+      return;
     }
+    const studyUID = nextTask?.timepoint?.UID;
+    const trialId = nextTask?.timepoint?.cycle;
+    const ifBaseline = trialId === 0;
+    if (ifBaseline) {
+      navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
+    } else {
+      const qidoForStudyUID = await dataSource.query.studies.search({
+        studyInstanceUid: studyUID,
+      });
+      if (!qidoForStudyUID?.length) {
+        // no data for study go back to task list
+        navigate('/');
+      }
+      const studyInfo = qidoForStudyUID[0];
+      const comparedStudy = await getStudyInfoByTrialId(dataSource, studyInfo?.mrn, `T${trialId - 1}`);
+      navigate(`/viewer?StudyInstanceUIDs=${studyUID},${comparedStudy?.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`);
+    }
+  }
+
+  async function getStudyInfoByTrialId(dataSource, mrn, trialId) {
+    const studies = await dataSource.query.studies.search({
+      patientId: mrn,
+    });
+    const comparedStudy = studies.find(s => s.trialTimePointId === trialId);
+    return comparedStudy;
   }
 
   // evibased, get next tsak study

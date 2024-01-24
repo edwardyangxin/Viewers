@@ -283,7 +283,9 @@ function WorkList({
     } = study;
     // evibased, add trial info
     let trialTimePointInfo = trialTimePointId ? trialTimePointId.slice(1) : date;
-    trialTimePointInfo = parseInt(trialTimePointInfo) === 0 ? '基线' : `访视${trialTimePointInfo}`;
+    const ifBaseline = trialTimePointInfo === '0';
+    const trialId = parseInt(trialTimePointInfo);
+    trialTimePointInfo = ifBaseline ? '基线' : `访视${trialTimePointInfo}`;
     // task info
     let taskInfo = '';
     for (const task of tasks) {
@@ -413,27 +415,36 @@ function WorkList({
               // mode.routes[x].path
               // Don't specify default data source, and it should just be picked up... (this may not currently be the case)
               // How do we know which params to pass? Today, it's just StudyInstanceUIDs and configUrl if exists
-              const query = new URLSearchParams();
-              if (filterValues.configUrl) {
-                query.append('configUrl', filterValues.configUrl);
-              }
-              query.append('StudyInstanceUIDs', studyInstanceUid);
               return (
                 mode.displayName && (
                   <Link
                     className={isValidMode ? '' : 'cursor-not-allowed'}
                     key={i}
-                    to={`${dataPath ? '../../' : ''}${mode.routeName}${
-                      dataPath || ''
-                    }?${query.toString()}`}
-                    onClick={event => {
+                    // eviabsed, dynamically get the path for study
+                    // to={`${dataPath ? '../../' : ''}${mode.routeName}${
+                    //   dataPath || ''
+                    // }?${query.toString()}`}
+                    onClick={async event => {
                       // In case any event bubbles up for an invalid mode, prevent the navigation.
                       // For example, the event bubbles up when the icon embedded in the disabled button is clicked.
-                      if (!isValidMode) {
-                        event.preventDefault();
+                      event.preventDefault();
+                      // evibased, get the path for study
+                      const query = new URLSearchParams();
+                      if (filterValues.configUrl) {
+                        query.append('configUrl', filterValues.configUrl);
                       }
+                      let path = `${dataPath ? '../../' : ''}${mode.routeName}${dataPath || ''}?`;
+                      if (ifBaseline) {
+                        query.append('StudyInstanceUIDs', studyInstanceUid);
+                      } else {
+                        // get the last study uid for comparison mode
+                        const comparedStudy = await getStudyInfoByTrialId(dataSource, mrn, `T${trialId - 1}`);
+                        query.append('StudyInstanceUIDs', studyInstanceUid + (comparedStudy ? `,${comparedStudy.studyInstanceUid}` : ''));
+                        query.append('hangingprotocolId', '@ohif/timepointCompare');
+                      }
+                      path += query.toString();
+                      navigate(path);
                     }}
-                    // to={`${mode.routeName}/dicomweb?StudyInstanceUIDs=${studyInstanceUid}`}
                   >
                     {/* TODO revisit the completely rounded style of buttons used for launching a mode from the worklist later - for now use LegacyButton*/}
                     <LegacyButton
@@ -593,6 +604,15 @@ function WorkList({
       </div>
     </div>
   );
+}
+
+// evibased, get study info by trial id
+async function getStudyInfoByTrialId(dataSource, mrn, trialId) {
+  const studies = await dataSource.query.studies.search({
+    patientId: mrn,
+  });
+  const comparedStudy = studies.find(s => s.trialTimePointId === trialId);
+  return comparedStudy;
 }
 
 WorkList.propTypes = {

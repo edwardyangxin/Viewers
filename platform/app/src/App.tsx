@@ -30,6 +30,9 @@ let commandsManager: CommandsManager,
   hotkeysManager: HotkeysManager;
 
 function App({ config, defaultExtensions, defaultModes }) {
+  // evibased, change default modes here for now, just show longitudinal mode
+  defaultModes = ["@ohif/mode-longitudinal"]
+
   const [init, setInit] = useState(null);
   useEffect(() => {
     const run = async () => {
