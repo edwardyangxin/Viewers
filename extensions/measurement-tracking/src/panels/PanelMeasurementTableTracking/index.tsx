@@ -168,11 +168,13 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               measurementsPanelRef.current.scrollTop = measurementsPanelRef.current.scrollHeight;
             }, 300)();
 
-            // evibased, call command setMeasurementLabel for newly added measurement(label is '' or 'no label')
-            if (data.measurement.label === '' || data.measurement.label === 'no label') {
-              commandsManager.runCommand('setIRCMeasurementLabel', {
-                uid: data.measurement.uid,
-              });
+            // evibased, 4种测量工具, call command setMeasurementLabel for newly added measurement(label is '' or 'no label')
+            if (['Length', 'Bidirectional', 'ArrowAnnotate', 'RectangleROI'].includes(data.measurement.toolName)) {
+              if (data.measurement.label === '' || data.measurement.label === 'no label') {
+                commandsManager.runCommand('setIRCMeasurementLabel', {
+                  uid: data.measurement.uid,
+                });
+              }
             }
           }
         }).unsubscribe

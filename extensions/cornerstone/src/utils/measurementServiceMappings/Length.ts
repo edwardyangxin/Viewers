@@ -199,7 +199,9 @@ function getDisplayText(mappedAnnotations, displaySet) {
   }
   const roundedLength = utils.roundNumber(length, 2);
   displayText.push(
-    `${roundedLength} ${unit} (S: ${SeriesNumber}${instanceText}${frameText})`
+    // evibased,
+    // `${roundedLength} ${unit} (S: ${SeriesNumber}${instanceText}${frameText})`
+    `L:${roundedLength} ${unit ? unit : 'mm'}`
   );
 
   return displayText;

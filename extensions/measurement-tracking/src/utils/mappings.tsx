@@ -167,16 +167,27 @@ for (const [organKey, organValue] of Object.entries(organLocationMapping)) {
 }
 
 // 区分target
-const targetKeyGroup = ['Target', 'Target_NM', 'Target_CR', 'Target_UN'];
+const targetKeyGroup = ['Target', 'Target_NM', 'Target_CR', 'Target_UN', 'Target_NE'];
 const nonTargetKeyGroup = [
   'Non_Target',
   'Non_Target_Disappear',
+  'Non_Target_Nodal_NP',
   'Non_Target_Progress',
   'Non_Target_UN',
-  'Possible_New_Lesion',
+  'Non_Target_NE',
+  'New_Lesion_Possible',
   'New_Lesion',
+  'New_Lesion_Disappear',
+  'New_Lesion_UN',
+  'New_Lesion_NE',
 ];
-const newLesionKeyGroup = ['Possible_New_Lesion', 'New_Lesion'];
+const newLesionKeyGroup = [
+  'New_Lesion_Possible',
+  'New_Lesion',
+  'New_Lesion_Disappear',
+  'New_Lesion_UN',
+  'New_Lesion_NE',
+];
 const otherKeyGroup = ['Other'];
 
 const targetResponseMapping = {

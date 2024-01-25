@@ -131,7 +131,14 @@ function modeFactory({ modeConfiguration }) {
       toolbarService.addButtons([...toolbarButtons, ...moreTools, ...moreToolsMpr]);
       // default button section is for the top level toolbar
       toolbarService.createButtonSection(DEFAULT_TOOL_GROUP_ID, [
-        'MeasurementTools',
+        // evibased, top toolbar
+        // 'MeasurementTools',
+        // anno tools
+        'Length',
+        'Bidirectional',
+        'ArrowAnnotate',
+        'Rectangle',
+
         'Zoom',
         'WindowLevel',
         'Pan',

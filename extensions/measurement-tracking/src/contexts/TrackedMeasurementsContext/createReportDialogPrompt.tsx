@@ -410,12 +410,15 @@ function getTargetExpandedContent(targetFindings) {
           const lesionIndex = dm.measurementLabelInfo.lesionIndex;
           const lesion = dm.measurementLabelInfo.lesion;
           const lesionLocationStr = locationStrBuilder(dm.measurementLabelInfo);
+          const lesionValue = lesion.value;
           // get diameter
           let diameter = 0.0;
           // get long and short axis
-          if (dm.toolName === 'Bidirectional') {
-            // bi-dimensional tool
-            // get long axis
+          if (lesionValue === 'Target' && dm.toolName === 'Bidirectional') {
+            // get long axis for 双径测量工具
+            diameter = dm.data[Object.keys(dm.data)[0]].length;
+          } else if (lesionValue === 'Target' && dm.toolName === 'Length') {
+            // get long axis for 长径测量工具
             diameter = dm.data[Object.keys(dm.data)[0]].length;
           } else {
             // no axis info
@@ -448,12 +451,12 @@ function getTargetExpandedContent(targetFindings) {
             const lesionIndex = dm.measurementLabelInfo.lesionIndex;
             const lesion = dm.measurementLabelInfo.lesion;
             const lesionLocationStr = locationStrBuilder(dm.measurementLabelInfo);
+            const lesionValue = lesion.value;
             // get diameter
             let diameter = 0.0;
             // get long and short axis
-            if (dm.toolName === 'Bidirectional') {
-              // bi-dimensional tool
-              // get short axis
+            if (lesionValue === 'Target' && dm.toolName === 'Bidirectional') {
+              // get short axis, 双径测量工具
               diameter = dm.data[Object.keys(dm.data)[0]].width;
             } else {
               // no axis info
@@ -646,11 +649,14 @@ function autoCalSOD(targetFindings) {
       // get long and short axis
       let longAxis = 0.0;
       let shortAxis = 0.0;
-      if (dm.toolName === 'Bidirectional') {
-        // bi-dimensional tool
+      if (lesionValue === 'Target' && dm.toolName === 'Bidirectional') {
+        // 可测量病灶，长短径测量
         // get long and short axis
         longAxis = dm.data[Object.keys(dm.data)[0]].length;
         shortAxis = dm.data[Object.keys(dm.data)[0]].width;
+      } else if (lesionValue === 'Target' && dm.toolName === 'Length') {
+        // 可测量病灶，长径测量
+        longAxis = dm.data[Object.keys(dm.data)[0]].length;
       } else {
         // no axis info
         if (lesionValue === 'Target_NM') {

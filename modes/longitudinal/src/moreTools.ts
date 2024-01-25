@@ -102,50 +102,50 @@ const moreTools = [
         //     },
         //   }
         // ),
-        ToolbarService._createToggleButton(
-          'ReferenceLines',
-          'tool-referenceLines', // change this with the new icon
-          'Reference Lines',
-          ReferenceLinesCommands,
-          'Show Reference Lines',
-          {
-            listeners: {
-              [EVENTS.STACK_VIEWPORT_NEW_STACK]: ReferenceLinesCommands,
-              [EVENTS.ACTIVE_VIEWPORT_ID_CHANGED]: ReferenceLinesCommands,
-            },
-          }
-        ),
-        ToolbarService._createToggleButton(
-          'ImageOverlayViewer',
-          'toggle-dicom-overlay',
-          'Image Overlay',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'ImageOverlayViewer',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Image Overlay',
-          { isActive: true }
-        ),
-        ToolbarService._createToolButton(
-          'StackScroll',
-          'tool-stack-scroll',
-          'Stack Scroll',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'StackScroll',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Stack Scroll'
-        ),
+        // ToolbarService._createToggleButton(
+        //   'ReferenceLines',
+        //   'tool-referenceLines', // change this with the new icon
+        //   'Reference Lines',
+        //   ReferenceLinesCommands,
+        //   'Show Reference Lines',
+        //   {
+        //     listeners: {
+        //       [EVENTS.STACK_VIEWPORT_NEW_STACK]: ReferenceLinesCommands,
+        //       [EVENTS.ACTIVE_VIEWPORT_ID_CHANGED]: ReferenceLinesCommands,
+        //     },
+        //   }
+        // ),
+        // ToolbarService._createToggleButton(
+        //   'ImageOverlayViewer',
+        //   'toggle-dicom-overlay',
+        //   'Image Overlay',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'ImageOverlayViewer',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Image Overlay',
+        //   { isActive: true }
+        // ),
+        // ToolbarService._createToolButton(
+        //   'StackScroll',
+        //   'tool-stack-scroll',
+        //   'Stack Scroll',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'StackScroll',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Stack Scroll'
+        // ),
         ToolbarService._createActionButton(
           'invert',
           'tool-invert',
@@ -248,119 +248,119 @@ const moreTools = [
           ],
           'Magnify'
         ),
-        ToolbarService._createToolButton(
-          'Rectangle',
-          'tool-rectangle',
-          'Rectangle',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'RectangleROI',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Rectangle'
-        ),
-        ToolbarService._createToolButton(
-          'Length',
-          'tool-length',
-          'Length',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'Length',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SRLength',
-                toolGroupId: 'SRToolGroup',
-              },
-              // we can use the setToolActive command for this from Cornerstone commandsModule
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Length Tool'
-        ),
-        ToolbarService._createToolButton(
-          'EllipticalROI',
-          'tool-elipse',
-          'Ellipse',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'EllipticalROI',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SREllipticalROI',
-                toolGroupId: 'SRToolGroup',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Ellipse Tool'
-        ),
-        ToolbarService._createToolButton(
-          'CircleROI',
-          'tool-circle',
-          'Circle',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'CircleROI',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SRCircleROI',
-                toolGroupId: 'SRToolGroup',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Circle Tool'
-        ),
-        ToolbarService._createToolButton(
-          'CalibrationLine',
-          'tool-calibration',
-          'Calibration',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'CalibrationLine',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Calibration Line'
-        ),
-        ToolbarService._createActionButton(
-          'TagBrowser',
-          'list-bullets',
-          'Dicom Tag Browser',
-          [
-            {
-              commandName: 'openDICOMTagViewer',
-              commandOptions: {},
-              context: 'DEFAULT',
-            },
-          ],
-          'Dicom Tag Browser'
-        ),
+        // ToolbarService._createToolButton(
+        //   'Rectangle',
+        //   'tool-rectangle',
+        //   'Rectangle',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'RectangleROI',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Rectangle'
+        // ),
+        // ToolbarService._createToolButton(
+        //   'Length',
+        //   'tool-length',
+        //   'Length',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'Length',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'SRLength',
+        //         toolGroupId: 'SRToolGroup',
+        //       },
+        //       // we can use the setToolActive command for this from Cornerstone commandsModule
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Length Tool'
+        // ),
+        // ToolbarService._createToolButton(
+        //   'EllipticalROI',
+        //   'tool-elipse',
+        //   'Ellipse',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'EllipticalROI',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'SREllipticalROI',
+        //         toolGroupId: 'SRToolGroup',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Ellipse Tool'
+        // ),
+        // ToolbarService._createToolButton(
+        //   'CircleROI',
+        //   'tool-circle',
+        //   'Circle',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'CircleROI',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'SRCircleROI',
+        //         toolGroupId: 'SRToolGroup',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Circle Tool'
+        // ),
+        // ToolbarService._createToolButton(
+        //   'CalibrationLine',
+        //   'tool-calibration',
+        //   'Calibration',
+        //   [
+        //     {
+        //       commandName: 'setToolActive',
+        //       commandOptions: {
+        //         toolName: 'CalibrationLine',
+        //       },
+        //       context: 'CORNERSTONE',
+        //     },
+        //   ],
+        //   'Calibration Line'
+        // ),
+        // ToolbarService._createActionButton(
+        //   'TagBrowser',
+        //   'list-bullets',
+        //   'Dicom Tag Browser',
+        //   [
+        //     {
+        //       commandName: 'openDICOMTagViewer',
+        //       commandOptions: {},
+        //       context: 'DEFAULT',
+        //     },
+        //   ],
+        //   'Dicom Tag Browser'
+        // ),
       ],
     },
   },

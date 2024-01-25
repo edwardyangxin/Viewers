@@ -186,7 +186,7 @@ function getDisplayText(mappedAnnotations, displaySet) {
 
   // Area sometimes becomes undefined if `preventHandleOutsideImage` is off.
   const roundedArea = utils.roundNumber(area || 0, 2);
-  displayText.push(`${roundedArea} ${getDisplayUnit(areaUnit)}`);
+  // displayText.push(`${roundedArea} ${getDisplayUnit(areaUnit)}`);
 
   // Todo: we need a better UI for displaying all these information
   mappedAnnotations.forEach(mappedAnnotation => {
@@ -200,8 +200,11 @@ function getDisplayText(mappedAnnotations, displaySet) {
 
     const str = `${maxStr}(S:${SeriesNumber}${instanceText}${frameText})`;
     if (!displayText.includes(str)) {
-      displayText.push(str);
+      // displayText.push(str);
     }
+
+    // evibased
+    displayText.push(`(太小:5mm,消失:0mm)`);
   });
 
   return displayText;

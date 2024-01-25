@@ -181,7 +181,7 @@ function getDisplayText(mappedAnnotations, displaySet) {
   displayText.push(
     // TODO: evibased, IRC related tools, 放到IRC extension. unit default to mm
     // `L: ${roundedLength} ${getDisplayUnit(unit)} (S: ${SeriesNumber}${instanceText}${frameText})`
-    `${roundedLength} x ${roundedWidth} ${unit ? unit : 'mm'}`
+    `S:${roundedWidth} x L:${roundedLength} ${unit ? unit : 'mm'}`
   );
   // displayText.push(`W: ${roundedWidth} ${getDisplayUnit(unit)}`);
 

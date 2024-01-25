@@ -56,160 +56,187 @@ function _createSetToolActiveCommands(toolName) {
 
 const toolbarButtons: Button[] = [
   // Measurement
+  // {
+  //   id: 'MeasurementTools',
+  //   type: 'ohif.splitButton',
+  //   props: {
+  //     groupId: 'MeasurementTools',
+  //     isRadio: true, // ?
+  //     // Switch?
+  //     primary: ToolbarService._createToolButton(
+  //       'Bidirectional',
+  //       'tool-bidirectional',
+  //       'Bidirectional',
+  //       [
+  //         {
+  //           commandName: 'setToolActive',
+  //           commandOptions: {
+  //             toolName: 'Bidirectional',
+  //           },
+  //           context: 'CORNERSTONE',
+  //         },
+  //         {
+  //           commandName: 'setToolActive',
+  //           commandOptions: {
+  //             toolName: 'SRBidirectional',
+  //             toolGroupId: 'SRToolGroup',
+  //           },
+  //           context: 'CORNERSTONE',
+  //         },
+  //       ],
+  //       'Bidirectional Tool'
+  //     ),
+  //     secondary: {
+  //       icon: 'chevron-down',
+  //       label: '',
+  //       isActive: true,
+  //       tooltip: 'More Measure Tools',
+  //     },
+  //     items: [
+  //       ToolbarService._createToolButton(
+  //         'Bidirectional',
+  //         'tool-bidirectional',
+  //         'Bidirectional',
+  //         [
+  //           {
+  //             commandName: 'setToolActive',
+  //             commandOptions: {
+  //               toolName: 'Bidirectional',
+  //             },
+  //             context: 'CORNERSTONE',
+  //           },
+  //           {
+  //             commandName: 'setToolActive',
+  //             commandOptions: {
+  //               toolName: 'SRBidirectional',
+  //               toolGroupId: 'SRToolGroup',
+  //             },
+  //             context: 'CORNERSTONE',
+  //           },
+  //         ],
+  //         'Bidirectional Tool'
+  //       ),
+  //       ToolbarService._createToolButton(
+  //         'ArrowAnnotate',
+  //         'tool-annotate',
+  //         'Annotation',
+  //         [
+  //           {
+  //             commandName: 'setToolActive',
+  //             commandOptions: {
+  //               toolName: 'ArrowAnnotate',
+  //             },
+  //             context: 'CORNERSTONE',
+  //           },
+  //           {
+  //             commandName: 'setToolActive',
+  //             commandOptions: {
+  //               toolName: 'SRArrowAnnotate',
+  //               toolGroupId: 'SRToolGroup',
+  //             },
+  //             context: 'CORNERSTONE',
+  //           },
+  //         ],
+  //         'Arrow Annotate'
+  //       ),
+  //     ],
+  //   },
+  // },
+  // Lesion Anno tools
   {
-    id: 'MeasurementTools',
-    type: 'ohif.splitButton',
+    id: 'Length',
+    type: 'ohif.radioGroup',
     props: {
-      groupId: 'MeasurementTools',
-      isRadio: true, // ?
-      // Switch?
-      primary: ToolbarService._createToolButton(
-        'Bidirectional',
-        'tool-bidirectional',
-        'Bidirectional',
-        [
-          {
-            commandName: 'setToolActive',
-            commandOptions: {
-              toolName: 'Bidirectional',
-            },
-            context: 'CORNERSTONE',
+      type: 'tool',
+      icon: 'tool-length',
+      label: '可测量病灶(长径)',
+      commands: [
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'Length',
           },
-          {
-            commandName: 'setToolActive',
-            commandOptions: {
-              toolName: 'SRBidirectional',
-              toolGroupId: 'SRToolGroup',
-            },
-            context: 'CORNERSTONE',
+          context: 'CORNERSTONE',
+        },
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'SRLength',
+            toolGroupId: 'SRToolGroup',
           },
-        ],
-        'Bidirectional Tool'
-      ),
-      secondary: {
-        icon: 'chevron-down',
-        label: '',
-        isActive: true,
-        tooltip: 'More Measure Tools',
-      },
-      items: [
-        ToolbarService._createToolButton(
-          'Bidirectional',
-          'tool-bidirectional',
-          'Bidirectional',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'Bidirectional',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SRBidirectional',
-                toolGroupId: 'SRToolGroup',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Bidirectional Tool'
-        ),
-        ToolbarService._createToolButton(
-          'ArrowAnnotate',
-          'tool-annotate',
-          'Annotation',
-          [
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'ArrowAnnotate',
-              },
-              context: 'CORNERSTONE',
-            },
-            {
-              commandName: 'setToolActive',
-              commandOptions: {
-                toolName: 'SRArrowAnnotate',
-                toolGroupId: 'SRToolGroup',
-              },
-              context: 'CORNERSTONE',
-            },
-          ],
-          'Arrow Annotate'
-        ),
-        // evibased, 2021-09-22, commented out, move to more tools
-        // ToolbarService._createToolButton(
-        //   'Length',
-        //   'tool-length',
-        //   'Length',
-        //   [
-        //     {
-        //       commandName: 'setToolActive',
-        //       commandOptions: {
-        //         toolName: 'Length',
-        //       },
-        //       context: 'CORNERSTONE',
-        //     },
-        //     {
-        //       commandName: 'setToolActive',
-        //       commandOptions: {
-        //         toolName: 'SRLength',
-        //         toolGroupId: 'SRToolGroup',
-        //       },
-        //       // we can use the setToolActive command for this from Cornerstone commandsModule
-        //       context: 'CORNERSTONE',
-        //     },
-        //   ],
-        //   'Length Tool'
-        // ),
-        // ToolbarService._createToolButton(
-        //   'EllipticalROI',
-        //   'tool-elipse',
-        //   'Ellipse',
-        //   [
-        //     {
-        //       commandName: 'setToolActive',
-        //       commandOptions: {
-        //         toolName: 'EllipticalROI',
-        //       },
-        //       context: 'CORNERSTONE',
-        //     },
-        //     {
-        //       commandName: 'setToolActive',
-        //       commandOptions: {
-        //         toolName: 'SREllipticalROI',
-        //         toolGroupId: 'SRToolGroup',
-        //       },
-        //       context: 'CORNERSTONE',
-        //     },
-        //   ],
-        //   'Ellipse Tool'
-        // ),
-        // ToolbarService._createToolButton(
-        //   'CircleROI',
-        //   'tool-circle',
-        //   'Circle',
-        //   [
-        //     {
-        //       commandName: 'setToolActive',
-        //       commandOptions: {
-        //         toolName: 'CircleROI',
-        //       },
-        //       context: 'CORNERSTONE',
-        //     },
-        //     {
-        //       commandName: 'setToolActive',
-        //       commandOptions: {
-        //         toolName: 'SRCircleROI',
-        //         toolGroupId: 'SRToolGroup',
-        //       },
-        //       context: 'CORNERSTONE',
-        //     },
-        //   ],
-        //   'Circle Tool'
-        // ),
+          // we can use the setToolActive command for this from Cornerstone commandsModule
+          context: 'CORNERSTONE',
+        },
+      ],
+    },
+  },
+  {
+    id: 'Bidirectional',
+    type: 'ohif.radioGroup',
+    props: {
+      type: 'tool',
+      icon: 'tool-bidirectional',
+      label: '可测量病灶(双径)',
+      commands: [
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'Bidirectional',
+          },
+          context: 'CORNERSTONE',
+        },
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'SRBidirectional',
+            toolGroupId: 'SRToolGroup',
+          },
+          context: 'CORNERSTONE',
+        },
+      ],
+    },
+  },
+  {
+    id: 'ArrowAnnotate',
+    type: 'ohif.radioGroup',
+    props: {
+      type: 'tool',
+      icon: 'tool-annotate',
+      label: '不可测量病灶(箭头)',
+      commands: [
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'ArrowAnnotate',
+          },
+          context: 'CORNERSTONE',
+        },
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'SRArrowAnnotate',
+            toolGroupId: 'SRToolGroup',
+          },
+          context: 'CORNERSTONE',
+        },
+      ],
+    },
+  },
+  {
+    id: 'Rectangle',
+    type: 'ohif.radioGroup',
+    props: {
+      type: 'tool',
+      icon: 'tool-rectangle',
+      label: '不可测量病灶(方框)',
+      commands: [
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'RectangleROI',
+          },
+          context: 'CORNERSTONE',
+        },
       ],
     },
   },
