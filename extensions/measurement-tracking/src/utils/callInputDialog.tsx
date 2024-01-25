@@ -2,7 +2,6 @@ import i18n from '@ohif/i18n';
 import { parseMeasurementLabelInfo, getEditMeasurementLabelDialog } from './utils';
 
 /**
- * TODO: evibased，使用统一的edit dialog，重构。
  * @param {*} data
  * @param {*} data.text
  * @param {*} data.label
@@ -16,13 +15,13 @@ import { parseMeasurementLabelInfo, getEditMeasurementLabelDialog } from './util
 function callInputDialog(
   uiDialogService,
   measurement, // measurement entity
+  comparedReportInfo,
   callback, // update measurement
   isArrowAnnotateInputDialog = true, // if arrow use data.text else use data.label
   dialogConfig: any = {}
 ) {
   const dialogId = 'dialog-enter-annotation';
-
-  let valueDialog = parseMeasurementLabelInfo(measurement);
+  const valueDialog = parseMeasurementLabelInfo(measurement);
 
   const {
     dialogTitle = i18n.t('Dialog:Annotation'),

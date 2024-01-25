@@ -68,14 +68,15 @@ const EVENTS = {
   INTERNAL_MEASUREMENT_UPDATED: 'event:internal_measurement_updated',
   MEASUREMENT_ADDED: 'event::measurement_added',
   RAW_MEASUREMENT_ADDED: 'event::raw_measurement_added',
-  // evibased, for compared measurements
-  READONLY_MEASUREMENT_ADDED: 'event::readonly_measurement_added',
-  MEASUREMENT_REMOVED: 'event::measurement_removed',
-  MEASUREMENTS_CLEARED: 'event::measurements_cleared',
   // Give the viewport a chance to jump to the measurement
   JUMP_TO_MEASUREMENT_VIEWPORT: 'event:jump_to_measurement_viewport',
   // Give the layout a chance to jump to the measurement
   JUMP_TO_MEASUREMENT_LAYOUT: 'event:jump_to_measurement_layout',
+  // evibased, for compared measurements
+  READONLY_MEASUREMENT_ADDED: 'event::readonly_measurement_added',
+  MEASUREMENT_REMOVED: 'event::measurement_removed',
+  MEASUREMENTS_CLEARED: 'event::measurements_cleared',
+  TRACKED_MEASUREMENT_EDIT: 'event::tracked_measurement_edit',
 };
 
 const VALUE_TYPES = {

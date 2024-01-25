@@ -25,6 +25,7 @@ import {
   getViewportId,
   parseMeasurementLabelInfo,
 } from '../../utils/utils';
+import callInputDialog from '../../utils/callInputDialog';
 
 const { downloadCSVReport } = utils;
 
@@ -64,7 +65,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   ] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
   const { trackedStudy, trackedSeries, taskInfo, successSaveReport, currentReportInfo,
-    currentTimepoint, lastTimepoint, comparedTimepoint, username, userRoles, currentTask } = trackedMeasurements.context;
+    currentTimepoint, lastTimepoint, comparedTimepoint, comparedReportInfo, 
+    username, userRoles, currentTask } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
@@ -167,13 +169,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             debounce(() => {
               measurementsPanelRef.current.scrollTop = measurementsPanelRef.current.scrollHeight;
             }, 300)();
-
             // evibased, 4种测量工具, call command setMeasurementLabel for newly added measurement(label is '' or 'no label')
             if (['Length', 'Bidirectional', 'ArrowAnnotate', 'RectangleROI'].includes(data.measurement.toolName)) {
               if (data.measurement.label === '' || data.measurement.label === 'no label') {
-                commandsManager.runCommand('setIRCMeasurementLabel', {
-                  uid: data.measurement.uid,
-                });
+                _editMeasurementLabel(commandsManager, uiDialogService, measurementService, data.measurement.uid, comparedReportInfo);
               }
             }
           }
@@ -181,12 +180,18 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       );
     });
 
+    const edit = measurementService.EVENTS.TRACKED_MEASUREMENT_EDIT;
+    const editSub = measurementService.subscribe(edit, data => {
+      _editMeasurementLabel(commandsManager, uiDialogService, measurementService, data.uid, comparedReportInfo);
+    });
+    subscriptions.push(editSub.unsubscribe);
+
     return () => {
       subscriptions.forEach(unsub => {
         unsub();
       });
     };
-  }, [measurementService, sendTrackedMeasurementsEvent]);
+  }, [measurementService, sendTrackedMeasurementsEvent, comparedReportInfo]);
 
   async function exportReport() {
     const measurements = measurementService.getMeasurements();
@@ -223,43 +228,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
   // TODO: evibased, 重构，和extension cornerstone callInputDialog统一代码
   const onMeasurementItemEditHandler = ({ uid, isActive }) => {
-    const measurement = measurementService.getMeasurement(uid);
-    // if readonly mode, not editable
-    if (commandsManager.getContext('CORNERSTONE').ifReadonlyMode) {
-      measurement.readonly = true;
-      return;
-    }
-
-    const dialogId = 'enter-annotation';
     jumpToImage({ uid, isActive });
-    const dialogTitle = t('Dialog:Annotation');
-    const isArrowAnnotateTool = measurement && measurement.toolName.toLowerCase().includes('arrow');
-    const valueDialog = parseMeasurementLabelInfo(measurement);
 
-    // for dialog sumbit button
-    const onSubmitHandler = ({ action, value }) => {
-      switch (action.id) {
-        case 'save': {
-          // copy measurement
-          const updatedMeasurement = { ...measurement };
-          updatedMeasurement['measurementLabelInfo'] = value['measurementLabelInfo'];
-          updatedMeasurement['label'] = value['label'].join('|');
-
-          measurementService.update(uid, updatedMeasurement, true);
-        }
-      }
-      uiDialogService.dismiss({ id: dialogId });
-    };
-
-    uiDialogService.create(
-      getEditMeasurementLabelDialog(
-        dialogId,
-        dialogTitle,
-        valueDialog,
-        isArrowAnnotateTool,
-        uiDialogService,
-        onSubmitHandler
-    ));
+    _editMeasurementLabel(commandsManager, uiDialogService, measurementService, uid, comparedReportInfo);
   };
 
   const onMeasurementItemClickHandler = ({ uid, isActive }) => {
@@ -278,6 +249,61 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     console.log('successSaveReport:', successSaveReport);
     _refreshTaskInfo(successSaveReport);
   }, [ successSaveReport ]);
+
+  // update compared report info based on comparedTimepoint
+  useEffect(() => {
+    if (!comparedTimepoint) { 
+      return; 
+    }
+    const {
+      studyInstanceUid,
+      date,
+      description,
+      numInstances,
+      modalities,
+      displaySets,
+      trialTimePointId,
+      reports,
+    } = comparedTimepoint;
+    const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId.slice(1)) : '';
+    // 现在只取第一个report，作为阅片任务的对比报告
+    const report = reports?.[0];
+
+    const targetFindings = [];
+    const nonTargetFindings = [];
+    const otherFindings = [];
+    if (report) {
+      const displayMeasurements = report.measurements.map((m, index) => _mapComparedMeasurementToDisplay(m, index));
+      for (const dm of displayMeasurements) {
+        // get target info
+        const lesionValue = dm.label.split('|')[1];
+        if (!(lesionValue in LesionMapping)) {
+          // not in LesionMapping, just show and allow edit in other group
+          otherFindings.push(dm);
+        } else if (targetKeyGroup.includes(lesionValue)) {
+          targetFindings.push(dm);
+        } else if (nonTargetKeyGroup.includes(lesionValue)) {
+          nonTargetFindings.push(dm);
+        } else {
+          otherFindings.push(dm);
+        }
+      }
+    }
+    // sort by index, get index from label, TODO: get index from measurementlabelInfo
+    targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+    nonTargetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+    otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+
+    // update compared report
+    sendTrackedMeasurementsEvent('UPDATE_COMPARED_REPORT', {
+      comparedReportInfo: {
+        report: report,
+        targetFindings: targetFindings,
+        nonTargetFindings: nonTargetFindings,
+        otherFindings: otherFindings,
+      },
+    });
+  }, [ comparedTimepoint ]);
 
   async function _refreshTaskInfo(navigateToNextTask = false) {
     // get taskInfo
@@ -461,13 +487,13 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       trialTimePointId,
       reports,
     } = comparedTimepoint;
+    const {
+      report,
+      targetFindings,
+      nonTargetFindings,
+      otherFindings,
+    } = comparedReportInfo;
     const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId.slice(1)) : '';
-    // TODO: 现在只取第一个report，后续看是否需要针对展现所有人的report
-    const report = reports?.[0];
-
-    const targetFindings = [];
-    const nonTargetFindings = [];
-    const otherFindings = [];
     let SOD = undefined;
     let response = undefined;
     let username = null;
@@ -477,26 +503,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       userAlias = report.task?.userAlias;
       SOD = report.SOD;
       response = report.response;
-      const displayMeasurements = report.measurements.map((m, index) => _mapComparedMeasurementToDisplay(m, index));
-      for (const dm of displayMeasurements) {
-        // get target info
-        const lesionValue = dm.label.split('|')[1];
-        if (!(lesionValue in LesionMapping)) {
-          // not in LesionMapping, just show and allow edit in other group
-          otherFindings.push(dm);
-        } else if (targetKeyGroup.includes(lesionValue)) {
-          targetFindings.push(dm);
-        } else if (nonTargetKeyGroup.includes(lesionValue)) {
-          nonTargetFindings.push(dm);
-        } else {
-          otherFindings.push(dm);
-        }
-      }
     }
-    // sort by index, get index from label, TODO: get index from measurementlabelInfo
-    targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
-    nonTargetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
-    otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
     return (
       <React.Fragment key={studyInstanceUid + '-pastReport'}>
@@ -613,9 +620,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             />
           </div>
         )}
-        {(currentTask?.type === 'reading' && comparedTimepoint) && (
-          getComparedTimepointReport()
-        )}
+        {(currentTask?.type === 'reading' && comparedTimepoint && comparedReportInfo) && (
+          getComparedTimepointReport())}
       </div>
     </>
   );
@@ -631,6 +637,40 @@ PanelMeasurementTableTracking.propTypes = {
     }).isRequired,
   }).isRequired,
 };
+
+function _editMeasurementLabel(commandsManager, uiDialogService, measurementService, uid, comparedReportInfo) {
+  const measurement = measurementService.getMeasurement(uid);
+  const isArrowAnnotateTool = measurement && measurement.toolName.toLowerCase().includes('arrow');
+
+  // if readonly mode, no editing
+  if (commandsManager.getContext('CORNERSTONE').ifReadonlyMode) {
+    measurement.readonly = true;
+    return;
+  }
+
+  callInputDialog(
+    uiDialogService,
+    measurement,
+    comparedReportInfo,
+    (label, actionId) => {
+      if (actionId === 'cancel') {
+        return;
+      }
+
+      // copy measurement, get measurement again in case it has been updated。
+      // 在创建annotation时，会不断更新长度。会导致update measurement为旧的长度错误。
+      const currentMeasurement = measurementService.getMeasurement(uid);
+      const updatedMeasurement = { ...currentMeasurement };
+      // update label data
+      updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
+      updatedMeasurement['label'] = label['label'];
+
+      // measurementService in platform core service module
+      measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
+    },
+    isArrowAnnotateTool // isArrowAnnotateInputDialog = false
+  );
+}
 
 // TODO: This could be a measurementService mapper
 function _mapMeasurementToDisplay(measurement, types, displaySetService) {

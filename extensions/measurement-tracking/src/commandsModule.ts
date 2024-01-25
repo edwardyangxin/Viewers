@@ -42,35 +42,9 @@ function commandsModule({
      * updated: set measurement data and label
      */
     setIRCMeasurementLabel: ({ uid }) => {
-      const measurement = measurementService.getMeasurement(uid);
-
-      // if readonly mode, no editing
-      if (commandsManager.getContext('CORNERSTONE').ifReadonlyMode) {
-        measurement.readonly = true;
-        return;
-      }
-
-      callInputDialog(
-        uiDialogService,
-        measurement,
-        (label, actionId) => {
-          if (actionId === 'cancel') {
-            return;
-          }
-
-          // copy measurement, get measurement again in case it has been updated。
-          // 在创建annotation时，会不断更新长度。会导致update measurement为旧的长度错误。
-          const currentMeasurement = measurementService.getMeasurement(uid);
-          const updatedMeasurement = { ...currentMeasurement };
-          // update label data
-          updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
-          updatedMeasurement['label'] = label['label'];
-
-          // measurementService in platform core service module
-          measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
-        },
-        false // isArrowAnnotateInputDialog = false
-      );
+      measurementService._broadcastEvent(measurementService.EVENTS.TRACKED_MEASUREMENT_EDIT, {
+        uid,
+      });
     },
 
     // evibased, 箭头标注callback, 默认不在此编辑
