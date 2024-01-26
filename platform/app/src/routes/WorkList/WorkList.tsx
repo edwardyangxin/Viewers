@@ -313,9 +313,14 @@ function WorkList({
         //   ),
         //   gridCol: 4,
         // },
+        // {
+        //   key: 'trialProtocolDescription',
+        //   content: <TooltipClipboard>{trialProtocolDescription}</TooltipClipboard>,
+        //   gridCol: 4,
+        // },
         {
-          key: 'trialProtocolDescription',
-          content: <TooltipClipboard>{trialProtocolDescription}</TooltipClipboard>,
+          key: 'trialProtocolId',
+          content: <TooltipClipboard>{trialProtocolId}</TooltipClipboard>,
           gridCol: 4,
         },
         {

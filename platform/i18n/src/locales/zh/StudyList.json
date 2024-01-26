@@ -27,5 +27,6 @@
   "TaskInfo": "任务信息",
   "TimePoint": "访视",
   "TrialProtocolDescription": "临床试验描述",
+  "TrialProtocolId": "临床试验编号",
   "TrialTimePointInfo": "访视"
 }

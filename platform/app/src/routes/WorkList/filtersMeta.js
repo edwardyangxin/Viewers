@@ -9,9 +9,16 @@ const filtersMeta = [
   //   isSortable: true,
   //   gridCol: 4,
   // },
+  // {
+  //   name: 'trialProtocolDescription',
+  //   displayName: i18n.t('StudyList:TrialProtocolDescription'),
+  //   inputType: 'Text',
+  //   isSortable: true,
+  //   gridCol: 4,
+  // },
   {
-    name: 'trialProtocolDescription',
-    displayName: i18n.t('StudyList:TrialProtocolDescription'),
+    name: 'trialProtocolId',
+    displayName: i18n.t('StudyList:TrialProtocolId'),
     inputType: 'Text',
     isSortable: true,
     gridCol: 4,
