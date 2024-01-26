@@ -22,6 +22,7 @@ function callInputDialog(
 ) {
   const dialogId = 'dialog-enter-annotation';
   const valueDialog = parseMeasurementLabelInfo(measurement);
+  valueDialog['comparedReportInfo'] = comparedReportInfo;
 
   const {
     dialogTitle = i18n.t('Dialog:Annotation'),

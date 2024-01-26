@@ -456,6 +456,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       StudyInstanceUID: studyInstanceUid,
       Label: baseLabel,
       AnnotationType: type,
+      label_info,
     } = measurement;
 
     const label = baseLabel || '(empty)';
@@ -464,6 +465,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
     return {
       uid: readonlyMeasurementUID,
+      measurementLabelInfo: label_info,
       label,
       baseLabel,
       measurementType: type.split(':')[1],

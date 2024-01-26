@@ -731,6 +731,51 @@ function getEditMeasurementLabelDialog(
       ],
       onSubmit: onSubmitHandler,
       body: ({ value, setValue }) => {
+        const comparedReportInfo = value.comparedReportInfo;
+
+        function findCorrespondingAndFill(findingsGroup, lesionIndex) {
+          const foundMeasurement = findingsGroup.find(
+            dm => parseInt(dm?.measurementLabelInfo?.lesionIndex?.value) === parseInt(lesionIndex.value)
+          );
+          if (foundMeasurement) {
+            // auto fill organ
+            const organ = foundMeasurement.measurementLabelInfo.organ;
+            const organLocation = foundMeasurement.measurementLabelInfo.organLocation;
+            const organLateral = foundMeasurement.measurementLabelInfo.organLateral;
+            setValue(value => {
+              value['measurementLabelInfo']['organ'] = organ;
+              value['label'][2] = organ ? organ['value'] : '';
+              value['measurementLabelInfo']['organLocation'] = organLocation;
+              value['measurementLabelInfo']['organLateral'] = organLateral;
+              return value;
+            });
+          }
+        }
+
+        function autoFillValue() {
+          const measurementLabelInfo = value['measurementLabelInfo'];
+          if (!measurementLabelInfo || !comparedReportInfo) {
+            return;
+          }
+          const lesion = measurementLabelInfo['lesion'];
+          const lesionIndex = measurementLabelInfo['lesionIndex'];
+          if (!lesion || !lesionIndex) {
+            return;
+          }
+          const targetFindings = comparedReportInfo.targetFindings;
+          const nonTargetFindings = comparedReportInfo.nonTargetFindings;
+          const newLesionFindings = comparedReportInfo.newLesionFindings;
+          if (targetKeyGroup.includes(lesion.value)) {
+            // target
+            findCorrespondingAndFill(targetFindings, lesionIndex);
+          } else if (nonTargetKeyGroup.includes(lesion.value)) {
+            // non-target
+            findCorrespondingAndFill(nonTargetFindings, lesionIndex);
+          } else if (newLesionKeyGroup.includes(lesion.value)) {
+            // new lesion
+            findCorrespondingAndFill(newLesionFindings, lesionIndex);
+          }
+        }
         return (
           <div>
             <label className="text-[14px] leading-[1.2] text-white">选择病灶类型</label>
@@ -748,6 +793,7 @@ function getEditMeasurementLabelDialog(
                   value['label'][1] = newSelection ? newSelection['value'] : '';
                   return value;
                 });
+                autoFillValue();
               }}
               options={lesionOptions}
             />
@@ -768,6 +814,7 @@ function getEditMeasurementLabelDialog(
                   value['label'][0] = newSelection ? newSelection['value'] : '';
                   return value;
                 });
+                autoFillValue();
               }}
               options={
                 targetKeyGroup.includes(value['label'][1])
