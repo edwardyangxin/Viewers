@@ -1,20 +1,16 @@
 window.config = {
   routerBasename: '/',
   whiteLabeling: {
-    createLogoComponentFn: function(React) {
+    createLogoComponentFn: function(React, Link) {
       return React.createElement(
-        'a',
-        {
-          target: '_self',
-          rel: 'noopener noreferrer',
-          className: 'text-2xl text-common-light',
-          href: '/',
-        },
+        Link,
+        { to: "/", className: "text-2xl text-common-light" },
         React.createElement('img', {
           src: './xunzheng-logo.svg',
           className: 'inline',
+          alt: 'Logo',
         }),
-        React.createElement('a', {}, '浔正医疗 EVI-BASED')
+        '浔正医疗 EVI-BASED'
       );
     },
   },

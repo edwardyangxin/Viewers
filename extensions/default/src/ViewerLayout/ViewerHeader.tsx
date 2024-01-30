@@ -47,16 +47,17 @@ function ViewerHeader({ hotkeysManager, extensionManager, servicesManager }) {
   const commitHash = process.env.COMMIT_HASH;
 
   const menuOptions = [
-    {
-      title: t('Header:About'),
-      icon: 'info',
-      onClick: () =>
-        show({
-          content: AboutModal,
-          title: t('AboutModal:About OHIF Viewer'),
-          contentProps: { versionNumber, commitHash },
-        }),
-    },
+    // evibased, disable about modal
+    // {
+    //   title: t('Header:About'),
+    //   icon: 'info',
+    //   onClick: () =>
+    //     show({
+    //       content: AboutModal,
+    //       title: t('AboutModal:About OHIF Viewer'),
+    //       contentProps: { versionNumber, commitHash },
+    //     }),
+    // },
     {
       title: t('Header:Preferences'),
       icon: 'settings',

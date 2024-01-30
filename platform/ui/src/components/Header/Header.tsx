@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import classNames from 'classnames';
@@ -52,7 +53,8 @@ function Header({
               />
             )}
             <div className="ml-4">
-              {WhiteLabeling?.createLogoComponentFn?.(React, props) || <Svg name="logo-ohif" />}
+              {/* evibased, add Link to whitelabeling function */}
+              {WhiteLabeling?.createLogoComponentFn?.(React, Link, props) || <Svg name="logo-ohif" />}
             </div>
           </div>
         </div>
