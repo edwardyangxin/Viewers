@@ -974,7 +974,7 @@ function getEditMeasurementLabelDialog(
             />
             {!isArrowAnnotateTool && (
               <CheckBox
-                label="病灶中存在空穴"
+                label="病灶中存在空腔"
                 checked={value.measurementLabelInfo?.cavitation}
                 labelClassName="text-[12px] pl-1 pt-1"
                 className="mb-[9px]"

@@ -258,17 +258,18 @@ export default function CreateReportDialogPrompt(
                       {ifBaseline ? (
                         <label className="text-[14px] leading-[1.2] text-black">靶病灶评估</label>
                       ) : (
-                        <label className="text-[14px] leading-[1.2] text-black">
-                          {`靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${(
+                        <label className="text-[14px] leading-[1.2] text-black whitespace-pre-line">
+                          {
+                          `靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${(
+                            parseFloat(value.SOD) - baselineSOD) >= 0 ? '+' : ''}${(
                             ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) *
-                            100
-                          ).toFixed(1)}%; 
+                            100).toFixed(1)}%;
                           与最低SOD(${lowestSOD}mm)变化:${(
-                            parseFloat(value.SOD) - lowestSOD
-                          ).toFixed(1)}mm,
-                          ${(((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(
-                            1
-                          )}%)`}
+                            parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
+                            parseFloat(value.SOD) - lowestSOD).toFixed(1)}mm & ${(
+                            parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
+                            ((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(1)}%)`
+                          }
                         </label>
                       )}
                       <Select

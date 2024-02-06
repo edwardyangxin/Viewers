@@ -354,12 +354,12 @@ function WorkList({
           content: <span dangerouslySetInnerHTML={{ __html: taskInfo }}></span>,
           gridCol: 4,
         },
-        {
-          key: 'modality',
-          content: modalities,
-          title: modalities,
-          gridCol: 3,
-        },
+        // {
+        //   key: 'modality',
+        //   content: modalities,
+        //   title: modalities,
+        //   gridCol: 3,
+        // },
         // {
         //   key: 'accession',
         //   content: <TooltipClipboard>{accession}</TooltipClipboard>,

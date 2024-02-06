@@ -123,7 +123,8 @@ const InputGroup = ({
           return (
             <div
               key={inputMeta.name}
-              className={classnames('pl-4 first:pl-12', getGridWidthClass(inputMeta.gridCol))}
+              // evibased, add grow to table title
+              className={classnames('pl-4 first:pl-12 grow', getGridWidthClass(inputMeta.gridCol))}
             >
               {renderFieldInputComponent(inputMeta)}
             </div>
