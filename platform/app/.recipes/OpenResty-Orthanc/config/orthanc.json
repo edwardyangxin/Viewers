@@ -89,7 +89,11 @@
     "Root": "/dicom-web/",
     "EnableWado": true,
     "WadoRoot": "/wado",
-    "Host": "127.0.0.1",
+    // "Host": "127.0.0.1",
+    // evibased, for local development. 
+    "Host": "localhost:3000",
+    // "Host": "evi-based.com",
+    // "Host": "test.evi-based.com",
     "Ssl": false,
     "StowMaxInstances": 10,
     "StowMaxSize": 10,

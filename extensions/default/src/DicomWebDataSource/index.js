@@ -418,8 +418,10 @@ function createDicomWebApi(dicomWebConfig, servicesManager) {
                 // isn't well specified in the standard, but is needed in
                 // any implementation that stores static copies of the metadata
                 StudyInstanceUID: naturalized.StudyInstanceUID,
+                // evibased, fixbug 当获取dicom pdf时，mediaType需要把{ mediaType: 'application/octet-stream' } 要放在第一个
+                // orthanc不支持application/pdf放在第一个，会导致获取失败
                 mediaTypes: mediaType
-                  ? [{ mediaType }, { mediaType: 'application/octet-stream' }]
+                  ? [{ mediaType: 'application/octet-stream' }, { mediaType }]
                   : undefined,
                 ...options,
               };
