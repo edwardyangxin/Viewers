@@ -3,7 +3,7 @@ import {
   WindowLevelTool,
   StackScrollTool,
   StackScrollMouseWheelTool,
-  ZoomTool,
+  // ZoomTool,
   VolumeRotateMouseWheelTool,
   MIPJumpToClickTool,
   LengthTool,
@@ -32,6 +32,7 @@ import {
 
 import CalibrationLineTool from './tools/CalibrationLineTool';
 import ImageOverlayViewerTool from './tools/ImageOverlayViewerTool';
+import ZoomFromCenterTool from './tools/ZoomFromCenterTool';
 
 export default function initCornerstoneTools(configuration = {}) {
   CrosshairsTool.isAnnotation = false;
@@ -42,7 +43,9 @@ export default function initCornerstoneTools(configuration = {}) {
   addTool(WindowLevelTool);
   addTool(StackScrollMouseWheelTool);
   addTool(StackScrollTool);
-  addTool(ZoomTool);
+  // addTool(ZoomTool);
+  // evibased, Zoom based on center of the image
+  addTool(ZoomFromCenterTool);
   addTool(ProbeTool);
   addTool(VolumeRotateMouseWheelTool);
   addTool(MIPJumpToClickTool);
@@ -88,7 +91,7 @@ const toolNames = {
   WindowLevel: WindowLevelTool.toolName,
   StackScroll: StackScrollTool.toolName,
   StackScrollMouseWheel: StackScrollMouseWheelTool.toolName,
-  Zoom: ZoomTool.toolName,
+  Zoom: ZoomFromCenterTool.toolName,
   VolumeRotateMouseWheel: VolumeRotateMouseWheelTool.toolName,
   MipJumpToClick: MIPJumpToClickTool.toolName,
   Length: LengthTool.toolName,
