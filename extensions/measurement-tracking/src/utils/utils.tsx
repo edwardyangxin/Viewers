@@ -346,7 +346,7 @@ function getTargetExpandedContent(targetFindings) {
             index: lesionIndex.label,
             lesionType: lesion.label,
             lesionLocation: lesionLocationStr,
-            diameter: `${diameter.toFixed(2)} mm`,
+            diameter: `${diameter.toFixed(1)} mm`,
             comment: dm.label_info.comment ? dm.label_info.comment : '',
           };
         })}
@@ -384,7 +384,7 @@ function getTargetExpandedContent(targetFindings) {
               index: lesionIndex.label,
               lesionType: lesion.label,
               lesionLocation: lesionLocationStr,
-              diameter: `${diameter.toFixed(2)} mm`,
+              diameter: `${diameter.toFixed(1)} mm`,
               comment: dm.label_info.comment ? dm.label_info.comment : '',
             };
           })}
@@ -508,7 +508,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
       },
       {
         key: 'SOD',
-        content: <span>{`径线和(SOD):${SOD} mm`}</span>,
+        content: <span>{`径线和(SOD):${parseFloat(SOD).toFixed(1)} mm`}</span>,
         gridCol: 3,
       },
     ],
@@ -617,7 +617,7 @@ function getPastReportDialog(uiDialogService, report) {
                       className="border-primary-main bg-slate-300 text-black"
                       transparent={true}
                       type="text"
-                      value={value.SOD}
+                      value={parseFloat(value.SOD).toFixed(1)}
                       disabled={true}
                     />
                   </div>

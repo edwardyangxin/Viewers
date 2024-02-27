@@ -244,11 +244,11 @@ function TrackedCornerstoneViewport(props) {
             patientSex: PatientSex || '',
             patientAge: PatientAge || '',
             MRN: PatientID || '',
-            thickness: SliceThickness ? `${parseFloat(SliceThickness).toFixed(2)}` : '',
+            thickness: SliceThickness ? `${parseFloat(SliceThickness).toFixed(1)}` : '',
             thicknessUnits: t('mm'),
             spacing:
               SpacingBetweenSlices !== undefined
-                ? `${parseFloat(SpacingBetweenSlices).toFixed(2)}${t('mm')}`
+                ? `${parseFloat(SpacingBetweenSlices).toFixed(1)}${t('mm')}`
                 : '',
             scanner: ManufacturerModelName || '',
           },

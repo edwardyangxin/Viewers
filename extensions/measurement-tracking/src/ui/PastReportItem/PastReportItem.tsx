@@ -36,9 +36,15 @@ const PastReportItem = ({
       <div className="flex flex-1 flex-col px-4 pb-2">
         {username ? (
           <div className="flex flex-row items-center justify-between pt-2 pb-2">
-            <div className="text-base text-white">{`${trialTimePointInfo}报告(${username})`}</div>
+            <div className="text-base text-white">
+              {`${trialTimePointInfo}`}
+              <br />
+              {username}
+            </div>
             <div className="flex flex-row items-center text-base text-blue-300">
-              {`${responseLabel}(SOD:${SOD}mm)`}
+              {`${responseLabel}`}
+              <br />
+              {`SOD:${parseFloat(SOD).toFixed(1)}mm`}
             </div>
             <LegacyButton
               key={studyInstanceUid + '-report-button'}

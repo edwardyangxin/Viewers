@@ -76,7 +76,7 @@ function PastReports({ servicesManager, extensionManager }) {
 
     const label = baseLabel || '(empty)';
     let displayText =
-      Width && Length ? [`${Width.toFixed(2)} x ${Length.toFixed(2)} ${Unit}`] : ['无法测量'];
+      Width && Length ? [`${Width.toFixed(1)} x ${Length.toFixed(1)} ${Unit}`] : ['无法测量'];
 
     return {
       uid: readonlyMeasurementUID,

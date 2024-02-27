@@ -217,7 +217,7 @@ export default function CreateReportDialogPrompt(
                   const calculateResult = new Function('return ' + inputStr);
                   // Call the function to get the result
                   result = calculateResult();
-                  result = result.toFixed(2);
+                  result = result.toFixed(1);
                 } catch (error) {
                   console.log('failed to calculate SOD', error);
                 }
@@ -248,7 +248,7 @@ export default function CreateReportDialogPrompt(
                         className="border-primary-main bg-slate-300 text-black"
                         transparent={true}
                         type="text"
-                        value={value.SOD}
+                        value={parseFloat(value.SOD).toFixed(1)}
                         onChange={onSODInputChangeHandler}
                         onKeyUp={onSODInputKeyUpHandler}
                         disabled={!ifReadingTask}
@@ -433,7 +433,7 @@ function getTargetExpandedContent(targetFindings) {
             index: lesionIndex.label,
             lesionType: lesion.label,
             lesionLocation: lesionLocationStr,
-            diameter: `${diameter.toFixed(2)} mm`,
+            diameter: `${diameter.toFixed(1)} mm`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
           };
         })}
@@ -471,7 +471,7 @@ function getTargetExpandedContent(targetFindings) {
               index: lesionIndex.label,
               lesionType: lesion.label,
               lesionLocation: lesionLocationStr,
-              diameter: `${diameter.toFixed(2)} mm`,
+              diameter: `${diameter.toFixed(1)} mm`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             };
           })}
@@ -597,7 +597,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
       },
       {
         key: 'SOD',
-        content: <span>{`径线和(SOD):${SOD} mm`}</span>,
+        content: <span>{`径线和(SOD):${parseFloat(SOD).toFixed(1)} mm`}</span>,
         gridCol: 3,
       },
     ],
@@ -679,5 +679,5 @@ function autoCalSOD(targetFindings) {
   } catch (error) {
     console.log('failed to parse length', error);
   }
-  return culmulativeSOD.toFixed(2);
+  return culmulativeSOD.toFixed(1);
 }

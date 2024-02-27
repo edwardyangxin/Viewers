@@ -461,7 +461,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
     const label = baseLabel || '(empty)';
     // only bidirectional shows displayText for now
-    const displayText = Width && Length ? [`${Length.toFixed(2)} x ${Width.toFixed(2)} ${Unit}`] : ['无测量信息'];
+    const displayText = Width && Length ? [`${Length.toFixed(1)} x ${Width.toFixed(1)} ${Unit}`] : ['无测量信息'];
 
     return {
       uid: readonlyMeasurementUID,
