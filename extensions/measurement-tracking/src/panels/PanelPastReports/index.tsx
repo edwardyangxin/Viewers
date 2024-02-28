@@ -166,7 +166,7 @@ function PastReports({ servicesManager, extensionManager }) {
               }}
               onReportClick={event => {
                 event.stopPropagation();
-                getPastReportDialog(uiDialogService, report);
+                getPastReportDialog(uiDialogService, trialTimePointInfo, report);
               }}
               data-cy="past-report-list"
             />

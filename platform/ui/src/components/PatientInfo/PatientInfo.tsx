@@ -50,7 +50,8 @@ function PatientInfo({
                   className="text-base font-bold text-white"
                   title={patientName}
                 >
-                  {patientName}
+                  {/* evibased */}
+                  {'受试者编号: ' + patientName}
                 </span>
                 <div className="border-secondary-main mt-4 mb-4 flex border-b pb-4">
                   <div className={classnames(classes.firstRow)}>

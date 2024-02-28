@@ -551,7 +551,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
   return tableDataSource;
 }
 
-function getPastReportDialog(uiDialogService, report) {
+function getPastReportDialog(uiDialogService, trialTimePointInfo, report) {
   let dialogId = undefined;
   const _handleClose = () => {
     // Dismiss dialog
@@ -585,7 +585,7 @@ function getPastReportDialog(uiDialogService, report) {
     dialogWidth: '1200px',
     onClickOutside: _handleClose,
     contentProps: {
-      title: '查看报告',
+      title: `往期报告(${trialTimePointInfo})`,
       value: {
         targetFindings: targetFindings,
         nonTargetFindings: nonTargetFindings,
