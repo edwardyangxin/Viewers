@@ -84,19 +84,19 @@ const moreTools = [
         ),
         // move to top level
         // ToolbarService._createToggleButton(
-        //   'StackImageSync',
+        //   'ImageSliceSync',
         //   'link',
-        //   'Stack Image Sync',
+        //   'Image Slice Sync',
         //   [
         //     {
-        //       commandName: 'toggleIRCImageSync',
+        //       commandName: 'toggleImageSliceSync',
         //     },
         //   ],
         //   'Enable position synchronization on stack viewports',
         //   {
         //     listeners: {
         //       [EVENTS.STACK_VIEWPORT_NEW_STACK]: {
-        //         commandName: 'toggleIRCImageSync',
+        //         commandName: 'toggleImageSliceSync',
         //         commandOptions: { toggledState: true },
         //       },
         //     },

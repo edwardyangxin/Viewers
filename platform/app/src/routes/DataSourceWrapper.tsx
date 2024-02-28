@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { ExtensionManager, MODULE_TYPES, Types, log } from '@ohif/core';
+import { Enums, ExtensionManager, MODULE_TYPES, log } from '@ohif/core';
 //
 import { extensionManager } from '../App.tsx';
 import { useParams, useLocation } from 'react-router';
@@ -173,7 +173,7 @@ function DataSourceWrapper(props) {
     // evibased, based on role from user.profile.realm_role, get task list and filter studies
     async function getData() {
       setIsLoading(true);
-      log.time(TimingEnum.SEARCH_TO_LIST);
+      log.time(Enums.TimingEnum.SEARCH_TO_LIST);
 
       // get user role
       let username = 'unknown';
@@ -190,13 +190,16 @@ function DataSourceWrapper(props) {
           const authHeader = userAuthenticationService.getAuthorizationHeader();
           const filterTaskStatus = 'create';
           const getTaskUrl = _appConfig['evibased']['task_get_url'];
-          const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&status=${filterTaskStatus}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: authHeader.Authorization,
+          const getTaskResponse = await fetch(
+            `${getTaskUrl}?username=${username}&status=${filterTaskStatus}`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: authHeader.Authorization,
+              },
             }
-          });
+          );
           if (!getTaskResponse.ok) {
             const body = await getTaskResponse.text();
             throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
@@ -224,8 +227,10 @@ function DataSourceWrapper(props) {
       }
 
       let studies = [];
-      if (!ifDoctor || 
-        (queryFilterValues.studyInstanceUid && queryFilterValues.studyInstanceUid.length > 0)) {
+      if (
+        !ifDoctor ||
+        (queryFilterValues.studyInstanceUid && queryFilterValues.studyInstanceUid.length > 0)
+      ) {
         // if not doctor or studyUIDs list is not empty, get studies by studyUIDs list
         studies = await dataSource.query.studies.search(queryFilterValues);
       }
@@ -275,8 +280,8 @@ function DataSourceWrapper(props) {
         pageNumber: queryFilterValues.pageNumber,
         location,
       });
-      log.timeEnd(TimingEnum.SCRIPT_TO_VIEW);
-      log.timeEnd(TimingEnum.SEARCH_TO_LIST);
+      log.timeEnd(Enums.TimingEnum.SCRIPT_TO_VIEW);
+      log.timeEnd(Enums.TimingEnum.SEARCH_TO_LIST);
 
       setIsLoading(false);
     }

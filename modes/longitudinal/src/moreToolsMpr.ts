@@ -57,9 +57,9 @@ const moreToolsMpr = [
           'Reset'
         ),
         ToolbarService._createToggleButton(
-          'StackImageSync',
+          'ImageSliceSync',
           'link',
-          'Stack Image Sync',
+          'Image Slice Sync',
           [
             {
               commandName: 'toggleIRCImageSync',
