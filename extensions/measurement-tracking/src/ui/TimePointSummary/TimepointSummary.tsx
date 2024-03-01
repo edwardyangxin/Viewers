@@ -132,7 +132,7 @@ const TimePointSummary = ({
               data-cy="return-to-work-list"
             >
               <h4 className="mr-auto ml-4 flex items-center text-lg font-medium text-white">
-                下一任务<br />任务列表
+                任务列表
               </h4>
               <Icon
                 name="chevron-right"

@@ -16,6 +16,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const isBackupSave = evt.isBackupSave === undefined ? evt.data.isBackupSave : evt.isBackupSave;
   const StudyInstanceUID = evt?.data?.StudyInstanceUID;
   const SeriesInstanceUID = evt?.data?.SeriesInstanceUID;
+  const imageQuality = evt.imageQuality === undefined ? evt.data.imageQuality : evt.imageQuality;
 
   const { trackedStudy, trackedSeries, currentTask } = ctx;
   let displaySetInstanceUIDs;
@@ -25,6 +26,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
     // TODO: Fallback if (uiDialogService) {
     const reportSummaryResult = await createReportDialogPrompt(
       ctx,
+      imageQuality,
       uiDialogService,
       measurementService,
       {
@@ -44,6 +46,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
           trackedStudy,
           trackedSeries,
           currentTask,
+          imageQuality,
           reportSummaryResult.value.reportInfo
         );
       } else {
@@ -110,6 +113,7 @@ async function _uploadReportAsync(
   trackedStudy,
   trackedSeries,
   currentTask,
+  imageQuality,
   reportInfo
 ) {
   const { measurementService, userAuthenticationService, uiNotificationService, uiDialogService } =
@@ -158,6 +162,7 @@ async function _uploadReportAsync(
       report_template: 'RECIST1.1',
       report_template_version: 'v1',
       report_comments: '', // deprecated but required by api
+      image_quality: imageQuality,
       measurements: trackedMeasurements,
       ...reportInfo,
     };

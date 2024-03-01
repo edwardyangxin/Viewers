@@ -23,6 +23,7 @@ export const CREATE_REPORT_DIALOG_RESPONSE = {
 //
 export default function CreateReportDialogPrompt(
   ctx,
+  imageQuality,
   uiDialogService,
   measurementService,
   { extensionManager }
@@ -184,6 +185,7 @@ export default function CreateReportDialogPrompt(
       contentProps: {
         title: i18n.t('MeasurementTable:Create Report'),
         value: {
+          imageQuality: imageQuality,
           targetFindings: targetFindings,
           nonTargetFindings: nonTargetFindings,
           newLesionFindings: newLesionFindings,
@@ -229,7 +231,16 @@ export default function CreateReportDialogPrompt(
           return (
             <>
               <div className="flex h-full flex-col bg-slate-300 ">
+                {/* image quality */}
+                <div className="flex flex-row justify-between pl-2 pb-2">
+                  <div className="flex flex-row">
+                    <span className="text-black text-[14px] leading-[1.2]">
+                      {`图像质量: ${value.imageQuality?.selection?.label} (${value.imageQuality?.description})`}
+                    </span>
+                  </div>
+                </div>
                 <div className="flex grow flex-col overflow-visible">
+                  {/* target/non-target table */}
                   <div className="flex grow flex-col">
                     <TargetListTable
                       tableDataSource={getTableDataSource(
@@ -240,6 +251,7 @@ export default function CreateReportDialogPrompt(
                       )}
                     />
                   </div>
+                  {/* SOD and response selections */}
                   <div className="mt-3 flex grow flex-row justify-evenly">
                     <div className="w-1/3">
                       <Input

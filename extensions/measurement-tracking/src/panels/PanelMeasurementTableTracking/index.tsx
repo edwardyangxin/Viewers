@@ -16,7 +16,7 @@ import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LesionMapping, targetKeyGroup, nonTargetKeyGroup} from '../../utils/mappings';
+import { LesionMapping, targetKeyGroup, nonTargetKeyGroup, imageQualityOptions, imageQualityMapping} from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
 import {
   getEditMeasurementLabelDialog,
@@ -74,7 +74,14 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   const measurementsPanelRef = useRef(null);
   const [appConfig] = useAppConfig();
   const [extendedComparedReport, setExtentedComparedReport] = useState(true);
+  // evibased, value for imageQuality, default is image_qualified
+  const [imageQuality, setImageQuality] = useState({
+    value: 'image_qualified',
+    label: imageQualityMapping['image_qualified'],
+  });
+  const [imageQualityDescription, setImageQualityDescription] = useState(null);
 
+  // measuremnts updated, update displayMeasurements
   useEffect(() => {
     const measurements = measurementService.getMeasurements();
     const filteredMeasurements = measurements.filter(
@@ -136,7 +143,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     }
   };
 
-  // ~~ DisplayStudySummary
+  // update DisplayStudySummary
   // evibased, remove dependency on updateDisplayStudySummary function, it will cause infinite loop
   useEffect(() => {
     updateDisplayStudySummary();
@@ -148,6 +155,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     currentTask,
   ]);
 
+  // subscribe to measurementService changes
   // TODO: Better way to consolidated, debounce, check on change?
   // Are we exposing the right API for measurementService?
   // This watches for ALL measurementService changes. It updates a timestamp,
@@ -304,6 +312,24 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       },
     });
   }, [ comparedTimepoint ]);
+
+  // report loaded, update data on this page
+  useEffect(() => {
+    if (currentReportInfo) {
+      // update imageQuality and imageQualityDescription
+      if (currentReportInfo?.image_quality) {
+        setImageQuality(currentReportInfo.image_quality?.selection);
+        setImageQualityDescription(currentReportInfo.image_quality?.description);
+      } else {
+        // report imageQuality is empty, set default value
+        setImageQuality({
+          value: null,
+          label: null,
+        });
+        setImageQualityDescription('');
+      }
+    }
+  }, [ currentReportInfo ]);
 
   async function _refreshTaskInfo(navigateToNextTask = false) {
     // get taskInfo
@@ -578,6 +604,42 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               currentLabels={targetFindings.length + nonTargetFindings.length}
             />
           )}
+          {/* image quality */}
+          <div className="">
+            <label className="text-[14px] leading-[1.2] text-white">影像质量评估</label>
+            <Select
+              id="imageQuality"
+              isClearable={false}
+              placeholder="影像质量评估"
+              value={[imageQuality ? imageQuality.value : 'image_qualified']}
+              onChange={(newSelection, action) => {
+                console.info('newSelection:', newSelection, 'action:', action);
+                setImageQuality(newSelection);
+              }}
+              options={imageQualityOptions}
+              // isDisabled={true}
+            />
+            <Input
+              className="border-primary-main bg-black"
+              type="text"
+              id="image-quality-description"
+              labelClassName="hidden text-white text-[10px] leading-[1.2]"
+              smallInput={true}
+              placeholder="影像质量描述"
+              value={imageQualityDescription}
+              onChange={event => {
+                event.persist();
+                setImageQualityDescription(event.target.value);
+              }}
+              onKeyUp={event => {
+                event.persist();
+                if (event.key === 'Enter') {
+                  setImageQualityDescription(event.target.value);
+                }
+              }}
+            />
+          </div>
+          {/* target lesions */}
           <MeasurementTable
             title={`${t('MeasurementTable:Target Findings')}(最多5个)`}
             ifTarget={true}
@@ -586,6 +648,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             onClick={jumpToImage}
             onEdit={onMeasurementItemEditHandler}
           />
+          {/* non target lesions */}
           <MeasurementTable
             title={t('MeasurementTable:Non-Target Findings')}
             data={nonTargetFindings}
@@ -593,6 +656,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             onClick={jumpToImage}
             onEdit={onMeasurementItemEditHandler}
           />
+          {/* other lesions */}
           {otherFindings.length > 0 && (
             <MeasurementTable
               title={t('MeasurementTable:Other Findings')}
@@ -603,6 +667,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             />
           )}
         </div>
+        {/* report button */}
         {!appConfig?.disableEditing && (
           <div className="flex justify-center p-4">
             <ActionButtons
@@ -610,15 +675,18 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               onExportClick={exportReport}
               onCreateReportClick={() => {
                 sendTrackedMeasurementsEvent('SAVE_REPORT', {
+                  imageQuality: {
+                    selection: imageQuality,
+                    description: imageQualityDescription,
+                  },
                   viewportId: viewportGrid.activeViewportId,
                   isBackupSave: true,
                 });
               }}
-              // can create report when no measurement
-            // disabled={
-              //   (targetFindings.length === 0 &&
-            //   nonTargetFindings.length === 0) || successSaveReport
-              // }
+            // todo: 对于查看报告的情况分类disable button：
+            // 1. 阅片任务，未选择影像质量，disable
+            // 2. 其他任务，不做disable？
+            // disabled={!imageQuality?.value}
             />
           </div>
         )}

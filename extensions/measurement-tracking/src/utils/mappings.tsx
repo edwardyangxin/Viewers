@@ -4,6 +4,17 @@ const TaskMapping = {
   QC: '质控',
 };
 
+const imageQualityMapping = {
+  image_qualified: '合格',
+  incomplete_anatomy: '解剖部位不完整',
+  important_anatomy_invisible: '重要解剖结构不可见',
+  missing_scan_slice: '扫描切片缺失',
+  motion_artifact: '存在运动伪影',
+  poor_IV_contrast: 'IV造影不佳',
+  no_IV_contrast: '无IV期造影',
+  other: '其他',
+};
+
 const targetIndexMapping = {
   1: 1,
   2: 2,
@@ -138,26 +149,22 @@ const organLocationMapping = {
 };
 
 // options
-const targetIndexOptions = [];
-for (const [key, value] of Object.entries(targetIndexMapping)) {
-  targetIndexOptions.push({ value: key, label: value });
+function constructOptions(mapping) {
+  const options = [];
+  for (const [key, value] of Object.entries(mapping)) {
+    options.push({ value: key, label: value });
+  }
+  return options;
 }
-const nonTargetIndexOptions = [];
-for (const [key, value] of Object.entries(nonTargetIndexMapping)) {
-  nonTargetIndexOptions.push({ value: key, label: value });
-}
-const lesionOptions = [];
-for (const [key, value] of Object.entries(LesionMapping)) {
-  lesionOptions.push({ value: key, label: value });
-}
-const organOptions = [];
-for (const [key, value] of Object.entries(organMapping)) {
-  organOptions.push({ value: key, label: value });
-}
-const organLateralOptions = [];
-for (const [key, value] of Object.entries(organLateralMapping)) {
-  organLateralOptions.push({ value: key, label: value });
-}
+
+const imageQualityOptions = constructOptions(imageQualityMapping);
+const targetIndexOptions = constructOptions(targetIndexMapping);
+const nonTargetIndexOptions = constructOptions(nonTargetIndexMapping);
+const lesionOptions = constructOptions(LesionMapping);
+const organOptions = constructOptions(organMapping);
+const organLateralOptions = constructOptions(organLateralMapping);
+
+// organLocationOptions 和上面的options结构不同
 const organLocationOptions = {};
 for (const [organKey, organValue] of Object.entries(organLocationMapping)) {
   organLocationOptions[organKey] = [];
@@ -239,12 +246,14 @@ for (const [key, value] of Object.entries(responseMapping)) {
 
 export {
   TaskMapping,
+  imageQualityMapping,
   targetIndexMapping,
   nonTargetIndexMapping,
   LesionMapping,
   organMapping,
   organLateralMapping,
   organLocationMapping,
+  imageQualityOptions,
   targetIndexOptions,
   nonTargetIndexOptions,
   lesionOptions,

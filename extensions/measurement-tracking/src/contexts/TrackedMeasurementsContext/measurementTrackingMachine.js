@@ -2,6 +2,7 @@ import { hydrateStructuredReport } from '@ohif/extension-cornerstone-dicom-sr';
 import { assign } from 'xstate';
 import { annotation as CsAnnotation } from '@cornerstonejs/tools';
 import { reportMeasurementToReadonlyMeasurement } from '../../utils/utils';
+import { imageQualityMapping } from '../../utils/mappings';
 
 const RESPONSE = {
   NO_NEVER: -1,
@@ -47,6 +48,14 @@ const machineConfiguration = {
       nextTaskStudyUID: undefined,
       totalTask: undefined,
       userTasks: [],
+    },
+    // deprecated
+    currentImageQuality: {
+      selection: {
+        value: 'image_qualified',
+        label: imageQualityMapping['image_qualified'],
+      },
+      description: null,
     },
   },
   states: {
@@ -95,6 +104,12 @@ const machineConfiguration = {
             currentTask: (_, event) => event.currentTask,
           }),
         },
+        // deprecated
+        // UPDATE_CURRENT_IMAGE_QUALITY: {
+        //   actions: assign({
+        //     currentImageQuality: (_, event) => event.currentImageQuality,
+        //   }),
+        // },
         UPDATE_TASK_INFO: {
           actions: assign({
             taskInfo: (_, event) => event.taskInfo,
@@ -372,7 +387,7 @@ const machineConfiguration = {
             target: 'tracking',
             actions: [
               'setTrackedStudyAndMultipleSeries',
-              'setCurrentReportInfo',
+              'updateCurrentReportInfo',
               // 'jumpToFirstMeasurementInActiveViewport',
               'jumpToFirstMeasurementInCurrentViewport', // evibased
               'setIsDirtyToClean',
@@ -503,11 +518,12 @@ const defaultOptions = {
       };
     }),
     // evibased, actions
-    setCurrentReportInfo: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(setCurrentReportInfo): ", evt.type, evt);
+    updateCurrentReportInfo: assign((ctx, evt) => {
+      console.log("measurementTrackingMachine action(updateCurrentReportInfo): ", evt.type, evt);
 
       return {
         currentReportInfo: evt.data.reportInfo,
+        currentImageQuality: evt.data.reportInfo?.image_quality,
       };
     }),
     successSaveReport: assign((ctx, evt) => {
