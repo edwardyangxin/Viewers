@@ -180,28 +180,34 @@ function PanelStudyBrowserTracking({
       }
 
       // get last timepoint and baseline timepoint, lowest SOD timepoint
-      let lastTimepointStudy = undefined;
+      let lastTimepoint = undefined;
       const lastTimepointId = parseInt(currentTimepoint.trialTimePointId.slice(1)) - 1;
-      let baselineStudy = undefined;
-      let lowestSODStudy = undefined;
+      let baselineTimepoint = undefined;
+      let lowestSODTimepoint = undefined;
       for (let study of actuallyMappedStudies) {
         const timepointId = parseInt(study.trialTimePointId.slice(1));
         if (timepointId === 0) {
           study.ifBaseline = true;
-          baselineStudy = study;
+          baselineTimepoint = study;
         }
         if (timepointId === lastTimepointId) {
           study.ifLastTimepoint = true;
-          lastTimepointStudy = study;
+          lastTimepoint = study;
         }
         const reports = study.reports;
         if (reports && reports.length > 0) {
-          // get lowest SOD timepoint, TODO: 默认使用了reports[0]第一个report
+          // TODO: 默认使用了reports[0]第一个report
+          // get lowest SOD timepoint
+          const selectedReport = reports[0];
+          if (selectedReport.targetResponse === 'NE') {
+            // NE, 不可评估, 不作为最低SOD访视点
+            continue;
+          }
           const sod = parseFloat(reports[0].SOD);
           study.SOD = sod;
           if (sod) {
-            if (!lowestSODStudy || sod < lowestSODStudy.SOD) {
-              lowestSODStudy = study;
+            if (!lowestSODTimepoint || sod < lowestSODTimepoint.SOD) {
+              lowestSODTimepoint = study;
             }
           }
         }
@@ -210,17 +216,17 @@ function PanelStudyBrowserTracking({
       // deprecated, 这里跳转会导致页面显示图片错误
       // if followups, auto go to compared mode if not
       // if (!currentTimepoint.ifBaseline && !ifCompareMode) {
-      //   navigate(`/viewer?StudyInstanceUIDs=${currentTimepoint.studyInstanceUid}&StudyInstanceUIDs=${lastTimepointStudy.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`, '_self');
+      //   navigate(`/viewer?StudyInstanceUIDs=${currentTimepoint.studyInstanceUid}&StudyInstanceUIDs=${lastTimepoint.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`, '_self');
       //   return;
       // }
 
       function ifTaskValid() {
-        if (!currentTimepoint || !baselineStudy) {
+        if (!currentTimepoint || !baselineTimepoint) {
           return false;
         }
 
         if (!currentTimepoint.ifBaseline) {
-          if (!lowestSODStudy || !lastTimepointStudy || !comparedTimepoint) {
+          if (!lowestSODTimepoint || !lastTimepoint || !comparedTimepoint) {
             return false;
           }
         }
@@ -239,15 +245,15 @@ function PanelStudyBrowserTracking({
       });
 
       sendTrackedMeasurementsEvent('UPDATE_BASELINE_TIMEPOINT', {
-        baselineTimepoint: baselineStudy,
+        baselineTimepoint: baselineTimepoint,
       });
 
       sendTrackedMeasurementsEvent('UPDATE_LOWEST_SOD_TIMEPOINT', {
-        lowestSODTimepoint: lowestSODStudy,
+        lowestSODTimepoint: lowestSODTimepoint,
       });
 
       sendTrackedMeasurementsEvent('UPDATE_LAST_TIMEPOINT', {
-        lastTimepoint: lastTimepointStudy,
+        lastTimepoint: lastTimepoint,
       });
 
       sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {

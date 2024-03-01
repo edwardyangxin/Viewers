@@ -10,8 +10,8 @@ const imageQualityMapping = {
   important_anatomy_invisible: '重要解剖结构不可见',
   missing_scan_slice: '扫描切片缺失',
   motion_artifact: '存在运动伪影',
-  poor_IV_contrast: 'IV造影不佳',
-  no_IV_contrast: '无IV期造影',
+  poor_IV_contrast: '注射期造影不佳',
+  no_IV_contrast: '无注射期造影',
   other: '其他',
 };
 

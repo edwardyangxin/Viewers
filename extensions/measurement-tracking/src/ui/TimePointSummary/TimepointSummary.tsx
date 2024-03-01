@@ -122,8 +122,8 @@ const TimePointSummary = ({
           </div>
         </div>
       )}
-      {/* no task go to next task or go to timepoint list */}
-      {!hasTask && (
+      {/* deprecated go back to task list */}
+      {/* {!hasTask && (
         <div className="flex items-center">
           <div className="flex-1">
             <div
@@ -141,7 +141,7 @@ const TimePointSummary = ({
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
