@@ -587,6 +587,7 @@ function getPastReportDialog(uiDialogService, trialTimePointInfo, report) {
     contentProps: {
       title: `往期报告(${trialTimePointInfo})`,
       value: {
+        imageQuality: report?.image_quality,
         targetFindings: targetFindings,
         nonTargetFindings: nonTargetFindings,
         newLesionFindings: newLesionFindings,
@@ -605,6 +606,17 @@ function getPastReportDialog(uiDialogService, trialTimePointInfo, report) {
         return (
           <>
             <div className="bg-slate-300 flex h-full flex-col ">
+              {/* image quality */}
+              <div className="flex flex-row justify-between pl-2 pb-2">
+                <div className="flex flex-row">
+                  <span className="text-black text-[14px] leading-[1.2]">
+                    { value.imageQuality ? 
+                      `图像质量: ${value.imageQuality?.selection?.label} (${value.imageQuality?.description})` : 
+                      '图像质量: 未知'}
+                  </span>
+                </div>
+              </div>
+              {/* lesion tables */}
               <div className="flex grow flex-col overflow-visible">
                 <div className="flex grow flex-col">
                   <TargetListTable tableDataSource={tableDataSource} />
