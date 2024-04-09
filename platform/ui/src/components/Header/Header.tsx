@@ -54,7 +54,9 @@ function Header({
             )}
             <div className="ml-4">
               {/* evibased, add Link to whitelabeling function */}
-              {WhiteLabeling?.createLogoComponentFn?.(React, Link, props) || <Svg name="logo-ohif" />}
+              {WhiteLabeling?.createLogoComponentFn?.(React, Link, props) || (
+                <Svg name="logo-ohif" />
+              )}
             </div>
           </div>
         </div>
