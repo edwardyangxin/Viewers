@@ -117,8 +117,7 @@ export {
   WindowLevelMenuItem,
   ImageScrollbar,
   ViewportOverlay,
-  // evibased
-  TimePointSummary,
+  MeasurementItem,
 } from './components';
 
 export { useSessionStorage } from './hooks';
