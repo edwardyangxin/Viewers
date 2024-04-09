@@ -2,18 +2,14 @@ import { hotkeys, utils } from '@ohif/core';
 import i18n from 'i18next';
 import { id } from './id';
 import initToolGroups from './initToolGroups';
-import moreTools from './moreTools';
-import moreToolsMpr from './moreToolsMpr';
 import toolbarButtons from './toolbarButtons';
+import moreTools from './moreTools';
 
 const { performAuditLog } = utils;
 
 // Allow this mode by excluding non-imaging modalities such as SR, SEG
 // Also, SM is not a simple imaging modalities, so exclude it.
 const NON_IMAGE_MODALITIES = ['SM', 'ECG', 'SR', 'SEG', 'RTSTRUCT'];
-
-const DEFAULT_TOOL_GROUP_ID = 'default';
-const MPR_TOOL_GROUP_ID = 'mpr';
 
 const ohif = {
   layout: '@ohif/extension-default.layoutTemplateModule.viewerLayout',
@@ -78,13 +74,8 @@ function modeFactory({ modeConfiguration }) {
      * Lifecycle hooks
      */
     onModeEnter: async ({ servicesManager, extensionManager, commandsManager }) => {
-      const {
-        measurementService,
-        toolbarService,
-        toolGroupService,
-        panelService,
-        customizationService,
-      } = servicesManager.services;
+      const { measurementService, toolbarService, toolGroupService, customizationService } =
+        servicesManager.services;
 
       measurementService.clearMeasurements();
 
@@ -96,7 +87,6 @@ function modeFactory({ modeConfiguration }) {
         '@ohif/extension-measurement-tracking.customizationModule.custom-context-menu',
       ]);
 
-      let unsubscribe;
       toolbarService.setDefaultTool({
         groupId: 'WindowLevel',
         itemId: 'WindowLevel',
@@ -112,33 +102,16 @@ function modeFactory({ modeConfiguration }) {
         ],
       });
 
-      const activateTool = () => {
-        toolbarService.recordInteraction(toolbarService.getDefaultTool());
-
-        // We don't need to reset the active tool whenever a viewport is getting
-        // added to the toolGroup.
-        unsubscribe();
-      };
-
-      // Since we only have one viewport for the basic cs3d mode and it has
-      // only one hanging protocol, we can just use the first viewport
-      ({ unsubscribe } = toolGroupService.subscribe(
-        toolGroupService.EVENTS.VIEWPORT_ADDED,
-        activateTool
-      ));
-
-      toolbarService.init(extensionManager);
-      toolbarService.addButtons([...toolbarButtons, ...moreTools, ...moreToolsMpr]);
-      // default button section is for the top level toolbar
-      toolbarService.createButtonSection(DEFAULT_TOOL_GROUP_ID, [
+      toolbarService.addButtons([...toolbarButtons, ...moreTools]);
+      toolbarService.createButtonSection('primary', [
         // evibased, top toolbar
         // 'MeasurementTools',
-        // anno tools
+        // annotation tools
         'Length',
         'Bidirectional',
         'ArrowAnnotate',
         'Rectangle',
-
+        // other tools
         'Zoom',
         'WindowLevel',
         'Pan',
@@ -149,8 +122,7 @@ function modeFactory({ modeConfiguration }) {
         'MoreTools',
       ]);
       toolbarService.createButtonSection(MPR_TOOL_GROUP_ID, [
-        // toolbar when MPR active
-        // 'MeasurementTools',
+        'MeasurementTools',
         'Zoom',
         'WindowLevel',
         'Pan',
@@ -158,7 +130,7 @@ function modeFactory({ modeConfiguration }) {
         // 'Layout',
         'MPR',
         'Crosshairs',
-        'MoreToolsMpr',
+        'MoreTools',
       ]);
 
       customizationService.addModeCustomizations([
@@ -209,7 +181,6 @@ function modeFactory({ modeConfiguration }) {
       const {
         toolGroupService,
         syncGroupService,
-        toolbarService,
         segmentationService,
         cornerstoneViewportService,
         uiDialogService,

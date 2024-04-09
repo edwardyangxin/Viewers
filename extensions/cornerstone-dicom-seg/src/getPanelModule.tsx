@@ -1,11 +1,17 @@
 import React from 'react';
 
 import { useAppConfig } from '@state';
+import { Toolbox } from '@ohif/ui';
 import PanelSegmentation from './panels/PanelSegmentation';
-import SegmentationToolbox from './panels/SegmentationToolbox';
 import i18n from '@ohif/i18n';
 
-const getPanelModule = ({ commandsManager, servicesManager, extensionManager, configuration }) => {
+const getPanelModule = ({
+  commandsManager,
+  servicesManager,
+  extensionManager,
+  configuration,
+  title,
+}) => {
   const { customizationService } = servicesManager.services;
 
   const wrappedPanelSegmentation = configuration => {
@@ -27,13 +33,14 @@ const getPanelModule = ({ commandsManager, servicesManager, extensionManager, co
   };
 
   const wrappedPanelSegmentationWithTools = configuration => {
-    const [appConfig] = useAppConfig();
     return (
       <>
-        <SegmentationToolbox
+        <Toolbox
           commandsManager={commandsManager}
           servicesManager={servicesManager}
           extensionManager={extensionManager}
+          buttonSectionId="segmentationToolbox"
+          title="Segmentation Tools"
           configuration={{
             ...configuration,
           }}
