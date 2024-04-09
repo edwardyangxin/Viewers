@@ -38,6 +38,13 @@ const filtersMeta = [
     gridCol: 3,
   },
   {
+    name: 'timepointStatus',
+    displayName: i18n.t('StudyList:TimepointStatus'),
+    inputType: 'None',
+    isSortable: false,
+    gridCol: 2,
+  },
+  {
     name: 'studyDate',
     displayName: i18n.t('StudyList:StudyDate'),
     inputType: 'DateRange',

@@ -37,7 +37,19 @@ const { availableLanguages, defaultLanguage, currentLanguage } = i18n;
 
 const seriesInStudiesMap = new Map();
 
-// evibased, task info mapping
+// evibased, info mapping, TODO: move to extension?
+const timepointStatusMap = {
+  'scheduled': '数据待上传',
+  'collecting': '数据上传中',
+  'appending': '数据补充中',
+  'QC-data': '数据待审核',
+  'reviewing': '待阅片',
+  'QC-report': '报告待审核',
+  'arbitration': '待仲裁',
+  'freezed': '报告数据锁定',
+  'archived': '报告数据已存档',
+};
+
 const taskTypeMap = {
   reading: '判读',
   arbitration: '仲裁',
@@ -51,6 +63,8 @@ const taskStatusMap = {
 
 /**
  * TODO: evibased, 重构到IRC的extension？
+ * 1. 为Manager添加按照项目过滤、timepoint status过滤
+ * 2. 
  * - debounce `setFilterValues` (150ms?)
  */
 function WorkList({
@@ -63,6 +77,14 @@ function WorkList({
   onRefresh,
   servicesManager,
 }) {
+  // evibased, get username & role
+  const { userAuthenticationService } = servicesManager.services;
+  const user = userAuthenticationService.getUser();
+  const username = user?.profile?.preferred_username;
+  const realm_role = user?.profile?.realm_role;
+  const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
+  const ifManager = !ifDoctor;
+
   const { hotkeyDefinitions, hotkeyDefaults } = hotkeysManager;
   const { show, hide } = useModal();
   const { t } = useTranslation();
@@ -280,13 +302,16 @@ function WorkList({
       trialSiteId,
       trialSiteDescription,
       tasks,
+      timepoint,
     } = study;
     // evibased, add trial info
     let trialTimePointInfo = trialTimePointId ? trialTimePointId.slice(1) : date;
     const ifBaseline = trialTimePointInfo === '0';
     const trialId = parseInt(trialTimePointInfo);
     trialTimePointInfo = ifBaseline ? '基线' : `访视${trialTimePointInfo}`;
-    // task info
+    // timepoint status
+    const timepointStatus = timepointStatusMap[timepoint.status] || '未知';
+    // task ''nfo
     let taskInfo = '';
     for (const task of tasks) {
       taskInfo += `${taskTypeMap[task.type]}(${task.username}): ${taskStatusMap[task.status]} <br>`;
@@ -332,6 +357,11 @@ function WorkList({
           key: 'trialTimePointInfo',
           content: <TooltipClipboard>{trialTimePointInfo}</TooltipClipboard>,
           gridCol: 3,
+        },
+        {
+          key: 'timepointStatus',
+          content: <span dangerouslySetInnerHTML={{ __html: timepointStatus }}></span>,
+          gridCol: 2,
         },
         {
           key: 'studyDate',
@@ -580,7 +610,7 @@ function WorkList({
             dataSourceConfigurationComponent ? () => dataSourceConfigurationComponent() : undefined
           }
         />
-        {hasStudies ? (
+        {(hasStudies || ifManager) ? (
           <div className="flex grow flex-col">
             <StudyListTable
               tableDataSource={tableDataSource.slice(offset, offsetAndTake)}

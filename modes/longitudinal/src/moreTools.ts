@@ -348,19 +348,19 @@ const moreTools = [
         //   ],
         //   'Calibration Line'
         // ),
-        // ToolbarService._createActionButton(
-        //   'TagBrowser',
-        //   'list-bullets',
-        //   'Dicom Tag Browser',
-        //   [
-        //     {
-        //       commandName: 'openDICOMTagViewer',
-        //       commandOptions: {},
-        //       context: 'DEFAULT',
-        //     },
-        //   ],
-        //   'Dicom Tag Browser'
-        // ),
+        ToolbarService._createActionButton(
+          'TagBrowser',
+          'list-bullets',
+          'Dicom Tag Browser',
+          [
+            {
+              commandName: 'openDICOMTagViewer',
+              commandOptions: {},
+              context: 'DEFAULT',
+            },
+          ],
+          'Dicom Tag Browser'
+        ),
       ],
     },
   },

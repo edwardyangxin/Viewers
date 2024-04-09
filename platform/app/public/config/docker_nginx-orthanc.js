@@ -88,5 +88,6 @@ window.config = {
     task_get_url: 'http://localhost:3000/api/task',
     task_update_url: 'http://localhost:3000/api/task',
     task_post_url: 'http://localhost:3000/api/task',
+    timepoint_get_url: 'http://localhost:3000/api-v2/api/timepoints/search',
   },
 };

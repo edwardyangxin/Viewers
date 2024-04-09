@@ -182,6 +182,16 @@ module.exports = (env, argv) => {
             'Host': 'localhost:3000',
           }
         },
+        '/api-v2': {
+          target: 'http://localhost:8081',
+          pathRewrite: { '^/api-v2': '' },
+          secure: false,
+          headers: {
+            'X-Forwarded-For': 'localhost',
+            'X-Real-IP': 'localhost',
+            'Host': 'localhost:8081',
+          }
+        },
         '/api': {
           target: 'https://api.evi-based.com',
           pathRewrite: { '^/api': '' },
