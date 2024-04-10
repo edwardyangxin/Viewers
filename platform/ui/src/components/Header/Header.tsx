@@ -63,13 +63,13 @@ function Header({
           <div className="flex items-center justify-center space-x-2">{children}</div>
         </div>
         <div className="absolute right-0 top-1/2 -translate-y-1/2 ">
-          <span className="text-common-light mr-3 text-lg">{t('Evibased Viewer System')}</span>
           <Dropdown
             id="options"
             showDropdownIcon={false}
             list={menuOptions}
             alignment="right"
           >
+            <span className="text-common-light mr-2 text-lg">{t('Evibased Viewer System')}</span>
             <IconButton
               id={'options-settings-icon'}
               variant="text"

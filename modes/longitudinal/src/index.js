@@ -87,21 +87,6 @@ function modeFactory({ modeConfiguration }) {
         '@ohif/extension-measurement-tracking.customizationModule.custom-context-menu',
       ]);
 
-      toolbarService.setDefaultTool({
-        groupId: 'WindowLevel',
-        itemId: 'WindowLevel',
-        interactionType: 'tool',
-        commands: [
-          {
-            commandName: 'setToolActive',
-            commandOptions: {
-              toolName: 'WindowLevel',
-            },
-            context: 'CORNERSTONE',
-          },
-        ],
-      });
-
       toolbarService.addButtons([...toolbarButtons, ...moreTools]);
       toolbarService.createButtonSection('primary', [
         // evibased, top toolbar
@@ -121,17 +106,19 @@ function modeFactory({ modeConfiguration }) {
         'MPR',
         'MoreTools',
       ]);
-      toolbarService.createButtonSection(MPR_TOOL_GROUP_ID, [
-        'MeasurementTools',
-        'Zoom',
-        'WindowLevel',
-        'Pan',
-        // 'Capture',
-        // 'Layout',
-        'MPR',
-        'Crosshairs',
-        'MoreTools',
-      ]);
+
+      // evibased, comment 没有需要两套toolbar，这里是一个为了MRP mode下toolbar的例子
+      // toolbarService.createButtonSection(MPR_TOOL_GROUP_ID, [
+      //   'MeasurementTools',
+      //   'Zoom',
+      //   'WindowLevel',
+      //   'Pan',
+      //   // 'Capture',
+      //   // 'Layout',
+      //   'MPR',
+      //   'Crosshairs',
+      //   'MoreTools',
+      // ]);
 
       customizationService.addModeCustomizations([
         {
