@@ -104,12 +104,20 @@ function PastReports({ servicesManager, extensionManager }) {
   };
 
   // past report ui
-  const getTabContent = () => {
+  function getTabContent() {
+    if (!Array.isArray(pastTimepoints) || pastTimepoints.length === 0) {
+      return null;
+    }
     return pastTimepoints.map(({ studyInstanceUid, trialTimePointId, reports }, timepointIndex) => {
       const trialTimePointInfo = trialTimePointId
         ? getTimepointName(trialTimePointId.slice(1))
         : '';
       // show all reports
+      if (!Array.isArray(reports) || reports.length === 0) {
+        return (
+          <React.Fragment key={`${studyInstanceUid}-pastReport-${timepointIndex}`}></React.Fragment>
+        );
+      }
       return reports.map((report, reportIndex) => {
         if (!report) {
           return (
@@ -205,7 +213,13 @@ function PastReports({ servicesManager, extensionManager }) {
   return (
     <>
       <div className="ohif-scrollbar invisible-scrollbar flex flex-1 flex-col overflow-auto">
-        {getTabContent()}
+        { 
+          pastTimepoints && pastTimepoints.length > 0 ? getTabContent() : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-lg text-gray-500">"无往期报告"</div>
+            </div>
+          )
+        }
       </div>
     </>
   );

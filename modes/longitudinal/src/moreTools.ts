@@ -56,67 +56,67 @@ const moreTools = [
           commands: 'flipViewportHorizontal',
           evaluate: 'evaluate.viewportProperties.toggle',
         }),
-        // evibased, TODO: move to top level
-        createButton({
-          id: 'ImageSliceSync',
-          icon: 'link',
-          label: 'Image Slice Sync',
-          tooltip: 'Enable position synchronization on stack viewports',
-          commands: {
-            commandName: 'toggleSynchronizer',
-            commandOptions: {
-              type: 'imageSlice',
-            },
-          },
-          listeners: {
-            [EVENTS.STACK_VIEWPORT_NEW_STACK]: {
-              commandName: 'toggleImageSliceSync',
-              commandOptions: { toggledState: true },
-            },
-          },
-          evaluate: 'evaluate.cornerstone.synchronizer',
-        }),
-        // evibased, commented out TODO:
-        createButton({
-          id: 'ReferenceLines',
-          icon: 'tool-referenceLines',
-          label: 'Reference Lines',
-          tooltip: 'Show Reference Lines',
-          commands: {
-            commandName: 'setToolEnabled',
-            commandOptions: {
-              toolName: 'ReferenceLines',
-              toggle: true, // Toggle the tool on/off upon click
-            },
-          },
-          listeners: {
-            [ViewportGridService.EVENTS.ACTIVE_VIEWPORT_ID_CHANGED]: ReferenceLinesListeners,
-            [ViewportGridService.EVENTS.VIEWPORTS_READY]: ReferenceLinesListeners,
-          },
-          evaluate: 'evaluate.cornerstoneTool.toggle',
-        }),
-        createButton({
-          id: 'ImageOverlay',
-          icon: 'toggle-dicom-overlay',
-          label: 'Image Overlay',
-          tooltip: 'Toggle Image Overlay',
-          commands: {
-            commandName: 'setToolEnabled',
-            commandOptions: {
-              toolName: 'ImageOverlayViewer',
-              toggle: true, // Toggle the tool on/off upon click
-            },
-          },
-          evaluate: 'evaluate.cornerstoneTool.toggle',
-        }),
-        createButton({
-          id: 'StackScroll',
-          icon: 'tool-stack-scroll',
-          label: 'Stack Scroll',
-          tooltip: 'Stack Scroll',
-          commands: setToolActiveToolbar,
-          evaluate: 'evaluate.cornerstoneTool',
-        }),
+        // evibased, move to top level
+        // createButton({
+        //   id: 'ImageSliceSync',
+        //   icon: 'link',
+        //   label: 'Image Slice Sync',
+        //   tooltip: 'Enable position synchronization on stack viewports',
+        //   commands: {
+        //     commandName: 'toggleSynchronizer',
+        //     commandOptions: {
+        //       type: 'imageSlice',
+        //     },
+        //   },
+        //   listeners: {
+        //     [EVENTS.STACK_VIEWPORT_NEW_STACK]: {
+        //       commandName: 'toggleImageSliceSync',
+        //       commandOptions: { toggledState: true },
+        //     },
+        //   },
+        //   evaluate: 'evaluate.cornerstone.synchronizer',
+        // }),
+        // evibased, commented out
+        // createButton({
+        //   id: 'ReferenceLines',
+        //   icon: 'tool-referenceLines',
+        //   label: 'Reference Lines',
+        //   tooltip: 'Show Reference Lines',
+        //   commands: {
+        //     commandName: 'setToolEnabled',
+        //     commandOptions: {
+        //       toolName: 'ReferenceLines',
+        //       toggle: true, // Toggle the tool on/off upon click
+        //     },
+        //   },
+        //   listeners: {
+        //     [ViewportGridService.EVENTS.ACTIVE_VIEWPORT_ID_CHANGED]: ReferenceLinesListeners,
+        //     [ViewportGridService.EVENTS.VIEWPORTS_READY]: ReferenceLinesListeners,
+        //   },
+        //   evaluate: 'evaluate.cornerstoneTool.toggle',
+        // }),
+        // createButton({
+        //   id: 'ImageOverlay',
+        //   icon: 'toggle-dicom-overlay',
+        //   label: 'Image Overlay',
+        //   tooltip: 'Toggle Image Overlay',
+        //   commands: {
+        //     commandName: 'setToolEnabled',
+        //     commandOptions: {
+        //       toolName: 'ImageOverlayViewer',
+        //       toggle: true, // Toggle the tool on/off upon click
+        //     },
+        //   },
+        //   evaluate: 'evaluate.cornerstoneTool.toggle',
+        // }),
+        // createButton({
+        //   id: 'StackScroll',
+        //   icon: 'tool-stack-scroll',
+        //   label: 'Stack Scroll',
+        //   tooltip: 'Stack Scroll',
+        //   commands: setToolActiveToolbar,
+        //   evaluate: 'evaluate.cornerstoneTool',
+        // }),
         createButton({
           id: 'invert',
           icon: 'tool-invert',
@@ -126,21 +126,21 @@ const moreTools = [
           evaluate: 'evaluate.viewportProperties.toggle',
         }),
         createButton({
-          id: 'Probe',
+          id: 'DragProbe',
           icon: 'tool-probe',
           label: 'Probe',
           tooltip: 'Probe',
           commands: setToolActiveToolbar,
           evaluate: 'evaluate.cornerstoneTool',
         }),
-        createButton({
-          id: 'Cine',
-          icon: 'tool-cine',
-          label: 'Cine',
-          tooltip: 'Cine',
-          commands: 'toggleCine',
-          evaluate: 'evaluate.cine',
-        }),
+        // createButton({
+        //   id: 'Cine',
+        //   icon: 'tool-cine',
+        //   label: 'Cine',
+        //   tooltip: 'Cine',
+        //   commands: 'toggleCine',
+        //   evaluate: 'evaluate.cine',
+        // }),
         createButton({
           id: 'Angle',
           icon: 'tool-angle',
@@ -158,14 +158,14 @@ const moreTools = [
           evaluate: 'evaluate.cornerstoneTool',
         }),
         // evibased, TODO: move to top level
-        createButton({
-          id: 'RectangleROI',
-          icon: 'tool-rectangle',
-          label: 'Rectangle',
-          tooltip: 'Rectangle',
-          commands: setToolActiveToolbar,
-          evaluate: 'evaluate.cornerstoneTool',
-        }),
+        // createButton({
+        //   id: 'RectangleROI',
+        //   icon: 'tool-rectangle',
+        //   label: 'Rectangle',
+        //   tooltip: 'Rectangle',
+        //   commands: setToolActiveToolbar,
+        //   evaluate: 'evaluate.cornerstoneTool',
+        // }),
         // createButton({
         //   id: 'CalibrationLine',
         //   icon: 'tool-calibration',

@@ -45,7 +45,7 @@ const toolbarButtons: Button[] = [
   // Measurement split button
   // {
   //   id: 'MeasurementTools',
-  //   type: 'ohif.splitButton',
+  //   uiType: 'ohif.splitButton',
   //   props: {
   //     groupId: 'MeasurementTools',
   //     // group evaluate to determine which item should move to the top
@@ -108,7 +108,7 @@ const toolbarButtons: Button[] = [
   // },
   {
     id: 'Length',
-    uitype: 'ohif.radioGroup',
+    uiType: 'ohif.radioGroup',
     props: {
       type: 'tool',
       icon: 'tool-length',
@@ -135,7 +135,7 @@ const toolbarButtons: Button[] = [
   },
   {
     id: 'Bidirectional',
-    type: 'ohif.radioGroup',
+    uiType: 'ohif.radioGroup',
     props: {
       type: 'tool',
       icon: 'tool-bidirectional',
@@ -161,7 +161,7 @@ const toolbarButtons: Button[] = [
   },
   {
     id: 'ArrowAnnotate',
-    type: 'ohif.radioGroup',
+    uiType: 'ohif.radioGroup',
     props: {
       type: 'tool',
       icon: 'tool-annotate',
@@ -187,7 +187,7 @@ const toolbarButtons: Button[] = [
   },
   {
     id: 'Rectangle',
-    type: 'ohif.radioGroup',
+    uiType: 'ohif.radioGroup',
     props: {
       type: 'tool',
       icon: 'tool-rectangle',
@@ -283,27 +283,30 @@ const toolbarButtons: Button[] = [
       ],
     },
   },
+  // evibased, new version of Image Slice Sync for reference
+  // createButton({
+  //   id: 'ImageSliceSync',
+  //   icon: 'link',
+  //   label: 'Image Slice Sync',
+  //   tooltip: 'Enable position synchronization on stack viewports',
+  //   commands: {
+  //     commandName: 'toggleSynchronizer',
+  //     commandOptions: {
+  //       type: 'imageSlice',
+  //     },
+  //   },
+  //   listeners: {
+  //     [EVENTS.STACK_VIEWPORT_NEW_STACK]: {
+  //       commandName: 'toggleImageSliceSync',
+  //       commandOptions: { toggledState: true },
+  //     },
+  //   },
+  //   evaluate: 'evaluate.cornerstone.synchronizer',
+  // }),
+  // evibased, old version of Image Slice Sync, use it for now
   {
     id: 'StackImageSync',
-    type: 'ohif.radioGroup',
-    props: {
-      type: 'toggle',
-      icon: 'link',
-      label: 'Stack Image Sync',
-      commands: [
-        {
-          commandName: 'toggleIRCImageSync',
-          commandOptions: {
-            toggledState: true,
-          },
-          context: 'CORNERSTONE', // command context
-        },
-      ],
-    },
-  },
-  {
-    id: 'StackImageSync',
-    type: 'ohif.radioGroup',
+    uiType: 'ohif.radioGroup',
     props: {
       type: 'toggle',
       icon: 'link',
@@ -336,6 +339,7 @@ const toolbarButtons: Button[] = [
       evaluate: 'evaluate.mpr',
     },
   },
+  // evibased, TODO: crosshairs not showing up when MRP mode is active
   {
     id: 'Crosshairs',
     uiType: 'ohif.radioGroup',

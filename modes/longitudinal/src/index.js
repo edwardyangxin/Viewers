@@ -82,15 +82,11 @@ function modeFactory({ modeConfiguration }) {
       // Init Default and SR ToolGroups
       initToolGroups(extensionManager, toolGroupService, commandsManager);
 
-      // init customizations
-      customizationService.addModeCustomizations([
-        '@ohif/extension-measurement-tracking.customizationModule.custom-context-menu',
-      ]);
-
       toolbarService.addButtons([...toolbarButtons, ...moreTools]);
       toolbarService.createButtonSection('primary', [
         // evibased, top toolbar
-        // 'MeasurementTools',
+        // group annotation tools
+        'MeasurementTools',
         // annotation tools
         'Length',
         'Bidirectional',
@@ -120,7 +116,9 @@ function modeFactory({ modeConfiguration }) {
       //   'MoreTools',
       // ]);
 
+      // evibased, init customizations, for custom context menu
       customizationService.addModeCustomizations([
+        '@ohif/extension-measurement-tracking.customizationModule.custom-context-menu',
         {
           id: 'segmentation.disableEditing',
           value: true,

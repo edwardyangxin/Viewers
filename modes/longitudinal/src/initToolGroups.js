@@ -7,6 +7,7 @@ function initDefaultToolGroup(extensionManager, toolGroupService, commandsManage
 
   const tools = {
     active: [
+      // default tools binding to mouse buttons
       {
         toolName: toolNames.WindowLevel,
         bindings: [{ mouseButton: Enums.MouseBindings.Primary }],
@@ -27,17 +28,21 @@ function initDefaultToolGroup(extensionManager, toolGroupService, commandsManage
         toolName: toolNames.ArrowAnnotate,
         configuration: {
           getTextCallback: (callback, eventDetails) =>
-            commandsManager.runCommand('IRCArrowTextCallback', {
-              callback,
-              eventDetails,
-            }, 'CORNERSTONE'),
+            commandsManager.runCommand(
+              'IRCArrowTextCallback',
+              {
+                callback,
+                eventDetails,
+              }, 'CORNERSTONE'),
 
           changeTextCallback: (data, eventDetails, callback) =>
-            commandsManager.runCommand('IRCArrowTextCallback', {
-              callback,
-              data,
-              eventDetails,
-            }, 'CORNERSTONE'),
+            commandsManager.runCommand(
+              'IRCArrowTextCallback',
+              {
+                callback,
+                data,
+                eventDetails,
+              }, 'CORNERSTONE'),
         },
       },
       { toolName: toolNames.Bidirectional },
@@ -53,8 +58,13 @@ function initDefaultToolGroup(extensionManager, toolGroupService, commandsManage
       { toolName: toolNames.SegmentationDisplay },
       { toolName: toolNames.CalibrationLine },
     ],
-    // enabled
-    enabled: [{ toolName: toolNames.ImageOverlayViewer }, { toolName: toolNames.ReferenceLines }],
+    // enabled by default
+    enabled: [
+    //   { toolName: toolNames.ImageOverlayViewer }, 
+    //   { toolName: toolNames.ReferenceLines }
+    ],
+    // disabled by default
+    disabled: [],
   };
 
   toolGroupService.createToolGroupAndAddTools(toolGroupId, tools);
@@ -179,6 +189,7 @@ function initMPRToolGroup(extensionManager, toolGroupService, commandsManager) {
       { toolName: toolNames.PlanarFreehandROI },
       { toolName: toolNames.SegmentationDisplay },
     ],
+    // disabled by default
     disabled: [
       {
         toolName: toolNames.Crosshairs,
@@ -193,9 +204,6 @@ function initMPRToolGroup(extensionManager, toolGroupService, commandsManager) {
       },
       { toolName: toolNames.ReferenceLines },
     ],
-
-    // enabled
-    // disabled
   };
 
   toolGroupService.createToolGroupAndAddTools('mpr', tools);
