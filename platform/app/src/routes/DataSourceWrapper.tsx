@@ -126,6 +126,7 @@ function DataSourceWrapper(props) {
     initializeDataSource();
   }, [dataSource]);
 
+  // evibased, enter/leave task list page one time job, audit log
   useEffect(() => {
     // evibased, audit log, enter task list page
     const auditMsg = 'enter task list page';
@@ -160,6 +161,7 @@ function DataSourceWrapper(props) {
     };
   }, []);
 
+  // evibased, get user role and task list, get studies by task list
   useEffect(() => {
     if (!isDataSourceInitialized) {
       return;
@@ -168,14 +170,14 @@ function DataSourceWrapper(props) {
     const queryFilterValues = _getQueryFilterValues(location.search, STUDIES_LIMIT);
 
     // evibased, get username & role
+    // evibased, based on role from user.profile.realm_role, get task list and filter studies
     const user = userAuthenticationService.getUser();
     const username = user?.profile?.preferred_username;
     const realm_role = user?.profile?.realm_role;
     const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
-    const ifManager = !ifDoctor;
+    const ifQC = realm_role ? realm_role.includes('QC') : false;
+    const ifManager = !ifDoctor && !ifQC;
 
-    // 204: no content
-    // evibased, based on role from user.profile.realm_role, get task list and filter studies
     async function getData() {
       setIsLoading(true);
       log.time(Enums.TimingEnum.SEARCH_TO_LIST);
@@ -183,8 +185,8 @@ function DataSourceWrapper(props) {
       const studyUIDInfoMap = {};
 
       // get filter queryFilterValues.studyInstanceUid list
-      // todo: extract to a function?
-      if (ifDoctor) {
+      // TODO: extract to a function?
+      if (ifDoctor || ifQC) {
         try {
           // doctor role, get task list by username
           // get task list by username and status
@@ -195,6 +197,10 @@ function DataSourceWrapper(props) {
             username: username,
             status: filterTaskStatus,
           };
+          if (ifQC) {
+            // data role, type QC?
+            fetchSearchParams.type = "QC";
+          }
           url.search = new URLSearchParams(fetchSearchParams).toString();
           const fetchOptions = {
             method: 'GET',
@@ -374,6 +380,7 @@ function DataSourceWrapper(props) {
         !isSamePage || (!isLoading && (newOffset !== previousOffset || isLocationUpdated));
 
       if (isDataInvalid) {
+        // evibased, fetch data: 1. timepoint list for manager, 2. task list for doctor/QC
         getData().catch(e => {
           console.error(e);
           // If there is a data source configuration API, then the Worklist will popup the dialog to attempt to configure it
