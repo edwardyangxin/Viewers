@@ -167,17 +167,19 @@ function DataSourceWrapper(props) {
 
     const queryFilterValues = _getQueryFilterValues(location.search, STUDIES_LIMIT);
 
+    // evibased, get username & role
+    const user = userAuthenticationService.getUser();
+    const username = user?.profile?.preferred_username;
+    const realm_role = user?.profile?.realm_role;
+    const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
+    const ifManager = !ifDoctor;
+
     // 204: no content
     // evibased, based on role from user.profile.realm_role, get task list and filter studies
     async function getData() {
       setIsLoading(true);
       log.time(Enums.TimingEnum.SEARCH_TO_LIST);
-      // evibased, get username & role
-      const user = userAuthenticationService.getUser();
-      const username = user?.profile?.preferred_username;
-      const realm_role = user?.profile?.realm_role;
-      const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
-      const ifManager = !ifDoctor;
+      // evibased, store studyInstanceUid to task info to avoid duplicate fetch
       const studyUIDInfoMap = {};
 
       // get filter queryFilterValues.studyInstanceUid list
@@ -187,28 +189,31 @@ function DataSourceWrapper(props) {
           // doctor role, get task list by username
           // get task list by username and status
           const authHeader = userAuthenticationService.getAuthorizationHeader();
-          const getTaskUrl = _appConfig['evibased']['task_get_url'];
+          const url = new URL(_appConfig['evibased']['task_get_url']);
           const filterTaskStatus = 'create';
-          const getTaskResponse = await fetch(
-            `${getTaskUrl}?username=${username}&status=${filterTaskStatus}`,
-            {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: authHeader.Authorization,
-              },
-            }
-          );
-          if (!getTaskResponse.ok) {
-            const body = await getTaskResponse.text();
-            throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+          const fetchSearchParams = {
+            username: username,
+            status: filterTaskStatus,
+          };
+          url.search = new URLSearchParams(fetchSearchParams).toString();
+          const fetchOptions = {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: authHeader.Authorization,
+            },
+          };
+          const response = await fetch(url, fetchOptions);
+          if (!response.ok) {
+            const data = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
           }
           let tasks = [];
-          if (getTaskResponse.status === 204) {
+          if (response.status === 204) {
             // no content
           } else {
-            const body = await getTaskResponse.json();
-            tasks = Array.isArray(body) ? body : [body];
+            const data = await response.json();
+            tasks = Array.isArray(data) ? data : [data];
           }
 
           // map studyInstanceUid to task
@@ -233,29 +238,32 @@ function DataSourceWrapper(props) {
           // no role default manager
           // get all timepoints with default Timepoint status
           // const authHeader = userAuthenticationService.getAuthorizationHeader();
-          const getTimepointUrl = _appConfig['evibased']['timepoint_get_url'];
+          const url = new URL(_appConfig['evibased']['timepoint_get_url']);
           const filterTimepointStatus = ['QC-data', 'reviewing', 'QC-report', 'arbitration'];
-
-          const getTimepointResponse = await fetch(
-            `${getTimepointUrl}?page=0&size=10000&search=status:${filterTimepointStatus.join('+')}`,
-            {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                // Authorization: authHeader.Authorization,
-              },
-            }
-          );
-          if (!getTimepointResponse.ok) {
-            const body = await getTimepointResponse.text();
-            throw new Error(`HTTP error! status: ${getTimepointResponse.status} body: ${body}`);
+          const fetchSearchParams = {
+            page: '0',
+            size: '10000',
+            search: `status:${filterTimepointStatus.join('+')}`,
+          };
+          url.search = new URLSearchParams(fetchSearchParams).toString();
+          const fetchOptions = {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              // Authorization: authHeader.Authorization,
+            },
+          };
+          const reponse = await fetch(url, fetchOptions);
+          if (!reponse.ok) {
+            const data = await reponse.text();
+            throw new Error(`HTTP error! status: ${reponse.status} data: ${data}`);
           }
           let timepoints = [];
-          if (getTimepointResponse.status === 204) {
+          if (reponse.status === 204) {
             // no content
           } else {
-            const body = await getTimepointResponse.json();
-            timepoints = Array.isArray(body) ? body : [body];
+            const data = await reponse.json();
+            timepoints = Array.isArray(data) ? data : [data];
           }
 
           // map studyInstanceUid to task
@@ -292,32 +300,39 @@ function DataSourceWrapper(props) {
           }
           // still need to fetch task info
           const authHeader = userAuthenticationService.getAuthorizationHeader();
-          const getTaskUrl = _appConfig['evibased']['task_get_url'];
-          let fetchTaskUrl;
+          const url = new URL(_appConfig['evibased']['task_get_url']);
+          let fetchSearchParams = {};
           if (ifDoctor) {
             // if doctor, fetch only doctor task info
-            fetchTaskUrl = `${getTaskUrl}?StudyInstanceUID=${StudyInstanceUID}&username=${username}`;
+            fetchSearchParams = {
+              StudyInstanceUID: StudyInstanceUID,
+              username: username,
+            };
           } else {
-            fetchTaskUrl = `${getTaskUrl}?StudyInstanceUID=${StudyInstanceUID}`;
+            fetchSearchParams = {
+              StudyInstanceUID: StudyInstanceUID,
+            };
           }
-          const getTaskResponse = await fetch(fetchTaskUrl, {
+          url.search = new URLSearchParams(fetchSearchParams).toString();
+          const fetchOptions = {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
               Authorization: authHeader.Authorization,
             },
-          });
-          if (!getTaskResponse.ok) {
+          };
+          const response = await fetch(url, fetchOptions);
+          if (!response.ok) {
             study.tasks = [];
-            const body = await getTaskResponse.text();
-            throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+            const data = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
           }
           let tasks = [];
-          if (getTaskResponse.status === 204) {
+          if (response.status === 204) {
             // no content
           } else {
-            const body = await getTaskResponse.json();
-            tasks = Array.isArray(body) ? body : [body];
+            const data = await response.json();
+            tasks = Array.isArray(data) ? data : [data];
           }
           study.tasks = tasks;
         } catch (e) {
@@ -364,6 +379,11 @@ function DataSourceWrapper(props) {
           // If there is a data source configuration API, then the Worklist will popup the dialog to attempt to configure it
           // and attempt to resolve this issue.
           if (dataSource.getConfig().configurationAPI) {
+            return;
+          }
+
+          // evibased, manager and no data, just go to timepoint list
+          if (ifManager) {
             return;
           }
 

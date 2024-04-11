@@ -313,7 +313,7 @@ function WorkList({
     const trialId = parseInt(trialTimePointInfo);
     trialTimePointInfo = ifBaseline ? '基线' : `访视${trialTimePointInfo}`;
     // timepoint status
-    const timepointStatus = timepointStatusMap[timepoint.status] || '未知';
+    const timepointStatus = timepointStatusMap[timepoint?.status] || '未知';
     // task ''nfo
     let taskInfo = '';
     for (const task of tasks) {

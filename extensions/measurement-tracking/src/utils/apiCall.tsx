@@ -1,30 +1,35 @@
 async function getTaskByUserAndUID(
-  url,
+  getTaskUrl,
   Authorization,
   username: string,
   studyUID: string,
   status = 'create'
 ) {
-  const getTaskResponse = await fetch(
-    `${url}?username=${username}&StudyInstanceUID=${studyUID}&status=${status}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: Authorization,
-      },
-    }
-  );
-  if (!getTaskResponse.ok) {
-    const body = await getTaskResponse.text();
-    throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+  const url = new URL(getTaskUrl);
+  const fetchSearchParams = {
+    username: username,
+    StudyInstanceUID: studyUID,
+    status: status,
+  };
+  url.search = new URLSearchParams(fetchSearchParams).toString();
+  const fetchOptions = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: Authorization,
+    },
+  };
+  const response = await fetch(url, fetchOptions);
+  if (!response.ok) {
+    const data = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
   }
   let tasks = [];
-  if (getTaskResponse.status === 204) {
+  if (response.status === 204) {
     // no content
   } else {
-    const body = await getTaskResponse.json();
-    tasks = Array.isArray(body) ? body : [body];
+    const data = await response.json();
+    tasks = Array.isArray(data) ? data : [data];
   }
   return tasks;
 }
