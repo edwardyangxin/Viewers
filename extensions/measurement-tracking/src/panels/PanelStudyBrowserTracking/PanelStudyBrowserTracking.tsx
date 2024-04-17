@@ -109,25 +109,25 @@ function PanelStudyBrowserTracking({
       // get user task
       const authHeader = userAuthenticationService.getAuthorizationHeader();
       const username = getUserName(userAuthenticationService);
-      const tasks = await getTaskByUserAndUID(appConfig['evibased']['task_get_url'], authHeader?.Authorization, username, currentStudyInstanceUID);
-      let currentTask = null;
-      tasks.forEach(task => {
-        // find the first task with status 'create' and type in ['reading'--阅片, 'arbitration'--裁判, 'QC'--质控']
-        if (['reading', 'arbitration', 'QC'].includes(task.type) && ['create'].includes(task.status)) {
-          currentTask = task;
-        }
-      });
-      if (currentTask) {
-        sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
-          currentTask: currentTask,
-        });
-        // set ifReadonlyMode to commandsManager CORNERSTONE context
-        // TODO: readonly mode refactor
-        const ifReadonlyMode = ['QC', 'arbitration'].includes(currentTask.type);
-        commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
-      }
 
-      // current study qido
+      // apiv2 graphql
+      const userTasks = await getTaskByUserAndUID(appConfig['evibased']['graphqlDR'], authHeader?.Authorization, username, currentStudyInstanceUID);
+      if (!userTasks || !userTasks.length) {
+        // pop warning dialog
+        popContactAdminDialog(uiDialogService);
+        return;
+      }
+      // only use the first task, assume only one task for each study
+      const currentTask = userTasks[0];
+      sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
+        currentTask: currentTask,
+      });
+      // set ifReadonlyMode to commandsManager CORNERSTONE context
+      // TODO: readonly mode refactor
+      const ifReadonlyMode = ['QC', 'arbitration'].includes(currentTask.type);
+      commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
+
+      // current study qido, PACS featch all related studies
       const qidoForStudyUID = await dataSource.query.studies.search({
         studyInstanceUid: StudyInstanceUID,
       });
@@ -138,7 +138,6 @@ function PanelStudyBrowserTracking({
       }
 
       let qidoStudiesForPatient = qidoForStudyUID;
-
       // try to fetch the prior studies based on the patientID if the
       // server can respond.
       try {
@@ -148,19 +147,49 @@ function PanelStudyBrowserTracking({
       }
 
       let mappedStudies = _mapDataSourceStudies(qidoStudiesForPatient);
-      if (appConfig.evibased['use_report_api']) {
-        mappedStudies = await _fetchBackendReports(
-          appConfig,
-          userAuthenticationService,
-          currentTask,
-          mappedStudies
-        );
+      // evibased, fetch reports for each studies for current username, apiv2 graphql
+      mappedStudies = await _fetchBackendReports(
+        appConfig,
+        userAuthenticationService,
+        currentTask,
+        mappedStudies
+      );
+
+      // evibased, filter attributes and get actuallyMappedStudies
+      const currentTimepoint = currentTask.timepoint;
+      const currentSubject = currentTimepoint.subject;
+      const subjectTimepoints = currentSubject.timepoints;
+      const currentTimepointIndex = subjectTimepoints.findIndex(tp => tp.UID === currentTimepoint.UID);
+      if (currentTimepointIndex === -1) {
+        console.error('current timepoint not found in subject timepoints');
+        popContactAdminDialog(uiDialogService);
+        return;
+      }
+      const baselineTimepoint = subjectTimepoints[0];
+      if (baselineTimepoint.cycle !== '00') {
+        console.error('baseline timepoint cycle not 00');
+        popContactAdminDialog(uiDialogService);
+        return;
       }
 
-      const actuallyMappedStudies = [];
-      let currentTimepoint = null;
+      const ifCurrentTimepointBaseline = currentTimepointIndex === 0;
+      const lastTimepoint = ifCurrentTimepointBaseline ? null : subjectTimepoints[currentTimepointIndex - 1];
       let comparedTimepoint = null;
+      const actuallyMappedStudies = [];
       for (const qidoStudy of mappedStudies) {
+        // evibased, check if qidoStudy UID/TrialTimepointId matches subjectTimepoints info
+        const qidoStudyUIDIndex = subjectTimepoints.findIndex(tp => tp.UID === qidoStudy.StudyInstanceUID);
+        if (qidoStudyUIDIndex === -1) {
+          console.error('qidoStudy not found in subject timepoints');
+          popContactAdminDialog(uiDialogService);
+          return;
+        }
+        // TODO: evibased, 后续要报错当不匹配时，暂时comment掉
+        // if (qidoStudy.TrialTimePointId !== subjectTimepoints[qidoStudyUIDIndex].cycle) {
+        //   console.error('qidoStudy cycle not match timepoint cycle');
+        //   popContactAdminDialog(uiDialogService);
+        //   return;
+        // }
         const selectedStudyAttributes = {
           studyInstanceUid: qidoStudy.StudyInstanceUID,
           date: formatDate(qidoStudy.StudyDate) || t('NoStudyDate'),
@@ -168,32 +197,42 @@ function PanelStudyBrowserTracking({
           modalities: qidoStudy.ModalitiesInStudy,
           numInstances: qidoStudy.NumInstances,
           trialTimePointId: qidoStudy.TrialTimePointId, //evibased, trial info
-          reports: qidoStudy.reports,
-          ifPrimary: currentStudyInstanceUID === qidoStudy.StudyInstanceUID,
+          reports: qidoStudy.reports, //evibased, reports
+          timepoint: subjectTimepoints[qidoStudyUIDIndex], //evibased, timepoint info
         };
         actuallyMappedStudies.push(selectedStudyAttributes);
-        if (selectedStudyAttributes.ifPrimary) {
-          currentTimepoint = selectedStudyAttributes;
-        } else if (comparedStudyInstanceUID === selectedStudyAttributes.studyInstanceUid) {
+        // update currentTimepoint, comparedTimepoint, lastTimepoint, baselineTimepoint
+        if (currentTimepoint.UID === qidoStudy.StudyInstanceUID) {
+          selectedStudyAttributes.ifPrimary = true;
+          sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT', {
+            currentTimepoint: selectedStudyAttributes,
+          });
+        }
+        if (comparedStudyInstanceUID === qidoStudy.StudyInstanceUID) {
+          selectedStudyAttributes.ifCompared = true;
           comparedTimepoint = selectedStudyAttributes;
+        }
+        if (baselineTimepoint.UID === qidoStudy.StudyInstanceUID) {
+          selectedStudyAttributes.ifBaseline = true;
+          sendTrackedMeasurementsEvent('UPDATE_BASELINE_TIMEPOINT', {
+            baselineTimepoint: selectedStudyAttributes,
+          });
+        }
+        if (lastTimepoint && lastTimepoint.UID === qidoStudy.StudyInstanceUID) {
+          selectedStudyAttributes.ifLastTimepoint = true;
+          sendTrackedMeasurementsEvent('UPDATE_LAST_TIMEPOINT', {
+            lastTimepoint: selectedStudyAttributes,
+          });
         }
       }
 
+      // TODO, determine currentTimepoint, comparedTimepoint, lastTimepoint, baselineTimepoint
+      // let currentTimepoint = null;
+
       // get last timepoint and baseline timepoint, lowest SOD timepoint
-      let lastTimepoint = undefined;
-      const lastTimepointId = parseInt(currentTimepoint.trialTimePointId.slice(1)) - 1;
-      let baselineTimepoint = undefined;
+      // TODO: 使用数据库中的BOR索引
       let lowestSODTimepoint = undefined;
-      for (let study of actuallyMappedStudies) {
-        const timepointId = parseInt(study.trialTimePointId.slice(1));
-        if (timepointId === 0) {
-          study.ifBaseline = true;
-          baselineTimepoint = study;
-        }
-        if (timepointId === lastTimepointId) {
-          study.ifLastTimepoint = true;
-          lastTimepoint = study;
-        }
+      for (const study of actuallyMappedStudies) {
         const reports = study.reports;
         if (reports && reports.length > 0) {
           // TODO: 默认使用了reports[0]第一个report
@@ -203,7 +242,7 @@ function PanelStudyBrowserTracking({
             // NE, 不可评估, 不作为最低SOD访视点
             continue;
           }
-          const sod = parseFloat(reports[0].SOD);
+          const sod = parseFloat(selectedReport.SOD);
           study.SOD = sod;
           if (sod) {
             if (!lowestSODTimepoint || sod < lowestSODTimepoint.SOD) {
@@ -240,20 +279,9 @@ function PanelStudyBrowserTracking({
         popContactAdminDialog(uiDialogService);
       }
 
-      sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT', {
-        currentTimepoint: currentTimepoint,
-      });
-
-      sendTrackedMeasurementsEvent('UPDATE_BASELINE_TIMEPOINT', {
-        baselineTimepoint: baselineTimepoint,
-      });
-
+      // update lowestSODTimepoint, comparedTimepoint
       sendTrackedMeasurementsEvent('UPDATE_LOWEST_SOD_TIMEPOINT', {
         lowestSODTimepoint: lowestSODTimepoint,
-      });
-
-      sendTrackedMeasurementsEvent('UPDATE_LAST_TIMEPOINT', {
-        lastTimepoint: lastTimepoint,
       });
 
       sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {
@@ -264,6 +292,7 @@ function PanelStudyBrowserTracking({
         appConfig: appConfig,
       });
 
+      // update actuallyMappedStudies to studyDisplayList
       setStudyDisplayList(prevArray => {
         const ret = [...actuallyMappedStudies];
         for (const study of prevArray) {
@@ -656,48 +685,81 @@ function _mapDataSourceStudies(studies) {
 // evibased, fetch data from API backend
 async function _fetchBackendReports(appConfig, userAuthenticationService, currentTask, mappedStudies) {
   console.log('fetching Backend reports for: ', mappedStudies);
-
+  const subjectId = mappedStudies[0].PatientID;
   try {
-    const reportFetchUrl = appConfig.evibased['report_fetch_url'];
     // get username from userAuthenticationService
     const authHeader = userAuthenticationService.getAuthorizationHeader();
     const username = getUserName(userAuthenticationService);
     const ifReadingTask = currentTask ? currentTask.type === 'reading' : false;
+    // get all subject related tasks and reports
+    // get url headers and body
+    const url = new URL(appConfig.evibased['graphqlDR']);
+    const headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    // headers.append("Authorization", authHeader?.Authorization);  //disable for apiv2 for now
+    // if filter by task username
+    let graphqlBody;
+    if (ifReadingTask) {
+      // reading task only see own reports
+      graphqlBody = JSON.stringify({
+        query: `query MyQuery {\n  subjectBySubjectId(subjectId: \"${subjectId}\", usernameTask: \"${username}\") {\n    subjectId\n    history\n    disease\n    timepoints {\n      UID\n      cycle\n      status\n      tasks {\n        id\n        type\n        username\n        status\n        userAlias\n        report {\n          SOD\n          createTime\n          id\n          measurements\n          nonTargetResponse\n          reportComment\n          reportInfo\n          reportTemplate\n          reportTemplateVersion\n          reportVersion\n          response\n          targetResponse\n          username\n        }\n      }\n    }\n  }\n}`,
+        variables: {},
+      });
+    } else {
+      // other see all reports
+      graphqlBody = JSON.stringify({
+        query: `query MyQuery {\n  subjectBySubjectId(subjectId: \"${subjectId}\") {\n    subjectId\n    history\n    disease\n    timepoints {\n      UID\n      cycle\n      status\n      tasks {\n        id\n        type\n        username\n        status\n        userAlias\n        report {\n          SOD\n          createTime\n          id\n          measurements\n          nonTargetResponse\n          reportComment\n          reportInfo\n          reportTemplate\n          reportTemplateVersion\n          reportVersion\n          response\n          targetResponse\n          username\n        }\n      }\n    }\n  }\n}`,
+        variables: {},
+      });
+    }
+    const requestOptions = {
+      method: 'POST',
+      headers: headers,
+      body: graphqlBody,
+      // redirect: "follow"
+    };
+    const response = await fetch(url, requestOptions);
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
+    }
+    let subjectData;
+    const body = await response.json();
+    if (response.status >= 200 && response.status < 300) {
+      subjectData = body.data.subjectBySubjectId;
+    } else {
+      throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
+    }
+
+    const timepoints = subjectData?.timepoints;
+    if (!timepoints || !timepoints.length) {
+      console.log('no timepoints for subject: ', subjectId);
+      return mappedStudies;
+    }
+    const UIDTimepointMap = timepoints.reduce((map, timepoint) => {
+      map[timepoint.UID] = timepoint;
+      return map;
+    }, {});
+
     // loop through all studies
     for (let i = 0; i < mappedStudies.length; i++) {
       const study = mappedStudies[i];
-      // get reports from reportFetchUrl by http request
-      let fetchUrl;
-      if (ifReadingTask) {
-        // doctor only see own reports
-        fetchUrl = `${reportFetchUrl}?username=${username}&StudyInstanceUID=${study.StudyInstanceUID}`;
-      } else {
-        // other see all reports
-        fetchUrl = `${reportFetchUrl}?StudyInstanceUID=${study.StudyInstanceUID}`;
-      }
-      const response = await fetch(fetchUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authHeader?.Authorization,
-        },
-      });
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
-      }
-
-      let reports = [];
-      if (response.status === 204) {
-        // no content
-        console.log('no reports for study: ', study.StudyInstanceUID);
-      } else {
-        const body = await response.json();
-        reports = Array.isArray(body) ? body : [body];
-      }
 
       // add reports to study
-      study['reports'] = reports;
+      study['timepoint'] = UIDTimepointMap[study.StudyInstanceUID] || null;
+      study['tasks'] = study['timepoint'] ? study['timepoint'].tasks : [];
+      study['reports'] = [];
+      if (study['tasks'] && study['tasks'].length) {
+        study['reports'] = study['tasks'].reduce((reports, task) => {
+          if (task.report && task.report.id) {
+            // copy task.report to report
+            const report = { ...task.report };
+            report.task = task;
+            reports.push(report);
+          }
+          return reports;
+        }, []);
+      }
     }
   } catch (error) {
     console.error('fetch reports error: ', error);

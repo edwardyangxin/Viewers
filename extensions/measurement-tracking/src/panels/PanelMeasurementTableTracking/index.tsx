@@ -256,12 +256,12 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   useEffect(() => {
     console.log('successSaveReport:', successSaveReport);
     _refreshTaskInfo(successSaveReport);
-  }, [ successSaveReport ]);
+  }, [ successSaveReport, currentTask ]);
 
   // update compared report info based on comparedTimepoint
   useEffect(() => {
-    if (!comparedTimepoint) { 
-      return; 
+    if (!comparedTimepoint) {
+      return;
     }
     const {
       studyInstanceUid,
@@ -273,7 +273,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       trialTimePointId,
       reports,
     } = comparedTimepoint;
-    const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId.slice(1)) : '';
+    // const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId) : '';
     // 现在只取第一个report，作为阅片任务的对比报告
     const report = reports?.[0];
 
@@ -335,24 +335,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     // get taskInfo
     const userTasks = await _getUserTaskInfo();
     let nextTask = undefined;
-    let taskInfo = {
-      nextTask: nextTask,
-      totalTask: undefined,
-      userTasks: [],
-    };
-    if (userTasks.length > 0) {
-      // get next task study
+    if (userTasks && userTasks.length > 0) {
+      // get next task info,
       for (const task of userTasks) {
         if (task.timepoint.UID !== StudyInstanceUIDs[0]) {
+          // the next task that is not current task
           nextTask = task;
           break;
         }
       }
-      taskInfo = {
-        nextTask: nextTask,
-        totalTask: userTasks.length,
-        userTasks: userTasks,
-      };
     }
 
     if (navigateToNextTask) {
@@ -361,7 +352,11 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     } else {
       // update taskInfo
       sendTrackedMeasurementsEvent('UPDATE_TASK_INFO', {
-        taskInfo: taskInfo,
+        taskInfo: {
+          nextTask: nextTask,
+          totalTask: userTasks ? userTasks.length : 0,
+          userTasks: userTasks ? userTasks : [],
+        },
       });
     }
 
@@ -369,26 +364,33 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   }
 
   async function _navigateToNextTask(nextTask) {
-    if (!nextTask) {
+    if (!nextTask || !nextTask.timepoint) {
       navigate('/');
       return;
     }
-    const studyUID = nextTask?.timepoint?.UID;
-    const trialId = nextTask?.timepoint?.cycle;
-    const ifBaseline = trialId === 0;
+    const timepoint = nextTask.timepoint;
+    const studyUID = timepoint.UID;
+    const trialId = timepoint.cycle;
+    const ifBaseline = trialId === 0 || trialId === '0' || trialId === '00'; // now '00' is baseline, other form are deprecated
     if (ifBaseline) {
       navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
     } else {
-      const qidoForStudyUID = await dataSource.query.studies.search({
-        studyInstanceUid: studyUID,
-      });
-      if (!qidoForStudyUID?.length) {
-        // no data for study go back to task list
+      // get compared timepoint UID
+      const timepoints = timepoint.subject.timepoints;
+      // UID in timepoints is in descending order, "00", "01", "02", ...
+      // get index of studyUID in timepoints
+      const index = timepoints.findIndex(tp => tp.UID === studyUID);
+      if (index === -1) {
+        // no studyUID in timepoints, data error, go back to task list
         navigate('/');
+      } else if (index === 0) {
+        // first timepoint?? should not happen
+        navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
       }
-      const studyInfo = qidoForStudyUID[0];
-      const comparedStudy = await getStudyInfoByTrialId(dataSource, studyInfo?.mrn, `T${trialId - 1}`);
-      navigate(`/viewer?StudyInstanceUIDs=${studyUID},${comparedStudy?.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`);
+      const comparedUID = timepoints[index - 1].UID;
+      navigate(
+        `/viewer?StudyInstanceUIDs=${studyUID},${comparedUID}&hangingprotocolId=@ohif/timepointCompare`
+      );
     }
   }
 
@@ -403,39 +405,71 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   // evibased, get next tsak study
   async function _getUserTaskInfo() {
     try {
-      const authHeader = userAuthenticationService.getAuthorizationHeader();
+      // const authHeader = userAuthenticationService.getAuthorizationHeader();
       const username = userAuthenticationService.getUser().profile.preferred_username;
-      const getTaskUrl = appConfig['evibased']['task_get_url'];
-      const taskStatus = 'create';
-
-      const getTaskResponse = await fetch(`${getTaskUrl}?username=${username}&status=${taskStatus}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authHeader?.Authorization,
-        },
+      // taskType
+      const taskType = currentTask?.type;
+      if (!taskType) {
+        return [];
+      }
+      let taskTypeFilterList = [];
+      if (taskType in ['reading', 'arbitration']) {
+        taskTypeFilterList = ['reading', 'arbitration'];
+      } else if (taskType === 'QC') {
+        taskTypeFilterList = ['QC'];
+      }
+      if (taskTypeFilterList.length === 0) {
+        return [];
+      }
+      const taskStatusFilter = 'create';
+      // build graphql query
+      const url = new URL(appConfig['evibased']['graphqlDR']);
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+      const graphql = JSON.stringify({
+        query: `query GetUserTaskInfo {
+          tasks(search: "username:${username},type:${taskTypeFilterList.join('+')},status:${taskStatusFilter}") {
+            username
+            type
+            timepoint {
+              UID
+              status
+              cycle
+              subject {
+                id
+                subjectId
+                timepoints {
+                  UID
+                }
+              }
+            }
+            status
+            userAlias
+            id
+          }
+        }`,
+        variables: {},
       });
-      if (!getTaskResponse.ok) {
-        const body = await getTaskResponse.text();
-        throw new Error(`HTTP error! status: ${getTaskResponse.status} body: ${body}`);
+      const requestOptions = {
+        method: 'POST',
+        headers: headers,
+        body: graphql,
+      };
+      const response = await fetch(url, requestOptions);
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
       }
 
-      let tasks = [];
-      if (getTaskResponse.status === 204) {
-        // no content
+      let userTasks = [];
+      const body = await response.json();
+      if (response.status >= 200 && response.status < 300) {
+        userTasks = body.data.tasks;
       } else {
-        const body = await getTaskResponse.json();
-        tasks = Array.isArray(body) ? body : [body];
+        console.error(`HTTP error! status: ${response.status} body: ${body}`);
       }
 
-      // loop tasks and filter
-      const filteredTasks = [];
-      for (const task of tasks) {
-        if (['reading', 'arbitration'].includes(task.type) && ['create'].includes(task.status)) {
-          filteredTasks.push(task);
-        }
-      }
-      return filteredTasks;
+      return userTasks;
     } catch (error) {
       console.log(error);
       return [];
@@ -521,7 +555,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       nonTargetFindings,
       otherFindings,
     } = comparedReportInfo;
-    const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId.slice(1)) : '';
+    const trialTimePointName = trialTimePointId ? getTimepointName(trialTimePointId) : '';
     let SOD = undefined;
     let response = undefined;
     let username = null;
@@ -537,7 +571,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       <React.Fragment key={studyInstanceUid + '-pastReport'}>
         <PastReportItem
           studyInstanceUid={studyInstanceUid}
-          trialTimePointInfo={trialTimePointInfo}
+          trialTimePointInfo={trialTimePointName}
           // username={userAlias ? userAlias : username}
           username={username} // only for reading task now, show username instead of userAlias
           SOD={SOD}
@@ -547,7 +581,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             setExtentedComparedReport(!extendedComparedReport);
           }}
           onReportClick={() => {
-            getPastReportDialog(uiDialogService, report);
+            getPastReportDialog(uiDialogService, trialTimePointName, report);
           }}
           data-cy="compared-report-list"
         />
@@ -599,7 +633,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               extensionManager={extensionManager}
               currentTask={displayStudySummary.currentTask}
               taskInfo={displayStudySummary.taskInfo}
-              timepoint={displayStudySummary.timepoint ? displayStudySummary.timepoint.slice(1) : undefined}
+              timepoint={displayStudySummary.timepoint}
               lastTimepointInfo={lastTimepoint}
               currentLabels={targetFindings.length + nonTargetFindings.length}
             />

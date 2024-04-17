@@ -220,7 +220,7 @@ function TrackedCornerstoneViewport(props) {
   const comparedStudyInstanceUID = comparedTimepoint ? comparedTimepoint.studyInstanceUid : null;
   const clinicalTrialTimePointID =
     ClinicalTrialTimePointID &&
-    getTimepointName(ClinicalTrialTimePointID.slice(1)) +
+    getTimepointName(ClinicalTrialTimePointID) +
       (currentStudyInstanceUID === StudyInstanceUID ? '(当前)' : '') +
       (comparedStudyInstanceUID === StudyInstanceUID ? '(对比)' : '');
   return (

@@ -60,7 +60,7 @@ const StudyBrowser = ({
         const ifCurrentTimePoint = studyInstanceUid === currentStudyInstanceUID;
         const ifComparedTimePoint = studyInstanceUid === comparedStudyInstanceUID;
         const trialTimePointInfo = trialTimePointId
-          ? ` ${getTimepointName(trialTimePointId.slice(1))}` + (ifCurrentTimePoint ? '(当前)' : '') + (ifComparedTimePoint ? '(对比)' : '') 
+          ? ` ${getTimepointName(trialTimePointId)}` + (ifCurrentTimePoint ? '(当前)' : '') + (ifComparedTimePoint ? '(对比)' : '') 
           : date;
         return (
           <React.Fragment key={studyInstanceUid}>

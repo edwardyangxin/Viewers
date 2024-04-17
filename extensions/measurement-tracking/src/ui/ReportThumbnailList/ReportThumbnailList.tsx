@@ -8,13 +8,13 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
       id="ohif-thumbnail-list"
       className="ohif-scrollbar bg-secondary-main min-h-[150px] overflow-y-hidden"
     >
-      {reports.map(({ create_time, username, measurements, task, reportRef }, index) => {
+      {reports.map(({ createTime, username, measurements, task, reportRef }, index) => {
         const taskType = task?.type;
         const userAlias = task?.userAlias;
         const isArbitration = taskType === 'arbitration';
         const taskTypeStr = taskType ? `${TaskMapping[taskType]}报告` : '未知类型';
         // Convert ISO time string to Date object
-        const dateObject = new Date(create_time);
+        const dateObject = new Date(createTime);
         // Format local date as 'yyyy-MM-DD'
         const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
         const createDate = dateObject.toLocaleDateString('en-CA', options);

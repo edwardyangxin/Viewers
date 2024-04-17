@@ -48,7 +48,19 @@ function getTimepointName(timepointId) {
   if (timepointId === null || timepointId === undefined) {
     return '未知';
   }
-  return parseInt(timepointId) === 0 ? '基线' : `访视${timepointId}`;
+  // deprecated, remove timepoint prefix, 现在没有T前缀
+  timepointId = timepointId.startsWith('T') ? timepointId.slice(1) : timepointId;
+  let timepointName = '';
+  if (timepointId === '00' || timepointId === '0') {
+    timepointName = '基线';
+  } else if (timepointId.length === 3) {
+    // the 3rd character is the unscheduled visit number
+    const unscheduledVisitNumber = timepointId[2];
+    timepointName = `访视${timepointId.slice(0, 2)}后计划外(${unscheduledVisitNumber})`;
+  } else if (timepointId.length <= 2) {
+    timepointName = `访视${timepointId}`;
+  }
+  return timepointName;
 }
 
 function buildWadorsImageId(measurenemt, appConfig) {

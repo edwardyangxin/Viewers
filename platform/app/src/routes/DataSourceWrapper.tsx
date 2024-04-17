@@ -188,42 +188,57 @@ function DataSourceWrapper(props) {
       // TODO: extract to a function?
       if (ifDoctor || ifQC) {
         try {
-          // doctor role, get task list by username
-          // get task list by username and status
-          const authHeader = userAuthenticationService.getAuthorizationHeader();
-          const url = new URL(_appConfig['evibased']['task_get_url']);
+          // doctor/QC role, get task list by username
           const filterTaskStatus = 'create';
-          const fetchSearchParams = {
-            username: username,
-            status: filterTaskStatus,
+          // build graphql query
+          const url = new URL(_appConfig['evibased']['graphqlDR']);
+          const headers = new Headers();
+          headers.append('Content-Type', 'application/json');
+          const graphql = JSON.stringify({
+            query: `query GetUserTaskList {
+              tasks(search: "username:${username},status:${filterTaskStatus}") {
+                username
+                type
+                status
+                userAlias
+                id
+                timepoint {
+                  UID
+                  status
+                  cycle
+                  subject {
+                    id
+                    subjectId
+                    timepoints {
+                      UID
+                      cycle
+                    }
+                  }
+                }
+              }
+            }`,
+            variables: {},
+          });
+          const requestOptions = {
+            method: 'POST',
+            headers: headers,
+            body: graphql,
           };
-          if (ifQC) {
-            // data role, type QC?
-            fetchSearchParams.type = "QC";
-          }
-          url.search = new URLSearchParams(fetchSearchParams).toString();
-          const fetchOptions = {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: authHeader.Authorization,
-            },
-          };
-          const response = await fetch(url, fetchOptions);
+          const response = await fetch(url, requestOptions);
           if (!response.ok) {
-            const data = await response.text();
-            throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
+            const body = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
           }
-          let tasks = [];
-          if (response.status === 204) {
-            // no content
+          let userTasks = [];
+          const body = await response.json();
+          if (response.status >= 200 && response.status < 300) {
+            userTasks = body.data.tasks;
           } else {
-            const data = await response.json();
-            tasks = Array.isArray(data) ? data : [data];
+            console.error(`HTTP error! status: ${response.status} body: ${body}`);
           }
 
           // map studyInstanceUid to task
-          tasks.forEach(task => {
+          userTasks.forEach(task => {
             studyUIDInfoMap[task.timepoint.UID] = {};
             studyUIDInfoMap[task.timepoint.UID].timepoint = task.timepoint;
             studyUIDInfoMap[task.timepoint.UID].tasks = [task];
@@ -242,41 +257,58 @@ function DataSourceWrapper(props) {
       } else if (ifManager) {
         try {
           // no role default manager
-          // get all timepoints with default Timepoint status
-          // const authHeader = userAuthenticationService.getAuthorizationHeader();
-          const url = new URL(_appConfig['evibased']['timepoint_get_url']);
           const filterTimepointStatus = ['QC-data', 'reviewing', 'QC-report', 'arbitration'];
-          const fetchSearchParams = {
-            page: '0',
-            size: '10000',
-            search: `status:${filterTimepointStatus.join('+')}`,
+          // build graphql query
+          const url = new URL(_appConfig['evibased']['graphqlDR']);
+          const headers = new Headers();
+          headers.append('Content-Type', 'application/json');
+          const graphql = JSON.stringify({
+            query: `query GetManagerTimepointList {
+              timepoints(search: "status:${filterTimepointStatus.join('+')}") {
+                cycle
+                UID
+                subject {
+                  timepoints {
+                    UID
+                    cycle
+                  }
+                  subjectId
+                }
+                status
+                tasks {
+                  id
+                  status
+                  userAlias
+                  username
+                  type
+                }
+              }
+            }`,
+            variables: {},
+          });
+          const requestOptions = {
+            method: 'POST',
+            headers: headers,
+            body: graphql,
           };
-          url.search = new URLSearchParams(fetchSearchParams).toString();
-          const fetchOptions = {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              // Authorization: authHeader.Authorization,
-            },
-          };
-          const reponse = await fetch(url, fetchOptions);
-          if (!reponse.ok) {
-            const data = await reponse.text();
-            throw new Error(`HTTP error! status: ${reponse.status} data: ${data}`);
+          const response = await fetch(url, requestOptions);
+          if (!response.ok) {
+            const body = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
           }
           let timepoints = [];
-          if (reponse.status === 204) {
-            // no content
+          const body = await response.json();
+          if (response.status >= 200 && response.status < 300) {
+            timepoints = body.data.timepoints;
           } else {
-            const data = await reponse.json();
-            timepoints = Array.isArray(data) ? data : [data];
+            console.error(`HTTP error! status: ${response.status} body: ${body}`);
           }
 
           // map studyInstanceUid to task
           timepoints.forEach(tp => {
-            studyUIDInfoMap[tp.uid] = {};
-            studyUIDInfoMap[tp.uid].timepoint = tp;
-            studyUIDInfoMap[tp.uid].tasks = tp.tasks;
+            studyUIDInfoMap[tp.UID] = {};
+            studyUIDInfoMap[tp.UID].timepoint = tp;
+            studyUIDInfoMap[tp.UID].tasks = tp.tasks;
           });
           // filter studies by studyInstanceUid list
           queryFilterValues.studyInstanceUid = Object.keys(studyUIDInfoMap);

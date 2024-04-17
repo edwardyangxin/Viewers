@@ -18,7 +18,9 @@ const TimePointSummary = ({
   const location = useLocation();
   const taskType = currentTask?.type;
   const hasTask = taskType ? true : false;
-  const ifBaseline = timepoint && parseInt(timepoint) > 1 ? false : true;
+  // deprecated, remove timepoint prefix
+  timepoint = timepoint && timepoint.startsWith('T') ? timepoint.slice(1) : timepoint;
+  const ifBaseline = !timepoint || timepoint === '0' || timepoint === '00';
   const ifFinished = taskInfo.totalTask === undefined || taskInfo.totalTask === 0;
   const reports = lastTimepointInfo?.reports;
   let lastTarget = 0;

@@ -1,6 +1,8 @@
 window.config = {
   routerBasename: '/deep-response',
-  investigationalUseDialog: false,  // OHIF investigational dialog popup, disable it
+  investigationalUseDialog: {
+    option: 'never',
+  }, // OHIF investigational dialog popup, disable it
   whiteLabeling: {
     createLogoComponentFn: function(React, Link) {
       return React.createElement(

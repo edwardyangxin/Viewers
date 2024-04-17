@@ -307,11 +307,10 @@ function WorkList({
       tasks,
       timepoint,
     } = study;
-    // evibased, add trial info
-    let trialTimePointInfo = trialTimePointId ? trialTimePointId.slice(1) : date;
-    const ifBaseline = trialTimePointInfo === '0';
-    const trialId = parseInt(trialTimePointInfo);
-    trialTimePointInfo = ifBaseline ? '基线' : `访视${trialTimePointInfo}`;
+    // evibased, add trial info, remove "T" for old data, 现在没有前缀T
+    const trialTimePointInfo = (trialTimePointId && trialTimePointId.startsWith('T') ? trialTimePointId.slice(1) : trialTimePointId) || date;
+    const ifBaseline = trialTimePointInfo === '0' || trialTimePointInfo === '00';
+    const trialTimePointName = getTimepointName(trialTimePointInfo);
     // timepoint status
     const timepointStatus = timepointStatusMap[timepoint?.status] || '未知';
     // task ''nfo
@@ -360,7 +359,7 @@ function WorkList({
         },
         {
           key: 'trialTimePointInfo',
-          content: <TooltipClipboard>{trialTimePointInfo}</TooltipClipboard>,
+          content: <TooltipClipboard>{trialTimePointName}</TooltipClipboard>,
           gridCol: 3,
         },
         {
@@ -492,9 +491,22 @@ function WorkList({
                         query.append('StudyInstanceUIDs', studyInstanceUid);
                       } else {
                         // get the last study uid for comparison mode
-                        const comparedStudy = await getStudyInfoByTrialId(dataSource, mrn, `T${trialId - 1}`);
-                        query.append('StudyInstanceUIDs', studyInstanceUid + (comparedStudy ? `,${comparedStudy.studyInstanceUid}` : ''));
-                        query.append('hangingprotocolId', '@ohif/timepointCompare');
+                        // const comparedStudy = await getStudyInfoByTrialId(dataSource, mrn, `T${trialId - 1}`);
+                        const timepoints = timepoint?.subject?.timepoints;
+                        if (!timepoints) {
+                          query.append('StudyInstanceUIDs', studyInstanceUid);
+                        } else {
+                          const currentStudyIndex = timepoints.findIndex(tp => tp.UID === studyInstanceUid);
+                          if (currentStudyIndex === -1) {
+                            query.append('StudyInstanceUIDs', studyInstanceUid);
+                          } else if (currentStudyIndex === 0) {
+                            query.append('StudyInstanceUIDs', studyInstanceUid);
+                          } else {
+                            const comparedTimepointUID = timepoints[currentStudyIndex - 1].UID;
+                            query.append('StudyInstanceUIDs', studyInstanceUid + `,${comparedTimepointUID}`);
+                            query.append('hangingprotocolId', '@ohif/timepointCompare');
+                          }
+                        }
                       }
                       path += query.toString();
                       navigate(path);
@@ -674,13 +686,22 @@ function WorkList({
   );
 }
 
-// evibased, get study info by trial id
-async function getStudyInfoByTrialId(dataSource, mrn, trialId) {
-  const studies = await dataSource.query.studies.search({
-    patientId: mrn,
-  });
-  const comparedStudy = studies.find(s => s.trialTimePointId === trialId);
-  return comparedStudy;
+// evibased, get timepoint name, TODO: use extension utils
+function getTimepointName(timepointId) {
+  if (timepointId === null || timepointId === undefined) {
+    return '未知';
+  }
+  let timepointName = timepointId;
+  if (timepointId === '00' || timepointId === '0') {
+    timepointName = '基线';
+  } else if (timepointId.length === 3) {
+    // the 3rd character is the unscheduled visit number
+    const unscheduledVisitNumber = timepointId[2];
+    timepointName = `访视${timepointId.slice(0, 2)}后计划外(${unscheduledVisitNumber})`;
+  } else if (timepointId.length <= 2) {
+    timepointName = `访视${timepointId}`;
+  }
+  return timepointName;
 }
 
 WorkList.propTypes = {

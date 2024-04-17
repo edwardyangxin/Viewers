@@ -1,6 +1,8 @@
 window.config = {
   routerBasename: '/',
-  investigationalUseDialog: false,  // OHIF investigational dialog popup, disable it
+  investigationalUseDialog: {
+    option: 'never',
+  }, // OHIF investigational dialog popup, disable it
   whiteLabeling: {
     createLogoComponentFn: function(React, Link) {
       return React.createElement(
@@ -90,5 +92,6 @@ window.config = {
     task_update_url: 'http://localhost:3000/api/task',
     task_post_url: 'http://localhost:3000/api/task',
     timepoint_get_url: 'http://localhost:3000/api-v2/api/timepoints/search',
+    graphqlDR: 'http://localhost:3000/api-v2/graphql-dr/graphql',
   },
 };

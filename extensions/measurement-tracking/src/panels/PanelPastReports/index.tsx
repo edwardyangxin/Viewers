@@ -109,9 +109,7 @@ function PastReports({ servicesManager, extensionManager }) {
       return null;
     }
     return pastTimepoints.map(({ studyInstanceUid, trialTimePointId, reports }, timepointIndex) => {
-      const trialTimePointInfo = trialTimePointId
-        ? getTimepointName(trialTimePointId.slice(1))
-        : '';
+      const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId) : '';
       // show all reports
       if (!Array.isArray(reports) || reports.length === 0) {
         return (
