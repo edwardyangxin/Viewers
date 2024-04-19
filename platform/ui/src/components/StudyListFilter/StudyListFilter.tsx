@@ -6,6 +6,22 @@ import LegacyButton from '../LegacyButton';
 import Icon from '../Icon';
 import Typography from '../Typography';
 import InputGroup from '../InputGroup';
+import Select from '../Select';
+
+const timepointStatusMapping = {
+  'scheduled': '未上传',
+  'collecting': '上传中',
+  'appending': '补充数据中',
+  'QC-data': '数据待审核',
+  'reviewing': '阅片中',
+  'QC-report': '报告待审核',
+  'arbitration': '仲裁中',
+  'freezed': '已锁定',
+};
+const timepointStatusOptions = Object.keys(timepointStatusMapping).map(key => ({
+  value: key,
+  label: timepointStatusMapping[key],
+}));
 
 const StudyListFilter = ({
   filtersMeta,
@@ -16,9 +32,11 @@ const StudyListFilter = ({
   numOfStudies,
   onUploadClick,
   getDataSourceConfigurationComponent,
+  ifManager = false, // evibased, add ifManager to show the filters for manager
+  projects = [], // evibased, projects list for manager
 }) => {
   const { t } = useTranslation('StudyList');
-  const { sortBy, sortDirection } = filterValues;
+  const { sortBy, sortDirection, timepointStatus } = filterValues;
   const filterSorting = { sortBy, sortDirection };
   const setFilterSorting = sortingValues => {
     onChange({
@@ -27,6 +45,14 @@ const StudyListFilter = ({
     });
   };
   const isSortingEnabled = numOfStudies > 0 && numOfStudies <= 100;
+
+  // evibased,
+  const [timepointStatusValue, setTimepointStatusValue] = React.useState(timepointStatus.split('+'));
+  const [projectCode, setProjectCode] = React.useState(null);
+  const projectsOptions = projects.map(project => ({
+    value: project,
+    label: project,
+  }));
 
   return (
     <React.Fragment>
@@ -41,6 +67,7 @@ const StudyListFilter = ({
                 >
                   {t('StudyList')}
                 </Typography>
+                {/* evibased, upload to PACS, not working for now */}
                 {getDataSourceConfigurationComponent && getDataSourceConfigurationComponent()}
                 {onUploadClick && (
                   <div
@@ -49,6 +76,62 @@ const StudyListFilter = ({
                   >
                     <Icon name="icon-upload"></Icon>
                     <span>{t('Upload')}</span>
+                  </div>
+                )}
+                {/* evibased, if manager show project, timepoint status filters */}
+                {ifManager && (
+                  <div className="z-50 flex gap-2">
+                    {/* project list select */}
+                    <Select
+                      id="projectFilter"
+                      isClearable={true}
+                      isSearchable={true}
+                      placeholder="按照项目过滤"
+                      value={[projectCode]}
+                      onChange={(newSelection, action) => {
+                        console.info('newSelection:', newSelection, 'action:', action);
+                        setProjectCode(newSelection ? newSelection.value : null);
+                      }}
+                      options={projectsOptions}
+                    />
+                    {/* timepoint status filter */}
+                    <Select
+                      id="timepointStatusFilter"
+                      closeMenuOnSelect={false}
+                      isClearable={true}
+                      isMulti={true}
+                      isSearchable={true}
+                      placeholder="访视状态过滤"
+                      value={timepointStatusValue}
+                      onChange={(newSelection, action) => {
+                        console.info('newSelection:', newSelection, 'action:', action);
+                        // all actions are handled the same way
+                        // if (action === 'select-option') {
+                        //   setTimepointStatusValue([...newSelection]);
+                        // } else if (action === 'clear') {
+                        //   setTimepointStatusValue([...newSelection]);
+                        // } else if (action === 'deselect-option') {
+                        //   setTimepointStatusValue([...newSelection]);
+                        // }
+                        setTimepointStatusValue([...newSelection]);
+                        console.info('timepointStatusValue:', timepointStatusValue);
+                      }}
+                      options={timepointStatusOptions}
+                    />
+                    {/* refresh button */}
+                    <div
+                      className="text-primary-active flex cursor-pointer items-center gap-2 self-center text-lg font-semibold"
+                      onClick={() => {
+                        console.info('search button clicked');
+                        setFilterSorting({
+                          timepointStatus: timepointStatusValue ? timepointStatusValue.join('+') : '',
+                          projectCode: projectCode ? projectCode : null,
+                        });
+                      }}
+                    >
+                      <Icon name="icon-search"></Icon>
+                      <span>{'刷新'}</span>
+                    </div>
                   </div>
                 )}
               </div>

@@ -79,6 +79,7 @@ function WorkList({
   dataPath,
   onRefresh,
   servicesManager,
+  projects, // evibased, projects list for manager
 }) {
   // evibased, get username & role
   const { userAuthenticationService } = servicesManager.services;
@@ -86,7 +87,8 @@ function WorkList({
   const username = user?.profile?.preferred_username;
   const realm_role = user?.profile?.realm_role;
   const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
-  const ifManager = !ifDoctor;
+  const ifQC = realm_role ? realm_role.includes('QC') : false;
+  const ifManager = !ifDoctor && !ifQC;
 
   const { hotkeyDefinitions, hotkeyDefaults } = hotkeysManager;
   const { show, hide } = useModal();
@@ -230,6 +232,9 @@ function WorkList({
         // evibased, extract trialTimePointInfo number to 'TX'
         const match = currValue.match(/\d+/);
         queryString.trialTimePointId = match ? `T${match[0]}` : '';
+      } else if (key === 'timepointStatus') {
+        // evibased, assign timepoint status when timepointStatus appears
+        queryString[key] = currValue;
       } else if (currValue !== defaultValue) {
         queryString[key] = currValue;
       }
@@ -654,6 +659,8 @@ function WorkList({
           getDataSourceConfigurationComponent={
             dataSourceConfigurationComponent ? () => dataSourceConfigurationComponent() : undefined
           }
+          ifManager={ifManager}
+          projects={projects}
         />
         {(hasStudies || ifManager) ? (
           <div className="flex grow flex-col">
@@ -714,11 +721,8 @@ WorkList.propTypes = {
   servicesManager: PropTypes.instanceOf(ServicesManager),
 };
 
-const defaultFilterValues = {
+export const defaultFilterValues = {
   patientName: '',
-  // evibased, add trial info
-  trialProtocolDescription: '',
-  trialTimePointInfo: '',
   mrn: '',
   studyDate: {
     startDate: null,
@@ -733,6 +737,11 @@ const defaultFilterValues = {
   resultsPerPage: 25,
   datasources: '',
   configUrl: null,
+  // evibased,
+  trialProtocolDescription: '',
+  trialTimePointInfo: '',
+  timepointStatus: ['QC-data', 'reviewing', 'QC-report', 'arbitration'].join('+'), // manager filter timepoint status
+  projectCode: null, // manager filter project
 };
 
 function _tryParseInt(str, defaultValue) {

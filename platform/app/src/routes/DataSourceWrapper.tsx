@@ -6,6 +6,7 @@ import { useParams, useLocation } from 'react-router';
 import { useNavigate } from 'react-router-dom';
 import useSearchParams from '../hooks/useSearchParams.ts';
 import { utils } from '@ohif/core';
+import { defaultFilterValues } from './WorkList/WorkList.tsx';
 
 const { TimingEnum } = Types;
 const { performAuditLog } = utils;
@@ -177,6 +178,7 @@ function DataSourceWrapper(props) {
     const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
     const ifQC = realm_role ? realm_role.includes('QC') : false;
     const ifManager = !ifDoctor && !ifQC;
+    let projects = []; // evibased, project list for manager
 
     async function getData() {
       setIsLoading(true);
@@ -255,26 +257,39 @@ function DataSourceWrapper(props) {
           console.error(e);
         }
       } else if (ifManager) {
+        // default timepoint status filter
+        let filterTimepointStatus = defaultFilterValues.timepointStatus.split('+');
+        if (queryFilterValues?.timepointStatus && queryFilterValues.timepointStatus !== '') {
+          filterTimepointStatus = queryFilterValues.timepointStatus.split('+');
+          delete queryFilterValues.timepointStatus;
+        }
+        const projectCode = queryFilterValues.projectCode ? queryFilterValues.projectCode : null;
         try {
-          // no role default manager
-          const filterTimepointStatus = ['QC-data', 'reviewing', 'QC-report', 'arbitration'];
           // build graphql query
           const url = new URL(_appConfig['evibased']['graphqlDR']);
           const headers = new Headers();
           headers.append('Content-Type', 'application/json');
+          const filterStr = projectCode
+            ? `query GetManagerTimepointList { timepoints(projectCode: "${projectCode}", search: "status:${filterTimepointStatus.join('+')}")`
+            : `query GetManagerTimepointList { timepoints(search: "status:${filterTimepointStatus.join('+')}")`;
           const graphql = JSON.stringify({
-            query: `query GetManagerTimepointList {
-              timepoints(search: "status:${filterTimepointStatus.join('+')}") {
-                cycle
+            query: `${filterStr} {
                 UID
+                cycle
+                status
                 subject {
                   timepoints {
                     UID
                     cycle
                   }
                   subjectId
+                  site {
+                    project {
+                      codename
+                    }
+                    siteId
+                  }
                 }
-                status
                 tasks {
                   id
                   status
@@ -282,6 +297,9 @@ function DataSourceWrapper(props) {
                   username
                   type
                 }
+              }
+              projects {
+                codename
               }
             }`,
             variables: {},
@@ -300,10 +318,10 @@ function DataSourceWrapper(props) {
           const body = await response.json();
           if (response.status >= 200 && response.status < 300) {
             timepoints = body.data.timepoints;
+            projects = body.data.projects.map(p => p.codename);
           } else {
             console.error(`HTTP error! status: ${response.status} body: ${body}`);
           }
-
           // map studyInstanceUid to task
           timepoints.forEach(tp => {
             studyUIDInfoMap[tp.UID] = {};
@@ -319,10 +337,10 @@ function DataSourceWrapper(props) {
 
       let studies = [];
       if (
-        ifManager ||
-        (queryFilterValues.studyInstanceUid && queryFilterValues.studyInstanceUid.length > 0)
+        !queryFilterValues.studyInstanceUid || // if no studyInstanceUid filter key, fetch all studies
+        (queryFilterValues.studyInstanceUid && queryFilterValues.studyInstanceUid.length > 0) // Fetch studies by studyInstanceUid list
       ) {
-        // fetch studies if 1. manager or 2. has studyInstanceUid filter by roles like: doctor or data manager
+        // fetch studies
         studies = await dataSource.query.studies.search(queryFilterValues);
       }
 
@@ -384,6 +402,7 @@ function DataSourceWrapper(props) {
         resultsPerPage: queryFilterValues.resultsPerPage,
         pageNumber: queryFilterValues.pageNumber,
         location,
+        projects: projects,
       });
       log.timeEnd(Enums.TimingEnum.SCRIPT_TO_VIEW);
       log.timeEnd(Enums.TimingEnum.SEARCH_TO_LIST);
@@ -450,6 +469,7 @@ function DataSourceWrapper(props) {
       isLoadingData={isLoading}
       // To refresh the data, simply reset it to DEFAULT_DATA which invalidates it and triggers a new query to fetch the data.
       onRefresh={() => setData(DEFAULT_DATA)}
+      projects={data.projects}
     />
   );
 }
@@ -494,6 +514,8 @@ function _getQueryFilterValues(query, queryLimit) {
     // evibased, trial info
     trialProtocolDescription: query.get('trialProtocolDescription'),
     trialTimePointId: query.get('trialTimePointId'),
+    timepointStatus: query.get('timepointStatus'),
+    projectCode: query.get('projectCode'),
   };
 
   // patientName: good
