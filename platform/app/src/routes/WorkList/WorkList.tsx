@@ -6,7 +6,7 @@ import moment from 'moment';
 import qs from 'query-string';
 import isEqual from 'lodash.isequal';
 import { useTranslation } from 'react-i18next';
-//
+
 import filtersMeta from './filtersMeta.js';
 import { useAppConfig } from '@state';
 import { useDebounce, useSearchParams } from '@hooks';
