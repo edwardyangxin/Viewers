@@ -15,7 +15,6 @@ import { utils, hotkeys, ServicesManager } from '@ohif/core';
 import {
   Icon,
   StudyListExpandedRow,
-  LegacyButton,
   EmptyStudies,
   StudyListTable,
   StudyListPagination,
@@ -66,8 +65,7 @@ const taskStatusMap = {
 
 /**
  * TODO: evibased, 重构到IRC的extension？
- * 1. 为Manager添加按照项目过滤、timepoint status过滤
- * 2. 
+ * 1. assign task
  * - debounce `setFilterValues` (150ms?)
  */
 function WorkList({
@@ -207,6 +205,7 @@ function WorkList({
     };
   }, []);
 
+  // evibased, after filterValues changed, update URL query parameters
   // Sync URL query parameters with filters
   useEffect(() => {
     if (!debouncedFilterValues) {
@@ -252,6 +251,7 @@ function WorkList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedFilterValues]);
 
+  // evibased, query series data for study after expanded row
   // Query for series information
   useEffect(() => {
     const fetchSeries = async studyInstanceUid => {
@@ -284,7 +284,7 @@ function WorkList({
   const isFiltering = (filterValues, defaultFilterValues) => {
     return !isEqual(filterValues, defaultFilterValues);
   };
-
+  // evibased, calculate front-end pagination 
   const rollingPageNumberMod = Math.floor(101 / resultsPerPage);
   const rollingPageNumber = (pageNumber - 1) % rollingPageNumberMod;
   const offset = resultsPerPage * rollingPageNumber;
@@ -337,6 +337,7 @@ function WorkList({
 
     return {
       dataCY: `studyRow-${studyInstanceUid}`,
+      // evibased, columns defined for each study row
       row: [
         // {
         //   key: 'patientName',
@@ -425,6 +426,7 @@ function WorkList({
       // Todo: This is actually running for all rows, even if they are
       // not clicked on.
       expandedContent: (
+        // evibased, expanded row content: series table and modes buttons
         <StudyListExpandedRow
           seriesTableColumns={{
             description: t('StudyList:Description'),
@@ -445,6 +447,7 @@ function WorkList({
               : []
           }
         >
+          {/* evibased: mode list builder */}
           <div className="flex flex-row gap-2">
             {(appConfig.groupEnabledModesFirst
               ? appConfig.loadedModes.sort((a, b) => {
@@ -475,6 +478,7 @@ function WorkList({
               // How do we know which params to pass? Today, it's just StudyInstanceUIDs and configUrl if exists
               return (
                 mode.displayName && (
+                  // evibased, mode button and build url path for study
                   <Link
                     className={isValidMode ? '' : 'cursor-not-allowed'}
                     key={i}
@@ -517,7 +521,6 @@ function WorkList({
                       navigate(path);
                     }}
                   >
-                    {/* TODO revisit the completely rounded style of buttons used for launching a mode from the worklist later - for now use LegacyButton*/}
                     <Button
                       type={ButtonEnums.type.primary}
                       size={ButtonEnums.size.medium}
@@ -546,6 +549,7 @@ function WorkList({
               );
             })}
           </div>
+          {/* evibased: TODO: task manage here? */}
         </StudyListExpandedRow>
       ),
       onClickRow: () =>
@@ -558,18 +562,8 @@ function WorkList({
   const versionNumber = process.env.VERSION_NUMBER;
   const commitHash = process.env.COMMIT_HASH;
 
+  // evibased, top menu options defined here
   const menuOptions = [
-    // evibased, add evibased about? or just remove it.
-    // {
-    //   title: t('Header:About'),
-    //   icon: 'info',
-    //   onClick: () =>
-    //     show({
-    //       content: AboutModal,
-    //       title: t('AboutModal:About OHIF Viewer'),
-    //       contentProps: { versionNumber, commitHash },
-    //     }),
-    // },
     {
       title: t('Header:Preferences'),
       icon: 'settings',
@@ -596,8 +590,19 @@ function WorkList({
           },
         }),
     },
+    // evibased, TODO: add evibased about like contact email etc.
+    // {
+    //   title: t('Header:About'),
+    //   icon: 'info',
+    //   onClick: () =>
+    //     show({
+    //       content: AboutModal,
+    //       title: t('AboutModal:About OHIF Viewer'),
+    //       contentProps: { versionNumber, commitHash },
+    //     }),
+    // },
   ];
-
+  // evibased, add logout option to menu if oidc(Keycloak) enabled 
   if (appConfig.oidc) {
     menuOptions.push({
       icon: 'power-off',
@@ -607,7 +612,7 @@ function WorkList({
       },
     });
   }
-
+  // evibased, upload dicom dialogue function, not used now
   const { customizationService } = servicesManager.services;
   const { component: dicomUploadComponent } =
     customizationService.get('dicomUploadComponent') ?? {};
@@ -640,14 +645,18 @@ function WorkList({
 
   return (
     <div className="flex h-screen flex-col bg-black ">
+      {/* evibased, global header */}
       <Header
         isSticky
         menuOptions={menuOptions}
         isReturnEnabled={false}
         WhiteLabeling={appConfig.whiteLabeling}
       />
+      {/* evibased, investigational use dialog at bottom page, disabled in config */}
       <InvestigationalUseDialog dialogConfiguration={appConfig?.investigationalUseDialog} />
+      {/* evibased, task/timepoints list */}
       <div className="ohif-scrollbar flex grow flex-col overflow-y-auto">
+        {/* evibased, table header and filter functions */}
         <StudyListFilter
           numOfStudies={pageNumber * resultsPerPage > 100 ? 101 : numOfStudies}
           filtersMeta={filtersMeta}
@@ -662,6 +671,7 @@ function WorkList({
           ifManager={ifManager}
           projects={projects}
         />
+        {/* evibased, manager show list anyway to enable timepoints filtering */}
         {(hasStudies || ifManager) ? (
           <div className="flex grow flex-col">
             <StudyListTable
@@ -680,6 +690,7 @@ function WorkList({
             </div>
           </div>
         ) : (
+          // evibased, loading or empty studies
           <div className="flex flex-col items-center justify-center pt-48">
             {appConfig.showLoadingIndicator && isLoadingData ? (
               <LoadingIndicatorProgress className={'h-full w-full bg-black'} />
