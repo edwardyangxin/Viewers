@@ -67,7 +67,7 @@ const StudyBrowser = ({
             <StudyItem
               studyInstanceUid={studyInstanceUid}
               ifPrimary={ifCurrentTimePoint}
-              canOpenPastReportPage={!(currentTask ? currentTask.type === 'reading' : false) && !ifPrimary}
+              canOpenPastReportPage={!(currentTask ? currentTask.type in ['review', 'reading'] : false) && !ifPrimary}
               canCompare={!ifCurrentTimePoint && ifCompareMode && !ifComparedTimePoint}
               date={trialTimePointInfo}
               description={description}

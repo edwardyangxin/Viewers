@@ -42,7 +42,7 @@ export default function CreateReportDialogPrompt(
   if (currentTask) {
     taskType = currentTask.type;
   }
-  const ifReadingTask = taskType === 'reading';
+  const ifReviewTask = taskType in ['review', 'reading'];
   const ifArbitrationTask = taskType === 'arbitration';
   const measurements = measurementService.getMeasurements();
   const filteredMeasurements = measurements.filter(
@@ -263,7 +263,7 @@ export default function CreateReportDialogPrompt(
                         value={parseFloat(value.SOD).toFixed(1)}
                         onChange={onSODInputChangeHandler}
                         onKeyUp={onSODInputKeyUpHandler}
-                        disabled={!ifReadingTask}
+                        disabled={!ifReviewTask}
                       />
                     </div>
                     <div className="w-1/3">
@@ -294,7 +294,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, targetResponse: newSelection?.value }));
                         }}
                         options={targetResponseOptions}
-                        isDisabled={!ifReadingTask || ifBaseline}
+                        isDisabled={!ifReviewTask || ifBaseline}
                       />
                     </div>
                   </div>
@@ -311,7 +311,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, nonTargetResponse: newSelection?.value }));
                         }}
                         options={nonTargetResponseOptions}
-                        isDisabled={!ifReadingTask || ifBaseline}
+                        isDisabled={!ifReviewTask || ifBaseline}
                       />
                     </div>
                     <div className="w-1/3">
@@ -326,7 +326,7 @@ export default function CreateReportDialogPrompt(
                           setValue(value => ({ ...value, response: newSelection?.value }));
                         }}
                         options={responseOptions}
-                        isDisabled={!ifReadingTask}
+                        isDisabled={!ifReviewTask}
                       />
                     </div>
                   </div>
@@ -351,7 +351,7 @@ export default function CreateReportDialogPrompt(
                             setValue(value => ({ ...value, comment: event.target.value }));
                           }
                         }}
-                        disabled={!ifReadingTask}
+                        disabled={!ifReviewTask}
                       />
                     </div>
                   </div>
