@@ -41,7 +41,7 @@ const { availableLanguages, defaultLanguage, currentLanguage } = i18n;
 const seriesInStudiesMap = new Map();
 
 // evibased, info mapping, TODO: move to extension?
-const timepointStatusMap = {
+const timepointStatusMapping = {
   'scheduled': '数据待上传',
   'collecting': '数据上传中',
   'appending': '数据补充中',
@@ -52,6 +52,10 @@ const timepointStatusMap = {
   'freezed': '报告数据锁定',
   'archived': '报告数据已存档',
 };
+const timepointStatusOptions = Object.keys(timepointStatusMapping).map(key => ({
+  value: key,
+  label: timepointStatusMapping[key],
+}));
 
 const taskTypeMap = {
   reading: '判读',
@@ -166,6 +170,8 @@ function WorkList({
   const querying = useMemo(() => {
     return isLoadingData || expandedRows.length > 0;
   }, [isLoadingData, expandedRows]);
+  // evibased, timepoints state for selection values, manager
+  const [timepointsState, setTimepointsState] = useState({});
 
   const setFilterValues = val => {
     if (filterValues.pageNumber === val.pageNumber) {
@@ -282,6 +288,29 @@ function WorkList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expandedRows, studies]);
 
+  // evibase, timepoints state update for selection values 
+  useEffect(() => {
+    const newTimepointState = {};
+    for (const study of studies) {
+      const { studyInstanceUid, timepoint, tasks } = study;
+      if (studyInstanceUid) {
+        newTimepointState[studyInstanceUid] = {
+          timepointStatus: timepoint?.status,
+          tasks: tasks.map(task => {
+            return {
+              id: task?.id,
+              type: task?.type,
+              username: task?.username,
+              status: task?.status,
+            };
+          }),
+        };
+      }
+    }
+    setTimepointsState(newTimepointState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ studies ]);
+
   const isFiltering = (filterValues, defaultFilterValues) => {
     return !isEqual(filterValues, defaultFilterValues);
   };
@@ -299,32 +328,15 @@ function WorkList({
       modalities,
       instances,
       description,
-      mrn,
-      patientName,
+      mrn, // evibased, patient id
       date,
       time,
       trialTimePointId,
-      trialTimePointDescription,
       trialSubjectId,
       trialProtocolId,
-      trialProtocolDescription,
-      trialSiteId,
-      trialSiteDescription,
-      tasks,
+
       timepoint,
     } = study;
-    // evibased, add trial info, remove "T" for old data, 现在没有前缀T
-    const trialTimePointInfo = (trialTimePointId && trialTimePointId.startsWith('T') ? trialTimePointId.slice(1) : trialTimePointId) || date;
-    const ifBaseline = trialTimePointInfo === '0' || trialTimePointInfo === '00';
-    const trialTimePointName = getTimepointName(trialTimePointInfo);
-    // timepoint status
-    const timepointStatus = timepointStatusMap[timepoint?.status] || '未知';
-    // task ''nfo
-    let taskInfoStr = '';
-    for (const task of tasks) {
-      taskInfoStr += `${taskTypeMap[task.type]}(${task.username}): ${taskStatusMap[task.status]} <br>`;
-    }
-
     const studyDate =
       date &&
       moment(date, ['YYYYMMDD', 'YYYY.MM.DD'], true).isValid() &&
@@ -335,6 +347,25 @@ function WorkList({
       moment(time, ['HH', 'HHmm', 'HHmmss', 'HHmmss.SSS']).format(
         t('Common:localTimeFormat', 'hh:mm A')
       );
+    // evibased,
+    // add trial info, remove "T" for old data, 现在没有前缀T
+    const trialTimePointInfo = (trialTimePointId && trialTimePointId.startsWith('T') ? trialTimePointId.slice(1) : trialTimePointId) || date;
+    const ifBaseline = trialTimePointInfo === '0' || trialTimePointInfo === '00';
+    const trialTimePointName = getTimepointName(trialTimePointInfo);
+    // timepoint status
+    let timepointStatusValue = [timepointsState[studyInstanceUid]?.timepointStatus];
+    const timepointStatus =
+      timepointStatusMapping[timepointsState[studyInstanceUid]?.timepointStatus] || '未知';
+    // task info
+    let taskInfoStr = '';
+    const tasks = timepointsState[studyInstanceUid]?.tasks || [];
+    for (const task of tasks) {
+      taskInfoStr += `${taskTypeMap[task.type]}(${task.username}): ${taskStatusMap[task.status]} <br>`;
+    }
+    // task selections
+    let usernameTask = timepointsState[studyInstanceUid]?.taskSelect?.username;
+    let userTaskType = timepointsState[studyInstanceUid]?.taskSelect?.type;
+    let taskDeleteValue = null;
 
     return {
       dataCY: `studyRow-${studyInstanceUid}`,
@@ -552,72 +583,121 @@ function WorkList({
               })}
             </div>
             {/* evibased: TODO: task manage here? */}
-            <div className="flex flex-row gap-2">
-              <Select
-                id="usernameSelect"
-                isClearable={true}
-                isSearchable={true}
-                placeholder="选择用户"
-                // value={[projectCode]}
-                // onChange={(newSelection, action) => {
-                //   console.info('newSelection:', newSelection, 'action:', action);
-                //   setProjectCode(newSelection ? newSelection.value : null);
-                // }}
-                options={[{ value: 'user1', label: 'user1' }, { value: 'user2', label: 'user2' }]}
-              />
-              <Select
-                id="taskTypeSelect"
-                isClearable={true}
-                placeholder="任务类型"
-                // value={[projectCode]}
-                // onChange={(newSelection, action) => {
-                //   console.info('newSelection:', newSelection, 'action:', action);
-                //   setProjectCode(newSelection ? newSelection.value : null);
-                // }}
-                options={[{ value: 'reading', label: '判读' }, { value: 'arbitration', label: '仲裁' }, { value: 'QC', label: '质控' }]}
-              />
-              <Button
-                type={ButtonEnums.type.primary}
-                size={ButtonEnums.size.medium}
-                // startIcon={<Icon className="!h-[20px] !w-[20px] text-black" name={'task'} />}
-                onClick={() => {
-                  console.log('TODO: task manage');
-                }}
-                dataCY={`task-add-${studyInstanceUid}`}
-                className={'text-[13px]'}
-              >
-                添加任务
-              </Button>
-              <Select
-                id="taskDeleteSelect"
-                isClearable={true}
-                isSearchable={true}
-                placeholder="选择任务"
-                // value={[projectCode]}
-                // onChange={(newSelection, action) => {
-                //   console.info('newSelection:', newSelection, 'action:', action);
-                //   setProjectCode(newSelection ? newSelection.value : null);
-                // }}
-                options={tasks.map(task => {
-                  return {
-                    value: task.id,
-                    label: `${task.username}-${taskTypeMap[task.type]}`,
-                  };
-                })}
-              />
-              <Button
-                type={ButtonEnums.type.primary}
-                size={ButtonEnums.size.medium}
-                // startIcon={<Icon className="!h-[20px] !w-[20px] text-black" name={'task'} />}
-                onClick={() => {
-                  console.log('TODO: task manage');
-                }}
-                dataCY={`task-delete-${studyInstanceUid}`}
-                className={'text-[13px]'}
-              >
-                删除任务
-              </Button>
-            </div>
+            {ifManager && (
+              <div className="flex flex-row gap-2">
+                <Select
+                  id="timepointStatusSelect"
+                  placeholder="访视状态"
+                  isClearable={false}
+                  value={timepointStatusValue}
+                  onChange={(newSelection, action) => {
+                    console.info('newSelection:', newSelection, 'action:', action);
+                    timepointStatusValue = [newSelection ? newSelection.value : null];
+                    console.info('new timepointStatusValue:', timepointStatusValue);
+                  }}
+                  options={timepointStatusOptions}
+                />
+                <Button
+                  type={ButtonEnums.type.primary}
+                  size={ButtonEnums.size.medium}
+                  // startIcon={<Icon className="!h-[20px] !w-[20px] text-black" name={'task'} />}
+                  onClick={() => {
+                    console.log('update timepoint status: ', timepointStatusValue);
+                    // timepoint.status = timepointStatusValue[0];
+                    const newTimepointsState = { ...timepointsState };
+                    newTimepointsState[studyInstanceUid].timepointStatus = timepointStatusValue[0];
+                    setTimepointsState(newTimepointsState);
+                    console.log('updated timepoint:', timepoint);
+                  }}
+                  dataCY={`timepoint-update-${studyInstanceUid}`}
+                  className={'text-[13px]'}
+                >
+                  更新访视状态
+                </Button>
+                <Select
+                  id="usernameSelect"
+                  isClearable={true}
+                  isSearchable={true}
+                  placeholder="选择用户"
+                  value={[usernameTask]}
+                  onChange={(newSelection, action) => {
+                    console.info('newSelection:', newSelection, 'action:', action);
+                    usernameTask = newSelection ? newSelection.value : null;
+                    console.info('new usernameTask:', usernameTask);
+                  }}
+                  // TODO: get users from Keycloak
+                  options={[{ value: 'user1', label: 'user1' }, { value: 'user2', label: 'user2' }]}
+                />
+                <Select
+                  id="taskTypeSelect"
+                  isClearable={true}
+                  placeholder="任务类型"
+                  value={[userTaskType]}
+                  onChange={(newSelection, action) => {
+                    console.info('newSelection:', newSelection, 'action:', action);
+                    userTaskType = newSelection ? newSelection.value : null;
+                    console.info('new userTaskType:', userTaskType);
+                  }}
+                  options={[{ value: 'reading', label: '判读' }, { value: 'arbitration', label: '仲裁' }, { value: 'QC', label: '质控' }]}
+                />
+                <Button
+                  type={ButtonEnums.type.primary}
+                  size={ButtonEnums.size.medium}
+                  onClick={() => {
+                    console.log('create new task: ', usernameTask, userTaskType);
+                    const newTimepointsState = { ...timepointsState };
+                    const newTask = {
+                      id: 'new_task_id',
+                      type: userTaskType,
+                      username: usernameTask,
+                      status: 'create',
+                    };
+                    newTimepointsState[studyInstanceUid].tasks.push(newTask);
+                    newTimepointsState[studyInstanceUid].taskSelect = { username: usernameTask, type: userTaskType };
+                    setTimepointsState(newTimepointsState);
+                    console.log('new task:', newTask);
+                  }}
+                  dataCY={`task-add-${studyInstanceUid}`}
+                  className={'text-[13px]'}
+                >
+                  添加任务
+                </Button>
+                <Select
+                  id="taskDeleteSelect"
+                  isClearable={true}
+                  isSearchable={true}
+                  placeholder="选择任务"
+                  value={[taskDeleteValue]}
+                  onChange={(newSelection, action) => {
+                    console.info('newSelection:', newSelection, 'action:', action);
+                    taskDeleteValue = newSelection ? newSelection.value : null;
+                    console.info('new taskDeleteValue:', taskDeleteValue);
+                  }}
+                  options={tasks.map(task => {
+                    return {
+                      value: task.id,
+                      label: `${task.username}-${taskTypeMap[task.type]}`,
+                    };
+                  })}
+                />
+                <Button
+                  type={ButtonEnums.type.primary}
+                  size={ButtonEnums.size.medium}
+                  onClick={() => {
+                    console.log('delete task: ', taskDeleteValue);
+                    const newTimepointsState = { ...timepointsState };
+                    const newTasks = newTimepointsState[studyInstanceUid].tasks.filter(task => task.id !== taskDeleteValue);
+                    newTimepointsState[studyInstanceUid].tasks = newTasks;
+                    setTimepointsState(newTimepointsState);
+                    console.log('after delete task:', newTasks);
+                  }}
+                  dataCY={`task-delete-${studyInstanceUid}`}
+                  className={'text-[13px]'}
+                >
+                  删除任务
+                </Button>
+              </div>
+            )}
           </div>
         </StudyListExpandedRow>
       ),

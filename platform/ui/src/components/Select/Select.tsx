@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import ReactSelect, { components } from 'react-select';
@@ -67,17 +67,24 @@ const Select = ({
     ? { ..._components, ..._noIconComponents }
     : { ..._components, ...components };
 
-  const selectedOptions = [];
+  // evibased, internalSelectedOptions to trigger re-render when value is changed
+  const [internalSelectedOptions, setInternalSelectedOptions] = React.useState(null);
 
-  // Map array of values to an array of selected options
-  if (value && Array.isArray(value)) {
-    value.forEach(val => {
-      const found = options.find(opt => opt.value === val);
-      if (found) {
-        selectedOptions.push(JSON.parse(JSON.stringify(found)));
-      }
-    });
-  }
+  // evibased, update internalSelectedOptions when value is changed
+  useEffect(() => {
+    const selectedOptions = [];
+
+    // Map array of values to an array of selected options
+    if (value && Array.isArray(value)) {
+      value.forEach(val => {
+        const found = options.find(opt => opt.value === val);
+        if (found) {
+          selectedOptions.push(JSON.parse(JSON.stringify(found)));
+        }
+      });
+    }
+    setInternalSelectedOptions(selectedOptions);
+  }, [value, options]);
 
   return (
     <ReactSelect
@@ -95,15 +102,14 @@ const Select = ({
       components={_components}
       placeholder={placeholder}
       options={options}
-      value={value && Array.isArray(value) ? selectedOptions : value}
+      value={value && Array.isArray(value) ? internalSelectedOptions : value}
       onChange={(selectedOptions, { action }) => {
         const newSelection =
           !selectedOptions || !selectedOptions.length // evibased, fix selectedOptions=null bug
             ? selectedOptions
-            : selectedOptions.reduce(
-                (acc, curr) => acc.concat([curr.value]),
-                []
-              );
+            : selectedOptions.reduce((acc, curr) => acc.concat([curr.value]), []);
+        // evibased, internalSelectedOptions to trigger re-render when value is changed
+        setInternalSelectedOptions(selectedOptions);
         onChange(newSelection, action);
       }}
     />
