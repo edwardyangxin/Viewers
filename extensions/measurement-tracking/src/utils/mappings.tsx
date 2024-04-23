@@ -1,7 +1,11 @@
 const TaskMapping = {
-  reading: '阅片',
+  review: '判读',
   arbitration: '仲裁',
-  QC: '质控',
+  'QC-data': '数据审核',
+  'QC-report': '报告审核',
+  // deprecated
+  reading: '判读-弃用',
+  QC: '质控-弃用',
 };
 
 const imageQualityMapping = {

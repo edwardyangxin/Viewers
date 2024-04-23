@@ -124,7 +124,7 @@ function PanelStudyBrowserTracking({
       });
       // set ifReadonlyMode to commandsManager CORNERSTONE context
       // TODO: readonly mode refactor
-      const ifReadonlyMode = ['QC', 'arbitration'].includes(currentTask.type);
+      const ifReadonlyMode = ['QC', 'QC-data', 'QC-report', 'arbitration'].includes(currentTask.type);
       commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
 
       // current study qido, PACS featch all related studies
@@ -690,7 +690,7 @@ async function _fetchBackendReports(appConfig, userAuthenticationService, curren
     // get username from userAuthenticationService
     const authHeader = userAuthenticationService.getAuthorizationHeader();
     const username = getUserName(userAuthenticationService);
-    const ifReadingTask = currentTask ? currentTask.type === 'reading' : false;
+    const ifReviewTask = currentTask ? currentTask.type in ['review', 'reading'] : false;
     // get all subject related tasks and reports
     // get url headers and body
     const url = new URL(appConfig.evibased['graphqlDR']);
@@ -699,8 +699,8 @@ async function _fetchBackendReports(appConfig, userAuthenticationService, curren
     // headers.append("Authorization", authHeader?.Authorization);  //disable for apiv2 for now
     // if filter by task username
     let graphqlBody;
-    if (ifReadingTask) {
-      // reading task only see own reports
+    if (ifReviewTask) {
+      // review task only see own reports
       graphqlBody = JSON.stringify({
         query: `query MyQuery {\n  subjectBySubjectId(subjectId: \"${subjectId}\", usernameTask: \"${username}\") {\n    subjectId\n    history\n    disease\n    timepoints {\n      UID\n      cycle\n      status\n      tasks {\n        id\n        type\n        username\n        status\n        userAlias\n        report {\n          SOD\n          createTime\n          id\n          measurements\n          nonTargetResponse\n          reportComment\n          reportInfo\n          reportTemplate\n          reportTemplateVersion\n          reportVersion\n          response\n          targetResponse\n          username\n        }\n      }\n    }\n  }\n}`,
         variables: {},

@@ -413,10 +413,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         return [];
       }
       let taskTypeFilterList = [];
-      if (taskType in ['reading', 'arbitration']) {
-        taskTypeFilterList = ['reading', 'arbitration'];
-      } else if (taskType === 'QC') {
-        taskTypeFilterList = ['QC'];
+      if (taskType in ['review', 'reading', 'arbitration']) {
+        taskTypeFilterList = ['review', 'reading', 'arbitration'];
+      } else if (taskType in ['QC-data', 'QC-report', 'QC']) {
+        taskTypeFilterList = ['QC-data', 'QC-report', 'QC'];
       }
       if (taskTypeFilterList.length === 0) {
         return [];
@@ -573,7 +573,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           studyInstanceUid={studyInstanceUid}
           trialTimePointInfo={trialTimePointName}
           // username={userAlias ? userAlias : username}
-          username={username} // only for reading task now, show username instead of userAlias
+          username={username} // only for review task now, show username instead of userAlias
           SOD={SOD}
           response={response}
           isActive={extendedComparedReport}
@@ -724,7 +724,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             />
           </div>
         )}
-        {(currentTask?.type === 'reading' && comparedTimepoint && comparedReportInfo) && (
+        {(currentTask?.type in ['review', 'reading'] &&
+         comparedTimepoint && comparedReportInfo) && (
           getComparedTimepointReport())}
       </div>
     </>
