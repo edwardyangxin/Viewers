@@ -699,6 +699,7 @@ async function _fetchBackendReports(appConfig, userAuthenticationService, curren
     // headers.append("Authorization", authHeader?.Authorization);  //disable for apiv2 for now
     // if filter by task username
     let graphqlBody;
+    // TODO: refactor graphql query below
     if (ifReviewTask) {
       // review task only see own reports
       graphqlBody = JSON.stringify({
