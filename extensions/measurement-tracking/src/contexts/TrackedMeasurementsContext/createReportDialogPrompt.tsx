@@ -42,7 +42,7 @@ export default function CreateReportDialogPrompt(
   if (currentTask) {
     taskType = currentTask.type;
   }
-  const ifReviewTask = taskType in ['review', 'reading'];
+  const ifReviewTask = ['review', 'reading'].includes(taskType);
   const ifArbitrationTask = taskType === 'arbitration';
   const measurements = measurementService.getMeasurements();
   const filteredMeasurements = measurements.filter(

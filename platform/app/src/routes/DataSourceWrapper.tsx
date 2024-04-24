@@ -205,6 +205,7 @@ function DataSourceWrapper(props) {
                 userAlias
                 id
                 timepoint {
+                  id
                   UID
                   status
                   cycle
@@ -274,6 +275,7 @@ function DataSourceWrapper(props) {
             : `query GetManagerTimepointList { timepoints(search: "status:${filterTimepointStatus.join('+')}")`;
           const graphql = JSON.stringify({
             query: `${filterStr} {
+                id
                 UID
                 cycle
                 status

@@ -690,7 +690,7 @@ async function _fetchBackendReports(appConfig, userAuthenticationService, curren
     // get username from userAuthenticationService
     const authHeader = userAuthenticationService.getAuthorizationHeader();
     const username = getUserName(userAuthenticationService);
-    const ifReviewTask = currentTask ? currentTask.type in ['review', 'reading'] : false;
+    const ifReviewTask = currentTask ? ['review', 'reading'].includes(currentTask.type) : false;
     // get all subject related tasks and reports
     // get url headers and body
     const url = new URL(appConfig.evibased['graphqlDR']);

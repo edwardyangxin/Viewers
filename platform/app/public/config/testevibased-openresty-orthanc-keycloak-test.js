@@ -69,13 +69,18 @@ window.config = {
   ],
   // evibased, config
   evibased: {
-    use_report_api: true,
+    use_report_api: true, // deprecated
     ping_url: 'https://test.evi-based.com/api/ping',
     audit_log_url: 'https://test.evi-based.com/api/log',
     report_upload_url: 'https://test.evi-based.com/api/report',
-    report_fetch_url: 'https://test.evi-based.com/api/report',
-    task_get_url: 'https://test.evi-based.com/api/task',
+    report_fetch_url: 'https://test.evi-based.com/api/report', // deprecated
+    task_get_url: 'https://test.evi-based.com/api/task', // deprecated
     task_update_url: 'https://test.evi-based.com/api/task',
-    task_post_url: 'https://test.evi-based.com/api/task',
+    task_post_url: 'https://test.evi-based.com/api/task', // deprecated
+    apiv2_tasks_url: 'https://test.evi-based.com/api-v2/api/tasks',
+    apiv2_timepoints_url: 'https://test.evi-based.com/api-v2/api/timepoints',
+    timepoint_get_url: 'https://test.evi-based.com/api-v2/api/timepoints/search',
+    graphqlDR: 'https://test.evi-based.com/api-v2/graphql-dr/graphql',
+    keycloak_admin_url: 'https://test.evi-based.com/auth/admin',
   },
 };

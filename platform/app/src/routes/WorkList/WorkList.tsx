@@ -70,6 +70,7 @@ const taskTypeMap = {
 const taskStatusMap = {
   create: '待处理',
   done: '已完成',
+  archive: '已存档',
 };
 
 /**
@@ -176,6 +177,7 @@ function WorkList({
   }, [isLoadingData, expandedRows]);
   // evibased, timepoints state for selection values, manager
   const [timepointsState, setTimepointsState] = useState({});
+  const [userListForTask, setUserListForTask] = useState([]);
 
   const setFilterValues = val => {
     if (filterValues.pageNumber === val.pageNumber) {
@@ -215,6 +217,57 @@ function WorkList({
       document.body.classList.remove('bg-black');
     };
   }, []);
+
+  useEffect(() => {
+    // evibased, for manager, get user list for task assignment
+    const fetchUserList = async () => {
+      try {
+        const url = new URL(appConfig['evibased']['keycloak_admin_url'] + '/realms/ohif/groups');
+        const authHeader = userAuthenticationService.getAuthorizationHeader();
+        const fetchOptions = {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: authHeader?.Authorization,
+          },
+        };
+        const response = await fetch(url, fetchOptions);
+        if (!response.ok) {
+          console.log('failed to get group list');
+          return;
+        }
+        const groups = await response.json();
+        console.log('groups:', groups);
+        const userList = [];
+        for (const group of groups) {
+          if (['doctor', 'data'].includes(group.name)) {
+            const groupId = group.id;
+            const groupName = group.name;
+            const url = new URL(appConfig['evibased']['keycloak_admin_url'] + `/realms/ohif/groups/${groupId}/members`);
+            const response = await fetch(url, fetchOptions);
+            if (!response.ok) {
+              console.log('failed to get group members');
+              return;
+            }
+            const members = await response.json();
+            // console.log('members:', members);
+            members.forEach(member => {
+              const label = `${member.username}(${groupName})`;
+              userList.push({ value: member.username, label: label });
+            });
+          }
+        }
+        if (userList.length > 0) {
+          setUserListForTask(userList);
+        }
+      } catch (ex) {
+        console.warn(ex);
+      }
+    };
+    if (ifManager) {
+      fetchUserList();
+    }
+  }, [user]);
 
   // evibased, after filterValues changed, update URL query parameters
   // Sync URL query parameters with filters
@@ -338,7 +391,6 @@ function WorkList({
       trialTimePointId,
       trialSubjectId,
       trialProtocolId,
-
       timepoint,
     } = study;
     const studyDate =
@@ -357,7 +409,7 @@ function WorkList({
     const ifBaseline = trialTimePointInfo === '0' || trialTimePointInfo === '00';
     const trialTimePointName = getTimepointName(trialTimePointInfo);
     // timepoint status
-    let timepointStatusValue = [timepointsState[studyInstanceUid]?.timepointStatus];
+    let timepointStatusValue = timepointsState[studyInstanceUid]?.timepointStatus;
     const timepointStatus =
       timepointStatusMapping[timepointsState[studyInstanceUid]?.timepointStatus] || '未知';
     // task info
@@ -369,7 +421,7 @@ function WorkList({
     // task selections
     let usernameTask = timepointsState[studyInstanceUid]?.taskSelect?.username;
     let userTaskType = timepointsState[studyInstanceUid]?.taskSelect?.type;
-    let taskDeleteValue = null;
+    let taskDeleteById = null;
 
     return {
       dataCY: `studyRow-${studyInstanceUid}`,
@@ -591,12 +643,13 @@ function WorkList({
               <div className="flex flex-row gap-2">
                 <Select
                   id="timepointStatusSelect"
+                  className="min-w-40"
                   placeholder="访视状态"
                   isClearable={false}
-                  value={timepointStatusValue}
+                  value={[timepointStatusValue]}
                   onChange={(newSelection, action) => {
                     console.info('newSelection:', newSelection, 'action:', action);
-                    timepointStatusValue = [newSelection ? newSelection.value : null];
+                    timepointStatusValue = newSelection ? newSelection.value : null;
                     console.info('new timepointStatusValue:', timepointStatusValue);
                   }}
                   options={timepointStatusOptions}
@@ -605,22 +658,32 @@ function WorkList({
                   type={ButtonEnums.type.primary}
                   size={ButtonEnums.size.medium}
                   // startIcon={<Icon className="!h-[20px] !w-[20px] text-black" name={'task'} />}
-                  onClick={() => {
-                    console.log('update timepoint status: ', timepointStatusValue);
-                    // timepoint.status = timepointStatusValue[0];
+                  onClick={async () => {
+                    if (!timepointStatusValue) {
+                      console.log('invalid timepoint status!');
+                      return;
+                    }
+                    console.log('update timepoint status: ', timepoint, timepointStatusValue);
+                    const newTimepoint = await _updateTimepointStatus(timepoint.id, timepointStatusValue, appConfig.evibased['apiv2_timepoints_url']);
+                    if (!newTimepoint) {
+                      console.log('fail to update timepoint status!');
+                      return;
+                    }
                     const newTimepointsState = { ...timepointsState };
-                    newTimepointsState[studyInstanceUid].timepointStatus = timepointStatusValue[0];
+                    newTimepointsState[studyInstanceUid].timepointStatus = timepointStatusValue;
                     setTimepointsState(newTimepointsState);
-                    console.log('updated timepoint:', timepoint);
+                    console.log('updated timepoint:', newTimepoint);
                   }}
                   dataCY={`timepoint-update-${studyInstanceUid}`}
                   className={'text-[13px]'}
+                  // disabled={!timepointStatusValue} // evibased, 这里disabled无法实时更新
                 >
                   更新访视状态
                 </Button>
                 <Select
                   id="usernameSelect"
-                  isClearable={true}
+                  className="min-w-40"
+                  isClearable={false}
                   isSearchable={true}
                   placeholder="选择用户"
                   value={[usernameTask]}
@@ -629,12 +692,16 @@ function WorkList({
                     usernameTask = newSelection ? newSelection.value : null;
                     console.info('new usernameTask:', usernameTask);
                   }}
-                  // TODO: get users from Keycloak
-                  options={[{ value: 'user1', label: 'user1' }, { value: 'user2', label: 'user2' }]}
+                  options={userListForTask}
+                  // options={[{ value: 'data', label: 'data' }, 
+                  //           { value: 'jialei', label: 'jialei' },
+                  //           { value: 'zhaoshijun', label: 'zhaoshijun' },
+                  //           { value: 'quhaixian', label: 'quhaixian' },]}
                 />
                 <Select
                   id="taskTypeSelect"
-                  isClearable={true}
+                  className="min-w-40"
+                  isClearable={false}
                   placeholder="任务类型"
                   value={[userTaskType]}
                   onChange={(newSelection, action) => {
@@ -642,20 +709,34 @@ function WorkList({
                     userTaskType = newSelection ? newSelection.value : null;
                     console.info('new userTaskType:', userTaskType);
                   }}
-                  options={[{ value: 'reading', label: '判读' }, { value: 'arbitration', label: '仲裁' }, { value: 'QC', label: '质控' }]}
+                  options={[{ value: 'review', label: '判读' },
+                            { value: 'arbitration', label: '仲裁' },
+                            { value: 'QC-data', label: '数据质控' },
+                            { value: 'QC-report', label: '报告质控' }]}
                 />
                 <Button
                   type={ButtonEnums.type.primary}
                   size={ButtonEnums.size.medium}
-                  onClick={() => {
+                  onClick={async () => {
+                    if (!usernameTask || !userTaskType) {
+                      console.log('invalid username or task type!');
+                      return;
+                    }
+                    // check if user and type exists in tasks
+                    const taskFound = tasks.filter(task => task.username === usernameTask && task.type === userTaskType);
+                    if (taskFound?.length > 0) {
+                      console.log('task already exists!');
+                      return;
+                    }
+
                     console.log('create new task: ', usernameTask, userTaskType);
+                    const newTask = await _createTask(usernameTask, userTaskType, studyInstanceUid, appConfig.evibased['apiv2_tasks_url']);
+                    if (!newTask) {
+                      console.log('fail to create new task!');
+                      return;
+                    }
+                    // update timepointsState
                     const newTimepointsState = { ...timepointsState };
-                    const newTask = {
-                      id: 'new_task_id',
-                      type: userTaskType,
-                      username: usernameTask,
-                      status: 'create',
-                    };
                     newTimepointsState[studyInstanceUid].tasks.push(newTask);
                     newTimepointsState[studyInstanceUid].taskSelect = { username: usernameTask, type: userTaskType };
                     setTimepointsState(newTimepointsState);
@@ -663,19 +744,21 @@ function WorkList({
                   }}
                   dataCY={`task-add-${studyInstanceUid}`}
                   className={'text-[13px]'}
+                  // disabled={!usernameTask || !userTaskType} // evibased, 这里disabled无法实时更新
                 >
                   添加任务
                 </Button>
                 <Select
                   id="taskDeleteSelect"
-                  isClearable={true}
+                  isClearable={false}
                   isSearchable={true}
+                  className="min-w-40"
                   placeholder="选择任务"
-                  value={[taskDeleteValue]}
+                  value={[taskDeleteById]}
                   onChange={(newSelection, action) => {
                     console.info('newSelection:', newSelection, 'action:', action);
-                    taskDeleteValue = newSelection ? newSelection.value : null;
-                    console.info('new taskDeleteValue:', taskDeleteValue);
+                    taskDeleteById = newSelection ? newSelection.value : null;
+                    console.info('new taskDeleteById:', taskDeleteById);
                   }}
                   options={tasks.map(task => {
                     return {
@@ -687,16 +770,26 @@ function WorkList({
                 <Button
                   type={ButtonEnums.type.primary}
                   size={ButtonEnums.size.medium}
-                  onClick={() => {
-                    console.log('delete task: ', taskDeleteValue);
+                  onClick={async () => {
+                    if (!taskDeleteById) {
+                      console.log('invalid task id!');
+                      return;
+                    }
+                    console.log('delete task: ', taskDeleteById);
+                    const success = await _deleteTask(taskDeleteById, appConfig.evibased['apiv2_tasks_url']);
+                    if (!success) {
+                      console.log('fail to delete task!');
+                      return;
+                    }
                     const newTimepointsState = { ...timepointsState };
-                    const newTasks = newTimepointsState[studyInstanceUid].tasks.filter(task => task.id !== taskDeleteValue);
+                    const newTasks = newTimepointsState[studyInstanceUid].tasks.filter(task => task.id !== taskDeleteById);
                     newTimepointsState[studyInstanceUid].tasks = newTasks;
                     setTimepointsState(newTimepointsState);
-                    console.log('after delete task:', newTasks);
+                    console.log('success delete task:', taskDeleteById);
                   }}
                   dataCY={`task-delete-${studyInstanceUid}`}
                   className={'text-[13px]'}
+                  // disabled={!taskDeleteById} // evibased, 这里disabled无法实时更新
                 >
                   删除任务
                 </Button>
@@ -873,6 +966,72 @@ function getTimepointName(timepointId) {
     timepointName = `访视${timepointId}`;
   }
   return timepointName;
+}
+
+async function _updateTimepointStatus(timepointId, timepointStatus, timepointUrl) {
+  const url = new URL(`${timepointUrl}/${timepointId}`);
+  const body = {
+    id: timepointId,
+    status: timepointStatus,
+  };
+  const fetchOptions = {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      // Authorization: Authorization,
+    },
+    body: JSON.stringify(body),
+  };
+  const response = await fetch(url, fetchOptions);
+  if (!response.ok) {
+    const data = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
+  }
+  return await response.json();
+}
+
+async function _createTask(usernameTask, userTaskType, studyInstanceUid, postTaskUrl) {
+  const url = new URL(postTaskUrl);
+  const body = {
+    type: userTaskType,
+    username: usernameTask,
+    status: 'create',
+    timepoint: {
+      uid: studyInstanceUid,
+    },
+  };
+  const fetchOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      // Authorization: Authorization,
+    },
+    body: JSON.stringify(body),
+  };
+  const response = await fetch(url, fetchOptions);
+  if (!response.ok) {
+    const data = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
+  }
+  const result = await response.json();
+  return result;
+}
+
+async function _deleteTask(taskId, deleteTaskUrl) {
+  const url = new URL(`${deleteTaskUrl}/${taskId}`);
+  const fetchOptions = {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      // Authorization: Authorization,
+    },
+  };
+  const response = await fetch(url, fetchOptions);
+  if (!response.ok) {
+    const data = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
+  }
+  return true;
 }
 
 WorkList.propTypes = {

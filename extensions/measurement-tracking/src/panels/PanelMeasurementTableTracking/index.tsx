@@ -413,9 +413,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         return [];
       }
       let taskTypeFilterList = [];
-      if (taskType in ['review', 'reading', 'arbitration']) {
+      if (['review', 'reading', 'arbitration'].includes(taskType)) {
         taskTypeFilterList = ['review', 'reading', 'arbitration'];
-      } else if (taskType in ['QC-data', 'QC-report', 'QC']) {
+      } else if (['QC-data', 'QC-report', 'QC'].includes(taskType)) {
         taskTypeFilterList = ['QC-data', 'QC-report', 'QC'];
       }
       if (taskTypeFilterList.length === 0) {
@@ -724,7 +724,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             />
           </div>
         )}
-        {(currentTask?.type in ['review', 'reading'] &&
+        {(['review', 'reading'].includes(currentTask?.type) &&
          comparedTimepoint && comparedReportInfo) && (
           getComparedTimepointReport())}
       </div>

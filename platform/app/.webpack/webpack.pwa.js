@@ -189,7 +189,8 @@ module.exports = (env, argv) => {
           headers: {
             'X-Forwarded-For': 'localhost',
             'X-Real-IP': 'localhost',
-            'Host': 'localhost:8081',
+            'Host': 'localhost:8081', // to avoid CORS issue
+            'Origin': 'http://localhost:8081', // to avoid CORS issue
           }
         },
         '/api': {
