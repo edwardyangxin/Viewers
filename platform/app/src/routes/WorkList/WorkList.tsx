@@ -294,7 +294,7 @@ function WorkList({
       } else if (key === 'trialTimePointInfo') {
         // evibased, extract trialTimePointInfo number to 'TX'
         const match = currValue.match(/\d+/);
-        queryString.trialTimePointId = match ? `T${match[0]}` : '';
+        queryString.trialTimePointId = match ? `${match[0]}` : '';
       } else if (key === 'timepointStatus') {
         // evibased, assign timepoint status when timepointStatus appears
         queryString[key] = currValue;
@@ -404,10 +404,11 @@ function WorkList({
         t('Common:localTimeFormat', 'hh:mm A')
       );
     // evibased,
-    // add trial info, remove "T" for old data, 现在没有前缀T
-    const trialTimePointInfo = (trialTimePointId && trialTimePointId.startsWith('T') ? trialTimePointId.slice(1) : trialTimePointId) || date;
-    const ifBaseline = trialTimePointInfo === '0' || trialTimePointInfo === '00';
-    const trialTimePointName = getTimepointName(trialTimePointInfo);
+    // deprecated, dicom tag trial id, remove "T" for old data, 现在没有前缀T
+    let trialTimePointIdstr = (trialTimePointId && trialTimePointId.startsWith('T') ? trialTimePointId.slice(1) : trialTimePointId) || date;
+    trialTimePointIdstr = timepoint ? String(timepoint.cycle) : trialTimePointIdstr; // use timepoint UID if exists instead of dicom tags
+    const ifBaseline = trialTimePointIdstr === '0' || trialTimePointIdstr === '00';
+    const trialTimePointName = getTimepointName(trialTimePointIdstr);
     // timepoint status
     let timepointStatusValue = timepointsState[studyInstanceUid]?.timepointStatus;
     const timepointStatus =

@@ -185,12 +185,12 @@ function PanelStudyBrowserTracking({
           popContactAdminDialog(uiDialogService);
           return;
         }
-        // TODO: evibased, 后续要报错当不匹配时，暂时comment掉
-        // if (qidoStudy.TrialTimePointId !== subjectTimepoints[qidoStudyUIDIndex].cycle) {
-        //   console.error('qidoStudy cycle not match timepoint cycle');
-        //   popContactAdminDialog(uiDialogService);
-        //   return;
-        // }
+        if (qidoStudy.TrialTimePointId !== subjectTimepoints[qidoStudyUIDIndex].cycle) {
+          console.error('qidoStudy cycle not match timepoint cycle');
+          // TODO: evibased, 后续要报错当不匹配时，暂时comment掉
+          // popContactAdminDialog(uiDialogService);
+          return;
+        }
         const selectedStudyAttributes = {
           studyInstanceUid: qidoStudy.StudyInstanceUID,
           date: formatDate(qidoStudy.StudyDate) || t('NoStudyDate'),

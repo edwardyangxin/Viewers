@@ -46,7 +46,6 @@ const StudyBrowser = ({
         numInstances,
         modalities,
         displaySets,
-        trialTimePointId,
         reports,
         ifPrimary,
       }) => {
