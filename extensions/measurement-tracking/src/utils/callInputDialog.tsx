@@ -7,7 +7,7 @@ import { parseMeasurementLabelInfo, getEditMeasurementLabelDialog } from './util
  * @param {*} data.label
  * @param {*} event
  * @param {*} callback
- * @param {*} isArrowAnnotateInputDialog
+ * @param {*} isNonMeasurementTool
  * @param {*} dialogConfig
  * @param {string?} dialogConfig.dialogTitle - title of the input dialog
  * @param {string?} dialogConfig.inputLabel - show label above the input
@@ -17,7 +17,7 @@ function callInputDialog(
   measurement, // measurement entity
   comparedReportInfo,
   callback, // update measurement
-  isArrowAnnotateInputDialog = true, // if arrow use data.text else use data.label
+  isNonMeasurementTool = true, // if arrow use data.text else use data.label
   dialogConfig: any = {}
 ) {
   const dialogId = 'dialog-enter-annotation';
@@ -57,7 +57,7 @@ function callInputDialog(
         dialogId,
         dialogTitle,
         valueDialog,
-        isArrowAnnotateInputDialog,
+        isNonMeasurementTool,
         uiDialogService,
         onSubmitHandler
       )

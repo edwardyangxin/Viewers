@@ -1,20 +1,4 @@
-import {
-  getEnabledElement,
-  StackViewport,
-  VolumeViewport,
-  utilities as csUtils,
-  Types as CoreTypes,
-  BaseVolumeViewport,
-} from '@cornerstonejs/core';
-import {
-  ToolGroupManager,
-  Enums,
-  utilities as cstUtils,
-  ReferenceLinesTool,
-} from '@cornerstonejs/tools';
 import { Types as OhifTypes } from '@ohif/core';
-
-import callInputDialog from './utils/callInputDialog';
 import toggleIRCImageSync from './utils/toggleStackImageSync';
 
 // evibased, based on cornerstone extension
@@ -22,16 +6,7 @@ function commandsModule({
   servicesManager,
   commandsManager,
 }: OhifTypes.Extensions.ExtensionParams): OhifTypes.Extensions.CommandsModule {
-  const {
-    viewportGridService,
-    toolGroupService,
-    cineService,
-    toolbarService,
-    uiDialogService,
-    cornerstoneViewportService,
-    uiNotificationService,
-    measurementService,
-  } = servicesManager.services as CornerstoneServices;
+  const { toolbarService, measurementService } = servicesManager.services as CornerstoneServices;
 
   const actions = {
     /**

@@ -19,35 +19,25 @@ const imageQualityMapping = {
   other: '其他',
 };
 
-const targetIndexMapping = {
-  1: '1',
-  2: '2',
-  3: '3',
-  4: '4',
-  5: '5',
-};
+function generateIndexMapping(start, end) {
+  const mapping = {};
+  for (let i = start; i <= end; i++) {
+    mapping[i] = i.toString();
+  }
+  return mapping;
+}
 
-const nonTargetIndexMapping = {
-  1: '1',
-  2: '2',
-  3: '3',
-  4: '4',
-  5: '5',
-  6: '6',
-  7: '7',
-  8: '8',
-  9: '9',
-  10: '10',
-  11: '11',
-  12: '12',
-  13: '13',
-  14: '14',
-  15: '15',
-  16: '16',
-  17: '17',
-  18: '18',
-  19: '19',
-  20: '20',
+const targetIndexMapping = generateIndexMapping(1, 5); // 1-5
+const nonTargetIndexMapping = generateIndexMapping(1, 20); // 1-20
+
+const LesionMeasurementMapping = {
+  Target: '靶病灶',
+  Non_Target: '非靶病灶',
+  Non_Target_Nodal_NP: '非靶病灶(淋巴结<10mm)',
+  Non_Target_Progress: '非靶病灶(进展)',
+  New_Lesion_Possible: '新发病灶(疑似)',
+  New_Lesion: '新发病灶(确认)',
+  Other: '其他',
 };
 
 const LesionMapping = {
@@ -69,6 +59,20 @@ const LesionMapping = {
   New_Lesion_NE: '新病灶(不可评估)',
   Other: '其他',
 };
+
+// based on supportedTools.js
+// 'Length',
+// 'EllipticalROI',
+// 'CircleROI',
+// 'Bidirectional',
+// 'ArrowAnnotate',
+// 'Angle',
+// 'CobbAngle',
+// 'Probe',
+// 'RectangleROI',
+// 'PlanarFreehandROI',
+const MeasurementTools = ['Length', 'Bidirectional'];
+const NonMeasurementTools = ['ArrowAnnotate', 'RectangleROI'];
 
 const organMapping = {
   Abdomen_Chest_Wall: 'Abdomen/Chest Wall:腹壁/胸壁',
@@ -165,6 +169,7 @@ const imageQualityOptions = constructOptions(imageQualityMapping);
 const targetIndexOptions = constructOptions(targetIndexMapping);
 const nonTargetIndexOptions = constructOptions(nonTargetIndexMapping);
 const lesionOptions = constructOptions(LesionMapping);
+const LesionMeasurementOptions = constructOptions(LesionMeasurementMapping);
 const organOptions = constructOptions(organMapping);
 const organLateralOptions = constructOptions(organLateralMapping);
 
@@ -254,13 +259,17 @@ export {
   targetIndexMapping,
   nonTargetIndexMapping,
   LesionMapping,
+  LesionMeasurementMapping,
   organMapping,
   organLateralMapping,
   organLocationMapping,
+  MeasurementTools,
+  NonMeasurementTools,
   imageQualityOptions,
   targetIndexOptions,
   nonTargetIndexOptions,
   lesionOptions,
+  LesionMeasurementOptions,
   organOptions,
   organLateralOptions,
   organLocationOptions,

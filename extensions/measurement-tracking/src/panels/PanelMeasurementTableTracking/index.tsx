@@ -16,14 +16,12 @@ import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LesionMapping, targetKeyGroup, nonTargetKeyGroup, imageQualityOptions, imageQualityMapping} from '../../utils/mappings';
+import { LesionMapping, targetKeyGroup, nonTargetKeyGroup, imageQualityOptions, imageQualityMapping, NonMeasurementTools} from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
 import {
-  getEditMeasurementLabelDialog,
   getPastReportDialog,
   getTimepointName,
   getViewportId,
-  parseMeasurementLabelInfo,
 } from '../../utils/utils';
 import callInputDialog from '../../utils/callInputDialog';
 
@@ -751,7 +749,7 @@ PanelMeasurementTableTracking.propTypes = {
 
 function _editMeasurementLabel(commandsManager, uiDialogService, measurementService, uid, comparedReportInfo) {
   const measurement = measurementService.getMeasurement(uid);
-  const isArrowAnnotateTool = measurement && measurement.toolName.toLowerCase().includes('arrow');
+  const isNonMeasurementTool = measurement && NonMeasurementTools.includes(measurement.toolName);
 
   // if readonly mode, no editing
   if (commandsManager.getContext('CORNERSTONE').ifReadonlyMode) {
@@ -786,7 +784,7 @@ function _editMeasurementLabel(commandsManager, uiDialogService, measurementServ
       // measurementService in platform core service module
       measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
     },
-    isArrowAnnotateTool // isArrowAnnotateInputDialog = false
+    isNonMeasurementTool // isArrowAnnotateInputDialog = false
   );
 }
 

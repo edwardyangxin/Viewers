@@ -18,6 +18,7 @@ import {
   targetResponseOptions,
   nonTargetResponseOptions,
   responseOptions,
+  LesionMeasurementOptions,
 } from './mappings';
 import { utils } from '@ohif/core';
 import TargetListTable, { TargetListExpandedRow } from '../ui/TargetListTable';
@@ -732,7 +733,7 @@ function getEditMeasurementLabelDialog(
   dialogId,
   dialogTitle,
   valueDialog,
-  isArrowAnnotateTool,
+  isNonMeasurementTool,
   uiDialogService,
   onSubmitHandler
 ) {
@@ -825,7 +826,7 @@ function getEditMeasurementLabelDialog(
                 });
                 autoFillValue();
               }}
-              options={lesionOptions}
+              options={isNonMeasurementTool ? lesionOptions : LesionMeasurementOptions}
             />
             <label className="mt-2 text-[14px] leading-[1.2] text-white">选择病灶编号</label>
             <Select
@@ -1002,7 +1003,7 @@ function getEditMeasurementLabelDialog(
                 }
               }}
             />
-            {!isArrowAnnotateTool && (
+            {!isNonMeasurementTool && (
               <CheckBox
                 label="病灶中存在空腔"
                 checked={value.measurementLabelInfo?.cavitation}
