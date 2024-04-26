@@ -6,12 +6,17 @@ export default function toggleIRCImageSync({
   servicesManager,
   viewports: providedViewports,
 }) {
-  if (!toggledState) {
-    return disableSync(STACK_SYNC_NAME, servicesManager);
-  }
-
+  // evibased, toggledState deprecated
+  // if (!toggledState) {
+  //   return disableSync(STACK_SYNC_NAME, servicesManager);
+  // }
   const { syncGroupService, viewportGridService, displaySetService, cornerstoneViewportService } =
     servicesManager.services;
+
+  // evibased, get existing synchronizer. if exists, disable it 
+  if (syncGroupService.getSynchronizer(STACK_SYNC_NAME)) {
+    return disableSync(STACK_SYNC_NAME, servicesManager);
+  }
 
   // sync all viewports for now
   const { viewports } = viewportGridService.getState();

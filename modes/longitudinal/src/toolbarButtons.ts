@@ -309,7 +309,7 @@ const toolbarButtons: Button[] = [
   //       commandOptions: { toggledState: true },
   //     },
   //   },
-  //   evaluate: 'evaluate.cornerstone.synchronizer',
+  //   evaluate: ['evaluate.cornerstone.synchronizer', 'evaluate.not3D'],
   // }),
   // evibased, old version of Image Slice Sync, use it for now
   {
