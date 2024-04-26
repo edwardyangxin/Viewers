@@ -131,6 +131,7 @@ const toolbarButtons: Button[] = [
           context: 'CORNERSTONE',
         },
       ],
+      evaluate: 'evaluate.cornerstoneTool',
     },
   },
   {
@@ -157,6 +158,7 @@ const toolbarButtons: Button[] = [
           context: 'CORNERSTONE',
         },
       ],
+      evaluate: 'evaluate.cornerstoneTool',
     },
   },
   {
@@ -183,6 +185,7 @@ const toolbarButtons: Button[] = [
           context: 'CORNERSTONE',
         },
       ],
+      evaluate: 'evaluate.cornerstoneTool',
     },
   },
   {
@@ -201,6 +204,7 @@ const toolbarButtons: Button[] = [
           context: 'CORNERSTONE',
         },
       ],
+      evaluate: 'evaluate.cornerstoneTool',
     },
   },
   {
