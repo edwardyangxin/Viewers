@@ -346,6 +346,9 @@ function getTargetExpandedContent(targetFindings) {
             // bi-dimensional tool
             // get long axis
             diameter = dm.Length;
+          } else if (dm.AnnotationType.split(':')[1] === 'Length') {
+            // single axis tool
+            diameter = dm.Length;
           } else {
             // no axis info
             if (lesion.value === 'Target_NM') {
@@ -384,6 +387,9 @@ function getTargetExpandedContent(targetFindings) {
               // bi-dimensional tool
               // get short axis
               diameter = dm.Width;
+            } else if (dm.AnnotationType.split(':')[1] === 'Length') {
+              // single axis tool
+              diameter = dm.Length;
             } else {
               // no axis info
               if (lesion.value === 'Target_NM') {

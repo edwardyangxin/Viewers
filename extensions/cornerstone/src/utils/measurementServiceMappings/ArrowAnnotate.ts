@@ -154,7 +154,7 @@ function getDisplayText(mappedAnnotations, displaySet) {
   const displayText = [];
 
   // Area is the same for all series
-  const { SeriesNumber, SOPInstanceUID, frameNumber } = mappedAnnotations[0];
+  const { SeriesNumber, SOPInstanceUID, frameNumber, text } = mappedAnnotations[0];
 
   const instance = displaySet.images.find(image => image.SOPInstanceUID === SOPInstanceUID);
 
@@ -168,7 +168,15 @@ function getDisplayText(mappedAnnotations, displaySet) {
 
   // TODO: evibased, IRC related tools, 放到IRC extension
   // displayText.push(`(S: ${SeriesNumber}${instanceText}${frameText})`);
-  displayText.push(`(太小:5mm,消失:0mm)`);
+  // evibased, for loaded report displayText
+  let dT = '(太小:5mm,消失:0mm)';
+  if (text && text.length > 0) {
+    const targetStr = text.split('|')[1];
+    if (targetStr && targetStr.startsWith('Non_Target')) {
+      dT = '不可测量-非靶';
+    }
+  }
+  displayText.push(dT);
 
   return displayText;
 }

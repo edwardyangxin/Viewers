@@ -47,7 +47,7 @@ const RectangleROI = {
 
     const mappedAnnotations = getMappedAnnotations(annotation, DisplaySetService);
 
-    const displayText = getDisplayText(mappedAnnotations, displaySet);
+    const displayText = getDisplayText(mappedAnnotations, displaySet, data.label);
     const getReport = () => _getReport(mappedAnnotations, points, FrameOfReferenceUID);
 
     return {
@@ -164,7 +164,7 @@ function _getReport(mappedAnnotations, points, FrameOfReferenceUID) {
   };
 }
 
-function getDisplayText(mappedAnnotations, displaySet) {
+function getDisplayText(mappedAnnotations, displaySet, label) {
   if (!mappedAnnotations || !mappedAnnotations.length) {
     return '';
   }
@@ -202,10 +202,17 @@ function getDisplayText(mappedAnnotations, displaySet) {
     if (!displayText.includes(str)) {
       // displayText.push(str);
     }
-
-    // evibased
-    displayText.push(`(太小:5mm,消失:0mm)`);
   });
+
+  // evibased, for loaded report displayText
+  let dT = '(太小:5mm,消失:0mm)';
+  if (label && label.length > 0) {
+    const targetStr = label.split('|')[1];
+    if (targetStr && targetStr.startsWith('Non_Target')) {
+      dT = '不可测量-非靶';
+    }
+  }
+  displayText.push(dT);
 
   return displayText;
 }

@@ -79,7 +79,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     value: 'image_qualified',
     label: imageQualityMapping['image_qualified'],
   });
-  const [imageQualityDescription, setImageQualityDescription] = useState(null);
+  const [imageQualityDescription, setImageQualityDescription] = useState('');
 
   // measuremnts updated, update displayMeasurements
   useEffect(() => {
@@ -317,9 +317,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   useEffect(() => {
     if (currentReportInfo) {
       // update imageQuality and imageQualityDescription
-      if (currentReportInfo?.image_quality) {
-        setImageQuality(currentReportInfo.image_quality?.selection);
-        setImageQualityDescription(currentReportInfo.image_quality?.description);
+      if (currentReportInfo?.imageQuality) {
+        setImageQuality(currentReportInfo.imageQuality?.selection);
+        setImageQualityDescription(currentReportInfo.imageQuality?.description);
       } else {
         // report imageQuality is empty, set default value
         setImageQuality({
@@ -518,17 +518,23 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       AnnotationType: type,
       label_info,
     } = measurement;
-
+    const measurementType = type.split(':')[1];
     const label = baseLabel || '(empty)';
     // only bidirectional shows displayText for now
-    const displayText = Width && Length ? [`${Length.toFixed(1)} x ${Width.toFixed(1)} ${Unit}`] : ['无测量信息'];
+    let displayText = ['无测量信息'];
+    if (measurementType === 'Length' && Length) {
+      displayText = [`${Length.toFixed(1)} mm`];
+    } else if (measurementType === 'Bidirectional' && Width && Length) {
+      displayText = [`${Length.toFixed(1)} x ${Width.toFixed(1)} mm`];
+    }
+    // const displayText = Width && Length ? [`${Length.toFixed(1)} x ${Width.toFixed(1)} mm`] : ['无测量信息'];
 
     return {
       uid: readonlyMeasurementUID,
       measurementLabelInfo: label_info,
       label,
       baseLabel,
-      measurementType: type.split(':')[1],
+      measurementType: measurementType,
       displayText,
       baseDisplayText: displayText,
       isActive: false,
@@ -769,6 +775,13 @@ function _editMeasurementLabel(commandsManager, uiDialogService, measurementServ
       // update label data
       updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
       updatedMeasurement['label'] = label['label'];
+      // update displayText for non target lesions (ArrowAnnotate and Square tool)
+      if (label['measurementLabelInfo'].lesion?.value?.startsWith('Non_Target')) {
+        if (['ArrowAnnotate', 'RectangleROI'].includes(currentMeasurement.toolName)) {
+          // default displayText is ['(太小:5mm,消失:0mm)'], 不适合非靶病灶
+          updatedMeasurement['displayText'] = ['不可测量-非靶'];
+        }
+      }
 
       // measurementService in platform core service module
       measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
