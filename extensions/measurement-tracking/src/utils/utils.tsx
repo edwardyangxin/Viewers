@@ -599,7 +599,7 @@ function getPastReportDialog(uiDialogService, trialTimePointInfo, report) {
     contentProps: {
       title: `往期报告(${trialTimePointInfo})`,
       value: {
-        imageQuality: report?.image_quality,
+        imageQuality: report?.imageQuality,
         targetFindings: targetFindings,
         nonTargetFindings: nonTargetFindings,
         newLesionFindings: newLesionFindings,
@@ -607,7 +607,7 @@ function getPastReportDialog(uiDialogService, trialTimePointInfo, report) {
         targetResponse: report ? report.targetResponse : null,
         nonTargetResponse: report ? report.nonTargetResponse : null,
         response: report ? report.response : null,
-        comment: report ? report.comment : '',
+        reviewComment: report ? report.reviewComment : '',
         arbitrationComment: report?.arbitrationComment ? report.arbitrationComment : null,
       },
       noCloseButton: false,
@@ -691,7 +691,7 @@ function getPastReportDialog(uiDialogService, trialTimePointInfo, report) {
                       labelClassName="text-black text-[12px] leading-[1.2] mt-2"
                       transparent={true}
                       placeholder="备注信息"
-                      value={value.comment}
+                      value={value.reviewComment}
                       disabled={true}
                     />
                   </div>

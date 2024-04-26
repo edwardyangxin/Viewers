@@ -86,12 +86,13 @@ window.config = {
     use_report_api: true, // deprecated
     ping_url: 'http://localhost:3000/api/ping', // no use now
     audit_log_url: 'http://localhost:3000/api/log',
-    report_upload_url: 'http://localhost:3000/api/report',
+    report_upload_url: 'http://localhost:3000/api/report', // deprecated
     report_fetch_url: 'http://localhost:3000/api/report', // deprecated
     task_get_url: 'http://localhost:3000/api/task', // deprecated
-    task_update_url: 'http://localhost:3000/api/task',
+    task_update_url: 'http://localhost:3000/api/task', // deprecated
     task_post_url: 'http://localhost:3000/api/task', // deprecated
     apiv2_tasks_url: 'http://localhost:3000/api-v2/api/tasks',
+    apiv2_reports_url: 'http://localhost:3000/api-v2/api/reports',
     apiv2_timepoints_url: 'http://localhost:3000/api-v2/api/timepoints',
     timepoint_get_url: 'http://localhost:3000/api-v2/api/timepoints/search',
     graphqlDR: 'http://localhost:3000/api-v2/graphql-dr/graphql',

@@ -110,42 +110,45 @@ function PanelStudyBrowserTracking({
       const authHeader = userAuthenticationService.getAuthorizationHeader();
       const username = getUserName(userAuthenticationService);
 
-      // apiv2 graphql
+      // apiv2 graphql, get current user task/timpoint/subject info
       const userTasks = await getTaskByUserAndUID(appConfig['evibased']['graphqlDR'], authHeader?.Authorization, username, currentStudyInstanceUID);
       if (!userTasks || !userTasks.length) {
         // pop warning dialog
+        console.error('no task found for user: ', username);
         popContactAdminDialog(uiDialogService);
         return;
       }
       // only use the first task, assume only one task for each study
       const currentTask = userTasks[0];
-      sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
-        currentTask: currentTask,
-      });
+      const currentTimepoint = currentTask.timepoint;
+      const currentSubject = currentTimepoint.subject;
       // set ifReadonlyMode to commandsManager CORNERSTONE context
       // TODO: readonly mode refactor
       const ifReadonlyMode = ['QC', 'QC-data', 'QC-report', 'arbitration'].includes(currentTask.type);
       commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
-
-      // current study qido, PACS featch all related studies
-      const qidoForStudyUID = await dataSource.query.studies.search({
-        studyInstanceUid: StudyInstanceUID,
+      sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
+        currentTask: currentTask,
       });
 
-      if (!qidoForStudyUID?.length) {
-        navigate('/notfoundstudy', '_self');
-        throw new Error('Invalid study URL');
-      }
+      // evibased, deprecated, no need to fetch current subject id from PACS
+      // current study qido, PACS featch all related studies
+      // const qidoForStudyUID = await dataSource.query.studies.search({
+      //   studyInstanceUid: StudyInstanceUID,
+      // });
+      // if (!qidoForStudyUID?.length) {
+      //   navigate('/notfoundstudy', '_self');
+      //   throw new Error('Invalid study URL');
+      // }
 
-      let qidoStudiesForPatient = qidoForStudyUID;
-      // try to fetch the prior studies based on the patientID if the
-      // server can respond.
+      // evibased, getStudiesForPatientByMRN only need patientID to fetch all related studies in PACS
+      // qidoForStudyUID in format of [{mrn: 'patientId'}]
+      let qidoStudiesForPatient = [];
       try {
-        qidoStudiesForPatient = await getStudiesForPatientByMRN(qidoForStudyUID);
+        qidoStudiesForPatient = await getStudiesForPatientByMRN([{mrn: currentSubject.subjectId}]);
       } catch (error) {
         console.warn(error);
       }
-
+      // evibased, map dicom tags from PACS
       let mappedStudies = _mapDataSourceStudies(qidoStudiesForPatient);
       // evibased, fetch reports for each studies for current username, apiv2 graphql
       mappedStudies = await _fetchBackendReports(
@@ -156,8 +159,6 @@ function PanelStudyBrowserTracking({
       );
 
       // evibased, filter attributes and get actuallyMappedStudies
-      const currentTimepoint = currentTask.timepoint;
-      const currentSubject = currentTimepoint.subject;
       const subjectTimepoints = currentSubject.timepoints;
       const currentTimepointIndex = subjectTimepoints.findIndex(tp => tp.UID === currentTimepoint.UID);
       if (currentTimepointIndex === -1) {
@@ -172,7 +173,7 @@ function PanelStudyBrowserTracking({
         return;
       }
 
-      const ifCurrentTimepointBaseline = currentTimepointIndex === 0;
+      const ifCurrentTimepointBaseline = currentTimepointIndex === 0 && currentTimepoint.cycle === '00';
       const lastTimepoint = ifCurrentTimepointBaseline ? null : subjectTimepoints[currentTimepointIndex - 1];
       let comparedTimepoint = null;
       const actuallyMappedStudies = [];
@@ -204,6 +205,9 @@ function PanelStudyBrowserTracking({
         // update currentTimepoint, comparedTimepoint, lastTimepoint, baselineTimepoint
         if (currentTimepoint.UID === qidoStudy.StudyInstanceUID) {
           selectedStudyAttributes.ifPrimary = true;
+          if (currentTimepoint.cycle === '00') {
+            selectedStudyAttributes.ifBaseline = true;
+          }
           sendTrackedMeasurementsEvent('UPDATE_CURRENT_TIMEPOINT', {
             currentTimepoint: selectedStudyAttributes,
           });
@@ -264,7 +268,7 @@ function PanelStudyBrowserTracking({
           return false;
         }
 
-        if (!currentTimepoint.ifBaseline) {
+        if (!ifCurrentTimepointBaseline) {
           if (!lowestSODTimepoint || !lastTimepoint || !comparedTimepoint) {
             return false;
           }
@@ -276,6 +280,7 @@ function PanelStudyBrowserTracking({
       // 发生数据错误，联系管理员
       if (!ifTaskValid()) {
         // pop warning dialog
+        console.error('data error, please contact admin');
         popContactAdminDialog(uiDialogService);
       }
 
@@ -308,7 +313,7 @@ function PanelStudyBrowserTracking({
     // StudyInstanceUIDs.forEach(sid => fetchTaskAndStudiesForPatient(sid));
     fetchTaskAndStudiesForPatient(currentStudyInstanceUID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [StudyInstanceUIDs, getStudiesForPatientByMRN]);
+  }, [currentStudyInstanceUID]);
 
   // evibased, comparedTimepoint change
   useEffect(() => {
@@ -698,21 +703,53 @@ async function _fetchBackendReports(appConfig, userAuthenticationService, curren
     headers.append('Content-Type', 'application/json');
     // headers.append("Authorization", authHeader?.Authorization);  //disable for apiv2 for now
     // if filter by task username
-    let graphqlBody;
-    // TODO: refactor graphql query below
+    let queryStr;
     if (ifReviewTask) {
       // review task only see own reports
-      graphqlBody = JSON.stringify({
-        query: `query MyQuery {\n  subjectBySubjectId(subjectId: \"${subjectId}\", usernameTask: \"${username}\") {\n    subjectId\n    history\n    disease\n    timepoints {\n      UID\n      cycle\n      status\n      tasks {\n        id\n        type\n        username\n        status\n        userAlias\n        report {\n          SOD\n          createTime\n          id\n          measurements\n          nonTargetResponse\n          reportComment\n          reportInfo\n          reportTemplate\n          reportTemplateVersion\n          reportVersion\n          response\n          targetResponse\n          username\n        }\n      }\n    }\n  }\n}`,
-        variables: {},
-      });
+      queryStr = `query GetAllReports {
+        subjectBySubjectId(subjectId: "${subjectId}", usernameTask: "${username}") `;
     } else {
       // other see all reports
-      graphqlBody = JSON.stringify({
-        query: `query MyQuery {\n  subjectBySubjectId(subjectId: \"${subjectId}\") {\n    subjectId\n    history\n    disease\n    timepoints {\n      UID\n      cycle\n      status\n      tasks {\n        id\n        type\n        username\n        status\n        userAlias\n        report {\n          SOD\n          createTime\n          id\n          measurements\n          nonTargetResponse\n          reportComment\n          reportInfo\n          reportTemplate\n          reportTemplateVersion\n          reportVersion\n          response\n          targetResponse\n          username\n        }\n      }\n    }\n  }\n}`,
-        variables: {},
-      });
+      queryStr = `query GetAllReports {
+        subjectBySubjectId(subjectId: "${subjectId}") `;
     }
+    const graphqlBody = JSON.stringify({
+      query: queryStr + `{
+          subjectId
+          history
+          disease
+          timepoints {
+            UID
+            cycle
+            status
+            tasks {
+              id
+              type
+              username
+              status
+              userAlias
+              report {
+                SOD
+                createTime
+                id
+                measurements
+                nonTargetResponse
+                reportTemplate
+                reportTemplateVersion
+                reportVersion
+                response
+                targetResponse
+                username
+                imageQuality
+                arbitrationComment
+                reviewComment
+              }
+            }
+          }
+        }
+      }`,
+      variables: {},
+    });
     const requestOptions = {
       method: 'POST',
       headers: headers,
@@ -904,8 +941,10 @@ function _mapDisplaySets(
 const thumbnailNoImageModalities = ['SR', 'SEG', 'SM', 'RTSTRUCT', 'RTPLAN', 'RTDOSE', 'DOC', 'OT'];
 
 function popContactAdminDialog(uiDialogService) {
+  // evibased, randomId to avoid same id conflict, but not necessary?
+  const randomId = Math.random().toString(36).substring(7);
   uiDialogService.create({
-    id: 'dl-contact-admin',
+    id: 'contact-admin-' + randomId,
     centralize: true,
     isDraggable: false,
     showOverlay: true,
@@ -919,7 +958,7 @@ function popContactAdminDialog(uiDialogService) {
         </div>
       ),
       actions: [],
-      onClose: () => uiDialogService.dismiss({ id: 'dl-contact-admin' }),
+      onClose: () => uiDialogService.dismiss({ id: 'contact-admin-' + randomId }),
       onShow: () => {},
       onSubmit: () => {},
     },

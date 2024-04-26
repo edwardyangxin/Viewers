@@ -104,12 +104,6 @@ const machineConfiguration = {
             currentTask: (_, event) => event.currentTask,
           }),
         },
-        // deprecated
-        // UPDATE_CURRENT_IMAGE_QUALITY: {
-        //   actions: assign({
-        //     currentImageQuality: (_, event) => event.currentImageQuality,
-        //   }),
-        // },
         UPDATE_TASK_INFO: {
           actions: assign({
             taskInfo: (_, event) => event.taskInfo,
@@ -523,7 +517,7 @@ const defaultOptions = {
 
       return {
         currentReportInfo: evt.data.reportInfo,
-        currentImageQuality: evt.data.reportInfo?.image_quality,
+        currentImageQuality: evt.data.reportInfo?.imageQuality,
       };
     }),
     successSaveReport: assign((ctx, evt) => {

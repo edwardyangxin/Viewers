@@ -92,13 +92,13 @@ export default function CreateReportDialogPrompt(
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
   // initial SOD
-  const initialSOD = autoCalSOD(targetFindings);
+  const autoCalculatedSOD = calSODFromTargets(targetFindings);
 
   return new Promise(function (resolve, reject) {
     let dialogId = undefined;
-    // evibased, get username, timestamp and comment for default report name
-    const { userAuthenticationService } = extensionManager._servicesManager.services;
-    const userInfo = userAuthenticationService.getUser();
+    // evibased, deprecated, get username, timestamp and comment for default report name
+    // const { userAuthenticationService } = extensionManager._servicesManager.services;
+    // const userInfo = userAuthenticationService.getUser();
 
     const _handleClose = () => {
       // Dismiss dialog
@@ -127,13 +127,13 @@ export default function CreateReportDialogPrompt(
               targetResponse: value.targetResponse,
               nonTargetResponse: value.nonTargetResponse,
               response: value.response,
-              comment: value.comment,
+              reviewComment: value.reviewComment,
             }
           };
           if (taskType === 'arbitration') {
             // 仲裁
             returnVal.reportInfo.arbitrationComment = value.arbitrationComment;
-            returnVal.reportInfo.reportRef = currentReportInfo._id;
+            returnVal.reportInfo.reportRef = { id: currentReportInfo._id };
           }
           resolve({
             action: CREATE_REPORT_DIALOG_RESPONSE.CREATE_REPORT,
@@ -152,7 +152,7 @@ export default function CreateReportDialogPrompt(
     };
 
     // actions, if user is QC, no save button
-    let dialogActions = [
+    const dialogActions = [
       {
         id: 'cancel',
         text: '返回',
@@ -163,7 +163,7 @@ export default function CreateReportDialogPrompt(
       if (!userRoles.includes('QC')) {
         let buttonText;
         if (taskType === 'arbitration') {
-          buttonText = `${i18n.t('MeasurementTable:Save')}(选择${currentReportInfo.username}的报告)`;
+          buttonText = `${i18n.t('MeasurementTable:Save')} 仲裁选择报告(${currentReportInfo.username})`;
         } else {
           buttonText = `${i18n.t('MeasurementTable:Save')}`;
         }
@@ -189,11 +189,11 @@ export default function CreateReportDialogPrompt(
           targetFindings: targetFindings,
           nonTargetFindings: nonTargetFindings,
           newLesionFindings: newLesionFindings,
-          SOD: currentReportInfo ? currentReportInfo.SOD : initialSOD,
+          SOD: autoCalculatedSOD, // always use auto calculated SOD, 加载报告currentReportInfo.SOD后，可能会修改Measurement
           targetResponse: currentReportInfo ? currentReportInfo.targetResponse : 'Baseline',
           nonTargetResponse: currentReportInfo ? currentReportInfo.nonTargetResponse : 'Baseline',
           response: currentReportInfo ? currentReportInfo.response : 'Baseline',
-          comment: currentReportInfo ? currentReportInfo.comment : '',
+          reviewComment: currentReportInfo ? currentReportInfo.reviewComment : '',
           arbitrationComment: currentReportInfo?.arbitrationComment ? currentReportInfo.arbitrationComment : null,
         },
         noCloseButton: false,
@@ -268,7 +268,7 @@ export default function CreateReportDialogPrompt(
                     </div>
                     <div className="w-1/3">
                       {ifBaseline ? (
-                        <label className="text-[14px] leading-[1.2] text-black">靶病灶评估</label>
+                        <label className="text-[14px] leading-[1.2] text-black">靶病灶评估(基线)</label>
                       ) : (
                         <label className="text-[14px] leading-[1.2] text-black whitespace-pre-line">
                           {
@@ -300,7 +300,7 @@ export default function CreateReportDialogPrompt(
                   </div>
                   <div className="flex grow flex-row justify-evenly">
                     <div className="w-1/3">
-                      <label className="text-[14px] leading-[1.2] text-black">非靶病灶评估</label>
+                      <label className="text-[14px] leading-[1.2] text-black">{ifBaseline ? '非靶病灶评估(基线)' : '非靶病灶评估'}</label>
                       <Select
                         id="nonTargetResponse"
                         isClearable={false}
@@ -315,7 +315,7 @@ export default function CreateReportDialogPrompt(
                       />
                     </div>
                     <div className="w-1/3">
-                      <label className="text-[14px] leading-[1.2] text-black">总体评估</label>
+                      <label className="text-[14px] leading-[1.2] text-black">{ifBaseline ? '总体评估(基线)' : '总体评估'}</label>
                       <Select
                         id="response"
                         isClearable={false}
@@ -340,15 +340,15 @@ export default function CreateReportDialogPrompt(
                         className="border-primary-main bg-slate-300 text-black"
                         transparent={true}
                         placeholder="备注信息"
-                        value={value.comment}
+                        value={value.reviewComment}
                         onChange={event => {
                           event.persist();
-                          setValue(value => ({ ...value, comment: event.target.value }));
+                          setValue(value => ({ ...value, reviewComment: event.target.value }));
                         }}
                         onKeyUp={event => {
                           event.persist();
                           if (event.key === 'Enter') {
-                            setValue(value => ({ ...value, comment: event.target.value }));
+                            setValue(value => ({ ...value, reviewComment: event.target.value }));
                           }
                         }}
                         disabled={!ifReviewTask}
@@ -652,7 +652,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
   return tableDataSource;
 }
 
-function autoCalSOD(targetFindings) {
+function calSODFromTargets(targetFindings) {
   let culmulativeSOD = 0.0;
   try {
     // calculate SOD based on targetFindings

@@ -1,6 +1,6 @@
-import { createReportAsync } from '@ohif/extension-default';
+// import { createReportAsync } from '@ohif/extension-default';
 import createReportDialogPrompt from './createReportDialogPrompt';
-import getNextSRSeriesNumber from '../../_shared/getNextSRSeriesNumber';
+// import getNextSRSeriesNumber from '../../_shared/getNextSRSeriesNumber';
 import RESPONSE from '../../_shared/PROMPT_RESPONSES';
 import { DicomMetadataStore, utils } from '@ohif/core';
 import React from 'react';
@@ -21,7 +21,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const { trackedStudy, trackedSeries, currentTask } = ctx;
   let displaySetInstanceUIDs;
 
-  //evibased, call createReportDialogPrompt and 1. store report to evibased api, 2. store report to PACS dicomSR
+  //evibased, call createReportDialogPrompt and store report to evibased api, was store report as dicomSR to PACS 
   return new Promise(async function (resolve, reject) {
     // TODO: Fallback if (uiDialogService) {
     const reportSummaryResult = await createReportDialogPrompt(
@@ -36,60 +36,56 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
 
     let successSaveReport = false;
     if (reportSummaryResult.action === RESPONSE.CREATE_REPORT) {
-      // get api flag
-      const _appConfig = extensionManager._appConfig;
-      if (_appConfig.evibased['use_report_api']) {
-        // post to report api
-        successSaveReport = await _uploadReportAsync(
-          servicesManager,
-          extensionManager,
-          trackedStudy,
-          trackedSeries,
-          currentTask,
-          imageQuality,
-          reportSummaryResult.value.reportInfo
-        );
-      } else {
-        // deprecated, SR report has limited fields, use report api instead
-        // reportInfo not saved to PACS dicomSR
-        throw new Error(`deprecated, SR report has limited fields, use report api instead`);
-        // post to PACS dicomSR
-        const dataSources = extensionManager.getDataSources();
-        const dataSource = dataSources[0];
-        const measurements = measurementService.getMeasurements();
-        const trackedMeasurements = measurements.filter(
-          m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
-        );
+      // post to backend api
+      successSaveReport = await _uploadReportAsync(
+        servicesManager,
+        extensionManager,
+        trackedStudy,
+        trackedSeries,
+        currentTask,
+        imageQuality,
+        reportSummaryResult.value.reportInfo
+      );
 
-        const SeriesDescription =
-          // isUndefinedOrEmpty
-          reportSummaryResult.value === undefined || reportSummaryResult.value === ''
-            ? 'Research Derived Series' // default
-            : reportSummaryResult.value; // provided value
+      // deprecated, SR report has limited fields, use report api instead
+      // reportInfo not saved to PACS dicomSR
+      // throw new Error(`deprecated, SR report has limited fields, use report api instead`);
+      // post to PACS dicomSR
+      // const dataSources = extensionManager.getDataSources();
+      // const dataSource = dataSources[0];
+      // const measurements = measurementService.getMeasurements();
+      // const trackedMeasurements = measurements.filter(
+      //   m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
+      // );
 
-        const SeriesNumber = getNextSRSeriesNumber(displaySetService);
+      // const SeriesDescription =
+      //   // isUndefinedOrEmpty
+      //   reportSummaryResult.value === undefined || reportSummaryResult.value === ''
+      //     ? 'Research Derived Series' // default
+      //     : reportSummaryResult.value; // provided value
 
-        const getReport = async () => {
-          return commandsManager.runCommand(
-            'storeMeasurements',
-            {
-              measurementData: trackedMeasurements,
-              dataSource,
-              additionalFindingTypes: ['ArrowAnnotate'],
-              options: {
-                SeriesDescription,
-                SeriesNumber,
-              },
-            },
-            'CORNERSTONE_STRUCTURED_REPORT'
-          );
-        };
-        displaySetInstanceUIDs = await createReportAsync({
-          servicesManager,
-          getReport,
-        });
-        successSaveReport = true;
-      }
+      // const SeriesNumber = getNextSRSeriesNumber(displaySetService);
+
+      // const getReport = async () => {
+      //   return commandsManager.runCommand(
+      //     'storeMeasurements',
+      //     {
+      //       measurementData: trackedMeasurements,
+      //       dataSource,
+      //       additionalFindingTypes: ['ArrowAnnotate'],
+      //       options: {
+      //         SeriesDescription,
+      //         SeriesNumber,
+      //       },
+      //     },
+      //     'CORNERSTONE_STRUCTURED_REPORT'
+      //   );
+      // };
+      // displaySetInstanceUIDs = await createReportAsync({
+      //   servicesManager,
+      //   getReport,
+      // });
+      // successSaveReport = true;
     } else if (reportSummaryResult.action === RESPONSE.CANCEL) {
       // Do nothing
     }
@@ -152,64 +148,80 @@ async function _uploadReportAsync(
     const StudyInstanceUID = trackedMeasurements[0]['StudyInstanceUID'];
 
     // post report api
-    const taskId = currentTask._id;
+    const taskId = currentTask.id;
     const taskType = currentTask.type;
-    const uploadReportUrl = _appConfig['evibased']['report_upload_url'];
-    const uploadReportBody = {
-      StudyInstanceUID: StudyInstanceUID,
+    // const uploadReportUrl = _appConfig['evibased']['report_upload_url'];
+    // evibased, reportInfo fields from report page
+    // reportInfo: {
+    //   SOD
+    //   targetResponse
+    //   nonTargetResponse
+    //   response
+    //   reviewComment
+    //   arbitrationComment
+    //   reportRef
+    // }
+    const createReportBody = {
+      StudyInstanceUID: StudyInstanceUID, // deprecated, no need to link to timepoint
       username: username,
-      task: taskId,
-      report_template: 'RECIST1.1',
-      report_template_version: 'v1',
-      report_comments: '', // deprecated but required by api
-      image_quality: imageQuality,
-      measurements: trackedMeasurements,
-      ...reportInfo,
+      task: { id: taskId }, // link to task
+      reportTemplate: 'RECIST1.1', // report criteria
+      reportTemplateVersion: 'v1', // criteria version
+      // reportComments: '', // deprecated but required by api
+      imageQuality: imageQuality, // imageQuality from image view page
+      measurements: trackedMeasurements, // measurements from measurement table
+      ...reportInfo, // reportInfo from report page, structure see above
     };
-    const reportResponse = await fetch(uploadReportUrl, {
+    const createReportUrl = new URL(_appConfig['evibased']['apiv2_reports_url']);
+    const reportResponse = await fetch(createReportUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: authHeader?.Authorization,
+        // Authorization: authHeader?.Authorization,
       },
-      body: JSON.stringify(uploadReportBody),
+      body: JSON.stringify(createReportBody),
     });
     if (!reportResponse.ok) {
       const body = await reportResponse.text();
       throw new Error(`HTTP error! status: ${reportResponse.status} body: ${body}`);
     }
-    const uploadReportResult = await reportResponse.json();
-    console.log('uploadReportResult:', uploadReportResult);
+    const newReport = await reportResponse.json();
+    console.log('newReport:', newReport);
 
-    // put task api
-    const putTaskUrl = _appConfig['evibased']['task_update_url'];
-    const putTaskBody = {
-      StudyInstanceUID: StudyInstanceUID,
-      username: username,
-      type: taskType,
-      status: 'done',
-    };
-    const putTaskResponse = await fetch(putTaskUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: authHeader?.Authorization,
-      },
-      body: JSON.stringify(putTaskBody),
-    });
-    if (!putTaskResponse.ok) {
-      const body = await putTaskResponse.text();
-      throw new Error(`HTTP error! status: ${putTaskResponse.status} body: ${body}`);
-    }
-    const putTaskResult = await putTaskResponse.json();
-    console.log('putTaskResult:', putTaskResult);
+    // deprecated, put task api
+    // const putTaskUrl = _appConfig['evibased']['task_update_url'];
+    // const putTaskBody = {
+    //   StudyInstanceUID: StudyInstanceUID,
+    //   username: username,
+    //   type: taskType,
+    //   status: 'done',
+    // };
+    // const putTaskResponse = await fetch(putTaskUrl, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     Authorization: authHeader?.Authorization,
+    //   },
+    //   body: JSON.stringify(putTaskBody),
+    // });
+    // if (!putTaskResponse.ok) {
+    //   const body = await putTaskResponse.text();
+    //   throw new Error(`HTTP error! status: ${putTaskResponse.status} body: ${body}`);
+    // }
+    // const putTaskResult = await putTaskResponse.json();
+    // console.log('putTaskResult:', putTaskResult);
 
     // audit log after upload report success
     const auditMsg = 'upload report success';
     const auditLogBodyMeta = {
-      taskType: taskType,
-      StudyInstanceUID: StudyInstanceUID,
-      action: 'upload_report',
+      info: {
+        username: username,
+        taskType: taskType,
+        StudyInstanceUID: StudyInstanceUID,
+        taskId: taskId,
+        reportId: newReport.id,
+      },
+      action: 'create_report',
       action_result: 'success',
     };
     performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);

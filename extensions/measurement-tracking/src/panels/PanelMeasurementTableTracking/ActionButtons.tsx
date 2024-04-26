@@ -9,7 +9,7 @@ function ActionButtons({ onExportClick, onUploadClick, onCreateReportClick, user
 
   let reportButtonName = t('Create Report');
   if (userRoles && userRoles.length > 0) {
-    if (userRoles.includes('QC')) {
+    if (!userRoles.includes('doctor')) {
       reportButtonName = '查看报告';
     }
   }

@@ -165,8 +165,8 @@ function getDisplayText(mappedAnnotations, displaySet) {
 
   const instanceText = InstanceNumber ? ` I: ${InstanceNumber}` : '';
   const frameText = displaySet.isMultiFrame ? ` F: ${frameNumber}` : '';
-  
-  // TODO: evibased, IRC related tools, 放到IRC extension 
+
+  // TODO: evibased, IRC related tools, 放到IRC extension
   // displayText.push(`(S: ${SeriesNumber}${instanceText}${frameText})`);
   displayText.push(`(太小:5mm,消失:0mm)`);
 

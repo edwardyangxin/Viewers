@@ -69,15 +69,16 @@ window.config = {
   ],
   // evibased, config
   evibased: {
-    use_report_api: true,  // deprecated
+    use_report_api: true, // deprecated
     ping_url: 'https://evi-based.com/api/ping',
     audit_log_url: 'https://evi-based.com/api/log',
-    report_upload_url: 'https://evi-based.com/api/report',
+    report_upload_url: 'https://evi-based.com/api/report', // deprecated
     report_fetch_url: 'https://evi-based.com/api/report', // deprecated
     task_get_url: 'https://evi-based.com/api/task', // deprecated
-    task_update_url: 'https://evi-based.com/api/task',
+    task_update_url: 'https://evi-based.com/api/task', // deprecated
     task_post_url: 'https://evi-based.com/api/task', // deprecated
     apiv2_tasks_url: 'https://evi-based.com/api-v2/api/tasks',
+    apiv2_reports_url: 'https://evi-based.com/api-v2/api/reports',
     apiv2_timepoints_url: 'https://evi-based.com/api-v2/api/timepoints',
     timepoint_get_url: 'https://evi-based.com/api-v2/api/timepoints/search',
     graphqlDR: 'https://evi-based.com/api-v2/graphql-dr/graphql',
