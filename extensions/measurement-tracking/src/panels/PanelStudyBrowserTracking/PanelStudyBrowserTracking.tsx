@@ -186,10 +186,10 @@ function PanelStudyBrowserTracking({
           return;
         }
         if (qidoStudy.TrialTimePointId !== subjectTimepoints[qidoStudyUIDIndex].cycle) {
-          console.error('qidoStudy cycle not match timepoint cycle');
-          // TODO: evibased, 后续要报错当不匹配时，暂时comment掉
+          console.error('qidoStudy cycle not match timepoint cycle tag and timepoint', qidoStudy.TrialTimePointId, subjectTimepoints[qidoStudyUIDIndex].cycle);
+          // TODO: evibased, 后续要报错,当不匹配时，暂时comment掉
           // popContactAdminDialog(uiDialogService);
-          return;
+          // return;
         }
         const selectedStudyAttributes = {
           studyInstanceUid: qidoStudy.StudyInstanceUID,

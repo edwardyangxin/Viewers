@@ -154,6 +154,7 @@ async function _uploadReportAsync(
     // evibased, reportInfo fields from report page
     // reportInfo: {
     //   SOD
+    //   autoCalculatedSOD
     //   targetResponse
     //   nonTargetResponse
     //   response

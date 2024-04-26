@@ -124,6 +124,7 @@ export default function CreateReportDialogPrompt(
             ...value,
             reportInfo: {
               SOD: value.SOD,
+              autoCalculatedSOD: value.autoCalculatedSOD,
               targetResponse: value.targetResponse,
               nonTargetResponse: value.nonTargetResponse,
               response: value.response,
@@ -189,7 +190,8 @@ export default function CreateReportDialogPrompt(
           targetFindings: targetFindings,
           nonTargetFindings: nonTargetFindings,
           newLesionFindings: newLesionFindings,
-          SOD: autoCalculatedSOD, // always use auto calculated SOD, 加载报告currentReportInfo.SOD后，可能会修改Measurement
+          SOD: autoCalculatedSOD, // always use auto calculated SOD as initial value, 加载报告currentReportInfo.SOD后，可能会修改Measurement
+          autoCalculatedSOD: autoCalculatedSOD,
           targetResponse: currentReportInfo ? currentReportInfo.targetResponse : 'Baseline',
           nonTargetResponse: currentReportInfo ? currentReportInfo.nonTargetResponse : 'Baseline',
           response: currentReportInfo ? currentReportInfo.response : 'Baseline',
@@ -247,7 +249,8 @@ export default function CreateReportDialogPrompt(
                         value.targetFindings,
                         value.nonTargetFindings,
                         value.newLesionFindings,
-                        value.SOD
+                        value.SOD,
+                        value.autoCalculatedSOD
                       )}
                     />
                   </div>
@@ -255,7 +258,7 @@ export default function CreateReportDialogPrompt(
                   <div className="mt-3 flex grow flex-row justify-evenly">
                     <div className="w-1/3">
                       <Input
-                        label="直径总和SOD(回车计算公式,单位mm)"
+                        label={`直径总和SOD(回车计算公式,单位mm,自动计算:${parseFloat(autoCalculatedSOD).toFixed(1)}mm)`}
                         labelClassName="text-black text-[14px] leading-[1.2]"
                         className="border-primary-main bg-slate-300 text-black"
                         transparent={true}
@@ -592,7 +595,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
   );
 }
 
-function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings, SOD) {
+function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings, SOD, autoCalculatedSOD) {
   const tableDataSource = [];
   // target
   tableDataSource.push({
@@ -609,7 +612,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
       },
       {
         key: 'SOD',
-        content: <span>{`径线和(SOD):${parseFloat(SOD).toFixed(1)} mm`}</span>,
+        content: <span>{`径线和(SOD):${parseFloat(SOD).toFixed(1)}mm(自动计算:${parseFloat(autoCalculatedSOD).toFixed(1)}mm)`}</span>,
         gridCol: 3,
       },
     ],
