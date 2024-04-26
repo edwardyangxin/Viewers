@@ -333,6 +333,10 @@ function commandsModule({
         return;
       }
 
+      if (!toolGroup.hasTool(toolName)) {
+        return;
+      }
+
       const activeToolName = toolGroup.getActivePrimaryMouseButtonTool();
 
       if (activeToolName) {
@@ -762,9 +766,6 @@ function commandsModule({
     },
     setViewportColormap: {
       commandFn: actions.setViewportColormap,
-    },
-    toggleImageSliceSync: {
-      commandFn: actions.toggleImageSliceSync,
     },
     setSourceViewportForReferenceLinesTool: {
       commandFn: actions.setSourceViewportForReferenceLinesTool,

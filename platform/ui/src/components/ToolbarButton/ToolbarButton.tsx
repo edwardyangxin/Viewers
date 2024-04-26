@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 
 import IconButton from '../IconButton';
 import Icon from '../Icon';
@@ -14,8 +15,10 @@ const ToolbarButton = ({
   dropdownContent,
   //
   className,
+  disabled,
   size,
   toolTipClassName,
+  disableToolTip = false,
   ...rest
   //
 }) => {
@@ -35,12 +38,14 @@ const ToolbarButton = ({
       <Tooltip
         isSticky={shouldShowDropdown}
         content={shouldShowDropdown ? dropdownContent : label}
+        secondaryContent={disabled ? 'Not available on the current viewport' : null}
         tight={shouldShowDropdown}
         className={toolTipClassNameToUse}
+        isDisabled={disableToolTip}
       >
         <IconButton
           size={sizeToUse}
-          className={className}
+          className={classNames(className, disabled ? '!cursor-default' : '')}
           onClick={() => {
             onInteraction({
               itemId: id,
@@ -75,6 +80,8 @@ ToolbarButton.propTypes = {
   dropdownContent: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
   size: PropTypes.string,
   toolTipClassName: PropTypes.string,
+  disableToolTip: PropTypes.bool,
+  disabled: PropTypes.bool,
 };
 
 export default ToolbarButton;

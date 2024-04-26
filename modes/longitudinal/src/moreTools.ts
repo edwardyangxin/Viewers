@@ -54,7 +54,7 @@ const moreTools = [
           label: 'Flip Horizontal',
           tooltip: 'Flip Horizontally',
           commands: 'flipViewportHorizontal',
-          evaluate: 'evaluate.viewportProperties.toggle',
+          evaluate: ['evaluate.viewportProperties.toggle', 'evaluate.not3D'],
         }),
         // evibased, move to top level
         // createButton({
@@ -74,9 +74,8 @@ const moreTools = [
         //       commandOptions: { toggledState: true },
         //     },
         //   },
-        //   evaluate: 'evaluate.cornerstone.synchronizer',
+        //   evaluate: ['evaluate.cornerstone.synchronizer', 'evaluate.not3D'],
         // }),
-        // evibased, commented out
         // createButton({
         //   id: 'ReferenceLines',
         //   icon: 'tool-referenceLines',
@@ -139,7 +138,7 @@ const moreTools = [
         //   label: 'Cine',
         //   tooltip: 'Cine',
         //   commands: 'toggleCine',
-        //   evaluate: 'evaluate.cine',
+        //   evaluate: ['evaluate.cine', 'evaluate.not3D'],
         // }),
         createButton({
           id: 'Angle',

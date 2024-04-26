@@ -156,34 +156,6 @@ const toolbarButtons: Button[] = [
     },
   },
   {
-    id: 'Capture',
-    uiType: 'ohif.radioGroup',
-    props: {
-      icon: 'tool-capture',
-      label: 'Capture',
-      commands: [
-        {
-          commandName: 'showDownloadViewportModal',
-        },
-      ],
-      evaluate: 'evaluate.action',
-    },
-  },
-  {
-    id: 'Layout',
-    uiType: 'ohif.layoutSelector',
-    props: {
-      rows: 3,
-      columns: 3,
-      evaluate: 'evaluate.action',
-      commands: [
-        {
-          commandName: 'setViewportGridLayout',
-        },
-      ],
-    },
-  },
-  {
     id: 'MPR',
     uiType: 'ohif.radioGroup',
     props: {
@@ -198,6 +170,36 @@ const toolbarButtons: Button[] = [
         },
       ],
       evaluate: 'evaluate.mpr',
+    },
+  },
+  {
+    id: 'TrackBallRotate',
+    type: 'ohif.radioGroup',
+    props: {
+      type: 'tool',
+      icon: 'tool-3d-rotate',
+      label: '3D Rotate',
+      commands: setToolActiveToolbar,
+    },
+  },
+  {
+    id: 'Capture',
+    uiType: 'ohif.radioGroup',
+    props: {
+      icon: 'tool-capture',
+      label: 'Capture',
+      commands: 'showDownloadViewportModal',
+      evaluate: 'evaluate.action',
+    },
+  },
+  {
+    id: 'Layout',
+    uiType: 'ohif.layoutSelector',
+    props: {
+      rows: 3,
+      columns: 4,
+      evaluate: 'evaluate.action',
+      commands: 'setViewportGridLayout',
     },
   },
   {

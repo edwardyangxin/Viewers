@@ -94,12 +94,14 @@ function modeFactory({ modeConfiguration }) {
         'Rectangle',
         // other tools
         'Zoom',
-        'WindowLevel',
         'Pan',
+        'TrackballRotate',
+        'WindowLevel',
         // 'Capture',
         'Layout',
         'StackImageSync',
         'MPR',
+        'Crosshairs',
         'MoreTools',
       ]);
 
