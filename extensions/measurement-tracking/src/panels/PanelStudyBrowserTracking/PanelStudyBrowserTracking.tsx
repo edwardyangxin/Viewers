@@ -824,15 +824,6 @@ function _mapDisplaySets(
       const imageSrc = thumbnailImageSrcMap[ds.displaySetInstanceUID];
       const componentType = _getComponentType(ds);
       const numPanes = viewportGridService.getNumViewportPanes();
-      const viewportIdentificator = [];
-
-      if (numPanes !== 1) {
-        viewports.forEach(viewportData => {
-          if (viewportData?.displaySetInstanceUIDs?.includes(ds.displaySetInstanceUID)) {
-            viewportIdentificator.push(viewportData.viewportLabel);
-          }
-        });
-      }
 
       const array =
         componentType === 'thumbnailTracked' ? thumbnailDisplaySets : thumbnailNoImageDisplaySets;
@@ -858,7 +849,6 @@ function _mapDisplaySets(
         },
         isTracked: trackedSeriesInstanceUIDs.includes(ds.SeriesInstanceUID),
         isHydratedForDerivedDisplaySet: ds.isHydrated,
-        viewportIdentificator,
       };
 
       if (componentType === 'thumbnailNoImage') {

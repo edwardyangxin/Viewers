@@ -32,7 +32,11 @@ import {
   Select,
 } from '@ohif/ui';
 
+import { Types } from '@ohif/ui';
+
 import i18n from '@ohif/i18n';
+
+const PatientInfoVisibility = Types.PatientInfoVisibility;
 
 const { sortBySeriesDate } = utils;
 
@@ -898,6 +902,7 @@ function WorkList({
         menuOptions={menuOptions}
         isReturnEnabled={false}
         WhiteLabeling={appConfig.whiteLabeling}
+        showPatientInfo={PatientInfoVisibility.DISABLED}
       />
       {/* evibased, investigational use dialog at bottom page, disabled in config */}
       <InvestigationalUseDialog dialogConfiguration={appConfig?.investigationalUseDialog} />

@@ -7,29 +7,6 @@ import type { Button } from '@ohif/core/types';
 const { windowLevelPresets } = defaults;
 const { createButton } = ToolbarService;
 
-/**
- *
- * @param {*} preset - preset number (from above import)
- * @param {*} title
- * @param {*} subtitle
- */
-function _createWwwcPreset(preset, title, subtitle) {
-  return {
-    id: preset.toString(),
-    title,
-    subtitle,
-    commands: [
-      {
-        commandName: 'setWindowLevel',
-        commandOptions: {
-          ...windowLevelPresets[preset],
-        },
-        context: 'CORNERSTONE',
-      },
-    ],
-  };
-}
-
 export const setToolActiveToolbar = {
   commandName: 'setToolActiveToolbar',
   commandOptions: {
@@ -214,10 +191,10 @@ const toolbarButtons: Button[] = [
       evaluate: 'evaluate.cornerstoneTool',
     },
   },
-  // Window Level + Presets...
+  // Window Level
   {
     id: 'WindowLevel',
-    uiType: 'ohif.splitButton',
+    uiType: 'ohif.radioGroup',
     props: {
       groupId: 'WindowLevel',
       primary: createButton({
