@@ -27,7 +27,7 @@ function ThumbnailTracked({
 }) {
   const { t } = useTranslation('ThumbnailTracked');
   const trackedIcon = isTracked ? 'circled-checkmark' : 'dotted-circle';
-  const viewportIdentificatorLabel = viewportIdentificator.join(', ');
+  // const viewportIdentificatorLabel = viewportIdentificator.join(', ');
   const renderViewportLabels = () => {
     const MAX_LABELS_PER_COL = 3;
     const shouldShowStack = viewportIdentificator.length > MAX_LABELS_PER_COL;
@@ -43,7 +43,7 @@ function ThumbnailTracked({
             position="right"
             content={
               <div className="max-w-40 text-left">
-                {`${t('Viewport')}: ${viewportIdentificatorLabel}`}
+                {/* {`${t('Viewport')}: ${viewportIdentificatorLabel}`} */}
               </div>
             }
           >
@@ -88,11 +88,11 @@ function ThumbnailTracked({
                   <span>
                     <span className="text-white">{isTracked ? t('Series is tracked') : t('Series is untracked')}</span>
                   </span>
-                  {!!viewportIdentificator.length && (
-                    <span>
-                      {`${t('Viewport')}: ${viewportIdentificatorLabel}`}
-                    </span>
-                  )}
+                  {/* {!!viewportIdentificator.length && (
+                    <span> */}
+                      {/* {`${t('Viewport')}: ${viewportIdentificatorLabel}`} */}
+                    {/* </span>
+                  )} */}
                 </div>
               </div>
             }

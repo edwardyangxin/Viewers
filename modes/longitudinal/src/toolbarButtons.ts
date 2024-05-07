@@ -7,6 +7,23 @@ import type { Button } from '@ohif/core/types';
 const { windowLevelPresets } = defaults;
 const { createButton } = ToolbarService;
 
+function _createWwwcPreset(preset, title, subtitle) {
+  return {
+    id: preset.toString(),
+    title,
+    subtitle,
+    commands: [
+      {
+        commandName: 'setWindowLevel',
+        commandOptions: {
+          ...windowLevelPresets[preset],
+        },
+        context: 'CORNERSTONE',
+      },
+    ],
+  };
+}
+
 export const setToolActiveToolbar = {
   commandName: 'setToolActiveToolbar',
   commandOptions: {
@@ -196,31 +213,41 @@ const toolbarButtons: Button[] = [
     id: 'WindowLevel',
     uiType: 'ohif.radioGroup',
     props: {
-      groupId: 'WindowLevel',
-      primary: createButton({
-        id: 'WindowLevel',
-        icon: 'tool-window-level',
-        label: 'Window Level',
-        tooltip: 'Window Level',
-        commands: setToolActiveToolbar,
-        evaluate: 'evaluate.cornerstoneTool',
-      }),
-      secondary: {
-        icon: 'chevron-down',
-        label: 'W/L Manual',
-        tooltip: 'W/L Presets',
-      },
-      renderer: WindowLevelMenuItem,
-      items: [
-        _createWwwcPreset(1, 'Soft tissue(软组织)', '400 / 40'),
-        _createWwwcPreset(2, 'Lung(肺)', '1500 / -600'),
-        _createWwwcPreset(3, 'Liver(肝脏)', '150 / 90'),
-        _createWwwcPreset(4, 'Bone(骨)', '2500 / 480'),
-        _createWwwcPreset(5, 'Brain(脑)', '80 / 40'),
-        _createWwwcPreset(6, 'Mediastinum(纵隔)', '350 / 50'),
-      ],
+      icon: 'tool-window-level',
+      label: 'Window Level',
+      commands: setToolActiveToolbar,
+      evaluate: 'evaluate.cornerstoneTool',
     },
   },
+  // {
+  //   id: 'WindowLevel',
+  //   uiType: 'ohif.splitButton',
+  //   props: {
+  //     groupId: 'WindowLevel',
+  //     primary: createButton({
+  //       id: 'WindowLevel',
+  //       icon: 'tool-window-level',
+  //       label: 'Window Level',
+  //       tooltip: 'Window Level',
+  //       commands: setToolActiveToolbar,
+  //       evaluate: 'evaluate.cornerstoneTool',
+  //     }),
+  //     secondary: {
+  //       icon: 'chevron-down',
+  //       label: 'W/L Manual',
+  //       tooltip: 'W/L Presets',
+  //     },
+  //     renderer: WindowLevelMenuItem,
+  //     items: [
+  //       _createWwwcPreset(1, 'Soft tissue(软组织)', '400 / 40'),
+  //       _createWwwcPreset(2, 'Lung(肺)', '1500 / -600'),
+  //       _createWwwcPreset(3, 'Liver(肝脏)', '150 / 90'),
+  //       _createWwwcPreset(4, 'Bone(骨)', '2500 / 480'),
+  //       _createWwwcPreset(5, 'Brain(脑)', '80 / 40'),
+  //       _createWwwcPreset(6, 'Mediastinum(纵隔)', '350 / 50'),
+  //     ],
+  //   },
+  // },
   // Pan...
   {
     id: 'Pan',

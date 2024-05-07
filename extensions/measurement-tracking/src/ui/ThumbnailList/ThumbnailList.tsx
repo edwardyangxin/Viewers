@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import ThumbnailTracked from '../ThumbnailTracked';
+// import ThumbnailTracked from '../ThumbnailTracked';
 import ThumbnailNoImage from '../ThumbnailNoImage';
-import { Thumbnail, Types } from '@ohif/ui';
+import { Thumbnail, Types, ThumbnailTracked } from '@ohif/ui';
 
 const ThumbnailList = ({
   thumbnails,
@@ -52,7 +52,7 @@ const ThumbnailList = ({
                   imageSrc={imageSrc}
                   imageAltText={imageAltText}
                   messages={messages}
-                  viewportIdentificator={viewportIdentificator}
+                  // viewportIdentificator={viewportIdentificator} // deprecated  
                   isActive={isActive}
                   onClick={() => onThumbnailClick(displaySetInstanceUID)}
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
@@ -71,7 +71,7 @@ const ThumbnailList = ({
                   imageSrc={imageSrc}
                   imageAltText={imageAltText}
                   messages={messages}
-                  viewportIdentificator={viewportIdentificator}
+                  // viewportIdentificator={viewportIdentificator} // deprecated
                   isTracked={isTracked}
                   isActive={isActive}
                   onClick={() => onThumbnailClick(displaySetInstanceUID)}

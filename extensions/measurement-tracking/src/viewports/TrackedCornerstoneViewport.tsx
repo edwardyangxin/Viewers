@@ -9,18 +9,17 @@ import { BaseVolumeViewport, Enums } from '@cornerstonejs/core';
 import { getTimepointName } from '../utils/utils';
 import { useTranslation } from 'react-i18next';
 
-const { formatDate } = utils;
+// const { formatDate } = utils;
 
 function TrackedCornerstoneViewport(props) {
   const { displaySets, viewportId, servicesManager, extensionManager } = props;
   const { StudyInstanceUIDs } = useImageViewer();
-  const { t } = useTranslation('Common');
   const {
     measurementService,
     cornerstoneViewportService,
-    viewportGridService, uiNotificationService,
+    viewportGridService,
     viewportActionCornersService,
-    uiNotificationService, // evibased, 
+    uiNotificationService, // evibased,
   } = servicesManager.services;
 
   // Todo: handling more than one displaySet on the same viewport
