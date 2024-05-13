@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { useImageViewer, Select, useViewportGrid, Input } from '@ohif/ui';
+import { StudySummary, useImageViewer, Select, useViewportGrid, Input } from '@ohif/ui';
 import TimePointSummary from '../../ui/TimePointSummary';
 import MeasurementTable from '../../ui/MeasurementTable';
+import ActionButtons from '../../ActionButtons';
 import { DicomMetadataStore, utils } from '@ohif/core';
 import { useDebounce } from '@hooks';
 import { useAppConfig } from '@state';
-import ActionButtons from './ActionButtons';
 import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { useNavigate } from 'react-router-dom';
@@ -42,14 +42,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   const dataSource = dataSources[0];
   const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
+  const { t } = useTranslation('MeasurementTable');
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(Date.now().toString());
   const debouncedMeasurementChangeTimestamp = useDebounce(measurementChangeTimestamp, 200);
   const {
     measurementService,
     uiDialogService,
     displaySetService,
-    userAuthenticationService,
     customizationService,
+    userAuthenticationService, // evibased, get username and roles
   } = servicesManager.services;
   const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
@@ -504,7 +505,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     }
   }
 
-  // default 分组显示
+  // evibased, default 分组显示, deprecated
   // const displayMeasurementsWithoutFindings = displayMeasurements.filter(
   //   dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
   // );

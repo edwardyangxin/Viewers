@@ -74,7 +74,12 @@ function initDefaultToolGroup(
       { toolName: toolNames.Magnify },
       { toolName: toolNames.SegmentationDisplay },
       { toolName: toolNames.CalibrationLine },
-      { toolName: toolNames.AdvancedMagnify },
+      {
+        toolName: toolNames.AdvancedMagnify,
+        configuration: {
+          disableOnPassive: true,
+        },
+      },
       { toolName: toolNames.UltrasoundDirectional },
       { toolName: toolNames.PlanarFreehandROI },
       { toolName: toolNames.SplineROI },

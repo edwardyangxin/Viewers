@@ -136,8 +136,8 @@ function modeFactory({ modeConfiguration }) {
       customizationService.addModeCustomizations([
         '@ohif/extension-measurement-tracking.customizationModule.custom-context-menu',
         {
-          id: 'segmentation.disableEditing',
-          value: true,
+          id: 'segmentation.panel',
+          disableEditing: true,
         },
       ]);
 
@@ -239,9 +239,9 @@ function modeFactory({ modeConfiguration }) {
             id: ohif.layout,
             props: {
               leftPanels: [tracked.thumbnailList],
-              // rightPanels: [tracked.measurements, dicomSeg.panel], // evibased, disable dicomSeg panel
+              // rightPanels: [dicomSeg.panel, tracked.measurements], // evibased, disable dicomSeg panel
               rightPanels: [tracked.measurements, tracked.pastReports],
-              rightPanelDefaultClosed: false,
+              rightPanelClosed: false,
               viewports: [
                 {
                   namespace: tracked.viewport,
