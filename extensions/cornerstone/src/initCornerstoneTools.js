@@ -16,7 +16,6 @@ import {
   ProbeTool,
   AngleTool,
   CobbAngleTool,
-  PlanarFreehandROITool,
   MagnifyTool,
   CrosshairsTool,
   SegmentationDisplayTool,
@@ -28,6 +27,11 @@ import {
   CircleScissorsTool,
   RectangleScissorsTool,
   SphereScissorsTool,
+  AdvancedMagnifyTool,
+  UltrasoundDirectionalTool,
+  PlanarFreehandROITool,
+  SplineROITool,
+  LivewireContourTool,
 } from '@cornerstonejs/tools';
 
 import CalibrationLineTool from './tools/CalibrationLineTool';
@@ -58,7 +62,6 @@ export default function initCornerstoneTools(configuration = {}) {
   addTool(DragProbeTool);
   addTool(AngleTool);
   addTool(CobbAngleTool);
-  addTool(PlanarFreehandROITool);
   addTool(MagnifyTool);
   addTool(CrosshairsTool);
   addTool(SegmentationDisplayTool);
@@ -69,6 +72,11 @@ export default function initCornerstoneTools(configuration = {}) {
   addTool(RectangleScissorsTool);
   addTool(SphereScissorsTool);
   addTool(ImageOverlayViewerTool);
+  addTool(AdvancedMagnifyTool);
+  addTool(UltrasoundDirectionalTool);
+  addTool(PlanarFreehandROITool);
+  addTool(SplineROITool);
+  addTool(LivewireContourTool);
 
   // Modify annotation tools to use dashed lines on SR
   const annotationStyle = {
@@ -103,7 +111,6 @@ const toolNames = {
   Bidirectional: BidirectionalTool.toolName,
   Angle: AngleTool.toolName,
   CobbAngle: CobbAngleTool.toolName,
-  PlanarFreehandROI: PlanarFreehandROITool.toolName,
   Magnify: MagnifyTool.toolName,
   Crosshairs: CrosshairsTool.toolName,
   SegmentationDisplay: SegmentationDisplayTool.toolName,
@@ -114,6 +121,11 @@ const toolNames = {
   RectangleScissors: RectangleScissorsTool.toolName,
   SphereScissors: SphereScissorsTool.toolName,
   ImageOverlayViewer: ImageOverlayViewerTool.toolName,
+  AdvancedMagnify: AdvancedMagnifyTool.toolName,
+  UltrasoundDirectional: UltrasoundDirectionalTool.toolName,
+  SplineROI: SplineROITool.toolName,
+  LivewireContour: LivewireContourTool.toolName,
+  PlanarFreehandROI: PlanarFreehandROITool.toolName,
 };
 
 export { toolNames };

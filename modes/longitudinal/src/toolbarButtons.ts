@@ -32,7 +32,7 @@ export const setToolActiveToolbar = {
 };
 
 const toolbarButtons: Button[] = [
-  // evibased, commented out, moved to the top level
+  // evibased, commented out, moved to the top level, 新的工具定义参考
   // Measurement split button
   // {
   //   id: 'MeasurementTools',
@@ -94,6 +94,30 @@ const toolbarButtons: Button[] = [
   //         commands: setToolActiveToolbar,
   //         evaluate: 'evaluate.cornerstoneTool',
   //       }),
+  // createButton({
+  //   id: 'PlanarFreehandROI',
+  //   icon: 'icon-tool-freehand-roi',
+  //   label: 'Freehand ROI',
+  //   tooltip: 'Freehand ROI',
+  //   commands: setToolActiveToolbar,
+  //   evaluate: 'evaluate.cornerstoneTool',
+  // }),
+  // createButton({
+  //   id: 'SplineROI',
+  //   icon: 'icon-tool-spline-roi',
+  //   label: 'Spline ROI',
+  //   tooltip: 'Spline ROI',
+  //   commands: setToolActiveToolbar,
+  //   evaluate: 'evaluate.cornerstoneTool',
+  // }),
+  // createButton({
+  //   id: 'LivewireContour',
+  //   icon: 'icon-tool-livewire',
+  //   label: 'Livewire tool',
+  //   tooltip: 'Livewire tool',
+  //   commands: setToolActiveToolbar,
+  //   evaluate: 'evaluate.cornerstoneTool',
+  // }),
   //     ],
   //   },
   // },

@@ -80,9 +80,9 @@ function CustomizableViewportOverlay({
     'cornerstoneOverlayBottomRight'
   );
 
-  const instance = useMemo(() => {
+  const instances = useMemo(() => {
     if (viewportData != null) {
-      return _getViewportInstance(viewportData, imageIndex);
+      return _getViewportInstances(viewportData);
     } else {
       return null;
     }
@@ -178,7 +178,7 @@ function CustomizableViewportOverlay({
           formatNumberPrecision,
           formatSpacing, // evibased
         },
-        instance,
+        instance: instances ? instances[item?.instanceIndex] : null,
         voi,
         scale,
         instanceNumber,
@@ -208,7 +208,7 @@ function CustomizableViewportOverlay({
       viewportId,
       servicesManager,
       customizationService,
-      instance,
+      instances,
       voi,
       scale,
       instanceNumber,
@@ -218,13 +218,15 @@ function CustomizableViewportOverlay({
   const getContent = useCallback(
     (customization, defaultItems, keyPrefix) => {
       const items = customization?.items ?? defaultItems;
-
       return (
         <>
           {items.map((item, index) => (
             <div key={`${keyPrefix}_${index}`}>
               {item?.condition
-                ? item.condition({ instance, formatters: { formatDate: formatDICOMDate } })
+                ? item.condition({
+                    instance: instances ? instances[item?.instanceIndex] : null,
+                    formatters: { formatDate: formatDICOMDate },
+                  })
                   ? _renderOverlayItem(item)
                   : null
                 : _renderOverlayItem(item)}
@@ -236,12 +238,52 @@ function CustomizableViewportOverlay({
     [_renderOverlayItem]
   );
 
+  const studyDateItem = {
+    id: 'StudyDate',
+    customizationType: 'ohif.overlayItem',
+    label: '',
+    title: 'Study date',
+    condition: ({ instance }) => instance && instance.StudyDate,
+    contentF: ({ instance, formatters: { formatDate } }) => formatDate(instance.StudyDate),
+  };
+
+  const seriesDescriptionItem = {
+    id: 'SeriesDescription',
+    customizationType: 'ohif.overlayItem',
+    label: '',
+    title: 'Series description',
+    attribute: 'SeriesDescription',
+    condition: ({ instance }) => {
+      return instance && instance.SeriesDescription;
+    },
+  };
+
+  const topLeftItems = instances
+    ? instances
+        .map((instance, index) => {
+          return [
+            {
+              ...studyDateItem,
+              instanceIndex: index,
+            },
+            {
+              ...seriesDescriptionItem,
+              instanceIndex: index,
+            },
+          ];
+        })
+        .flat()
+    : [];
+
   return (
     <ViewportOverlay
       topLeft={
         /**
          * Inline default overlay items for a more standard expansion
          */
+        // evibased, comment out default items
+        // getContent(topLeftCustomization, [...topLeftItems], 'topLeftOverlayItem')
+        // evibased, dicom info top left corner
         getContent(
           topLeftCustomization,
           // evibased info
@@ -259,7 +301,8 @@ function CustomizableViewportOverlay({
               customizationType: 'ohif.overlayItem',
               label: '',
               title: 'Study date',
-              condition: ({ instance }) => instance && !instance.ClinicalTrialTimePointID && instance.StudyDate,
+              condition: ({ instance }) =>
+                instance && !instance.ClinicalTrialTimePointID && instance.StudyDate,
               contentF: ({ instance, formatters: { formatDate } }) =>
                 formatDate(instance.StudyDate),
             },
@@ -363,18 +406,50 @@ function getTimepointName(timepointId) {
   return timepointName;
 }
 
-function _getViewportInstance(viewportData, imageIndex) {
-  let imageId = null;
+// evibased
+function formatSpacing(spacing) {
+  return `${parseFloat(spacing).toFixed(1)} mm`;
+}
+
+function getTimepointName(timepointId) {
+  if (timepointId === null || timepointId === undefined) {
+    return '未知';
+  }
+  // deprecated, remove timepoint prefix, 现在没有T前缀
+  timepointId = timepointId.startsWith('T') ? timepointId.slice(1) : timepointId;
+  let timepointName = '';
+  if (timepointId === '00' || timepointId === '0') {
+    timepointName = '基线';
+  } else if (timepointId.length === 3) {
+    // the 3rd character is the unscheduled visit number
+    const unscheduledVisitNumber = timepointId[2];
+    timepointName = `访视${timepointId.slice(0, 2)}后计划外(${unscheduledVisitNumber})`;
+  } else if (timepointId.length <= 2) {
+    timepointName = `访视${timepointId}`;
+  }
+  return timepointName;
+}
+
+function _getViewportInstances(viewportData) {
+  const imageIds = [];
   if (viewportData.viewportType === Enums.ViewportType.STACK) {
-    imageId = viewportData.data.imageIds[imageIndex];
+    imageIds.push(viewportData.data.imageIds[0]);
   } else if (viewportData.viewportType === Enums.ViewportType.ORTHOGRAPHIC) {
     const volumes = viewportData.data;
-    if (volumes && volumes.length == 1) {
-      const volume = volumes[0];
-      imageId = volume.imageIds[imageIndex];
-    }
+    volumes.forEach(volume => {
+      if (!volume?.imageIds) {
+        return;
+      }
+      imageIds.push(volume.imageIds[0]);
+    });
   }
-  return imageId ? metaData.get('instance', imageId) || {} : {};
+  const instances = [];
+
+  imageIds.forEach(imageId => {
+    const instance = metaData.get('instance', imageId) || {};
+    instances.push(instance);
+  });
+  return instances;
 }
 
 const getInstanceNumber = (viewportData, viewportId, imageIndex, cornerstoneViewportService) => {
@@ -388,7 +463,8 @@ const getInstanceNumber = (viewportData, viewportId, imageIndex, cornerstoneView
       instanceNumber = _getInstanceNumberFromVolume(
         viewportData,
         viewportId,
-        cornerstoneViewportService
+        cornerstoneViewportService,
+        imageIndex
       );
       break;
   }
@@ -419,15 +495,20 @@ function _getInstanceNumberFromStack(viewportData, imageIndex) {
 // Since volume viewports can be in any view direction, they can render
 // a reconstructed image which don't have imageIds; therefore, no instance and instanceNumber
 // Here we check if viewport is in the acquisition direction and if so, we get the instanceNumber
-function _getInstanceNumberFromVolume(viewportData, viewportId, cornerstoneViewportService) {
-  const volumes = viewportData.volumes;
+function _getInstanceNumberFromVolume(
+  viewportData,
+  viewportId,
+  cornerstoneViewportService,
+  imageIndex
+) {
+  const volumes = viewportData.data;
 
-  // Todo: support fusion of acquisition plane which has instanceNumber
-  if (!volumes || volumes.length > 1) {
+  if (!volumes) {
     return;
   }
 
-  const volume = volumes[0];
+  // Todo: support fusion of acquisition plane which has instanceNumber
+  const { volume } = volumes[0];
   const { direction, imageIds } = volume;
 
   const cornerstoneViewport = cornerstoneViewportService.getCornerstoneViewport(viewportId);
@@ -510,11 +591,15 @@ function InstanceNumberOverlayItem({
       className="overlay-item flex flex-row"
       style={{ color: (customization && customization.color) || undefined }}
     >
-      <span className="mr-1 shrink-0">I:</span>
       <span>
-        {instanceNumber !== undefined && instanceNumber !== null
-          ? `${instanceNumber} (${imageIndex + 1}/${numberOfSlices})`
-          : `${imageIndex + 1}/${numberOfSlices}`}
+        {instanceNumber !== undefined && instanceNumber !== null ? (
+          <>
+            <span className="mr-1 shrink-0">I:</span>
+            <span>{`${instanceNumber} (${imageIndex + 1}/${numberOfSlices})`}</span>
+          </>
+        ) : (
+          `${imageIndex + 1}/${numberOfSlices}`
+        )}
       </span>
     </div>
   );
