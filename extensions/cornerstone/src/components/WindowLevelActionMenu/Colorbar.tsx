@@ -103,7 +103,7 @@ export function Colorbar({
   return (
     <div className="all-in-one-menu-item flex w-full justify-center">
       <SwitchButton
-        label="Display Color bar"
+        label="显示颜色标尺" // evibased,
         checked={showColorbar}
         onChange={() => {
           onSetColorbar();

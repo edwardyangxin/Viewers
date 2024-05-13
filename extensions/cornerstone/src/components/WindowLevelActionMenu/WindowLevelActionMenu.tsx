@@ -153,8 +153,9 @@ export function WindowLevelActionMenu({
         {colormaps && !is3DVolume && (
           <AllInOneMenu.SubMenu
             key="colorLUTPresets"
-            itemLabel="Color LUT"
+            itemLabel="颜色变换(LUT)" // evibased, 
             itemIcon="icon-color-lut"
+            backLabel="返回"
           >
             <Colormap
               colormaps={colormaps}
@@ -171,6 +172,7 @@ export function WindowLevelActionMenu({
             key="windowLevelPresets"
             itemLabel={t('Modality Window Presets', { modality: Object.keys(presets)[0] })}
             itemIcon="viewport-window-level"
+            backLabel="返回"
           >
             <WindowLevel
               viewportId={viewportId}

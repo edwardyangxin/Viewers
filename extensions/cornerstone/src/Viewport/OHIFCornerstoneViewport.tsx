@@ -341,6 +341,7 @@ const OHIFCornerstoneViewport = React.memo(props => {
    * the viewportGrid to set the correct displaySet on the viewport, AND THEN we check
    * the cache for jumping to see if there is any jump queued, then we jump to the correct slice.
    */
+  // evibased, jump to measurement
   useEffect(() => {
     if (isJumpToMeasurementDisabled) {
       return;
@@ -372,6 +373,7 @@ const OHIFCornerstoneViewport = React.memo(props => {
   }, [displaySets, elementRef, viewportId]);
 
   // Set up the window level action menu in the viewport action corners.
+  // evibased, 右上角的窗宽窗位菜单、color map 菜单、3D volume rendering 菜单
   useEffect(() => {
     // Doing an === check here because the default config value when not set is true
     if (appConfig.addWindowLevelActionMenu === false) {
