@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-// import ThumbnailTracked from '../ThumbnailTracked';
+import ThumbnailTracked from '../ThumbnailTracked';
 import ThumbnailNoImage from '../ThumbnailNoImage';
-import { Thumbnail, Types, ThumbnailTracked } from '@ohif/ui';
+import { Thumbnail, Types } from '@ohif/ui';
 
 const ThumbnailList = ({
   thumbnails,
@@ -28,7 +28,6 @@ const ThumbnailList = ({
           componentType,
           seriesDate,
           countIcon,
-          viewportIdentificator,
           isTracked,
           canReject,
           onReject,
@@ -52,7 +51,6 @@ const ThumbnailList = ({
                   imageSrc={imageSrc}
                   imageAltText={imageAltText}
                   messages={messages}
-                  // viewportIdentificator={viewportIdentificator} // deprecated  
                   isActive={isActive}
                   onClick={() => onThumbnailClick(displaySetInstanceUID)}
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
@@ -71,7 +69,6 @@ const ThumbnailList = ({
                   imageSrc={imageSrc}
                   imageAltText={imageAltText}
                   messages={messages}
-                  // viewportIdentificator={viewportIdentificator} // deprecated
                   isTracked={isTracked}
                   isActive={isActive}
                   onClick={() => onThumbnailClick(displaySetInstanceUID)}
@@ -95,7 +92,6 @@ const ThumbnailList = ({
                   onReject={onReject}
                   onClick={() => onThumbnailClick(displaySetInstanceUID)}
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
-                  viewportIdentificator={viewportIdentificator}
                   isHydratedForDerivedDisplaySet={isHydratedForDerivedDisplaySet}
                 />
               );
@@ -119,7 +115,6 @@ ThumbnailList.propTypes = {
       numInstances: PropTypes.number,
       description: PropTypes.string,
       componentType: Types.ThumbnailType.isRequired,
-      viewportIdentificator: Types.StringArray,
       isTracked: PropTypes.bool,
       /**
        * Data the thumbnail should expose to a receiving drop target. Use a matching
