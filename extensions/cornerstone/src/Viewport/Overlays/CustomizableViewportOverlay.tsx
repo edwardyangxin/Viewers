@@ -243,7 +243,8 @@ function CustomizableViewportOverlay({
     customizationType: 'ohif.overlayItem',
     label: '',
     title: 'Study date',
-    condition: ({ instance }) => instance && instance.StudyDate,
+    condition: ({ instance }) =>
+      instance && !instance.ClinicalTrialTimePointID && instance.StudyDate,
     contentF: ({ instance, formatters: { formatDate } }) => formatDate(instance.StudyDate),
   };
 
@@ -258,6 +259,51 @@ function CustomizableViewportOverlay({
     },
   };
 
+  // evibased, dicom items
+  const patientIDItem = {
+    id: 'PatientID',
+    customizationType: 'ohif.overlayItem',
+    // label: '受试者',
+    title: 'Patient ID',
+    attribute: 'PatientID',
+    condition: ({ instance }) => instance && instance.PatientID,
+  };
+
+  const clinicalTrialTimePointIDItem = {
+    id: 'ClinicalTrialTimePointID',
+    customizationType: 'ohif.overlayItem',
+    // label: '访视编号',
+    title: 'Clinical Timepoint',
+    // attribute: 'ClinicalTrialTimePointID',
+    condition: ({ instance }) => instance && instance.ClinicalTrialTimePointID,
+    contentF: ({ instance, formatters }) => {
+      return getTimepointName(instance.ClinicalTrialTimePointID);
+    },
+  };
+
+  const sliceThicknessItem = {
+    id: 'SliceThickness',
+    customizationType: 'ohif.overlayItem',
+    label: '层厚',
+    title: 'SliceThickness',
+    // attribute: 'SliceThickness',
+    condition: ({ instance }) => instance && instance.SliceThickness,
+    contentF: ({ instance, formatters: { formatSpacing } }) =>
+      formatSpacing(instance.SliceThickness),
+  };
+
+  const spacingBetweenSlicesItem = {
+    id: 'SpacingBetweenSlices',
+    customizationType: 'ohif.overlayItem',
+    label: '层间距',
+    title: 'SpacingBetweenSlices',
+    // attribute: 'SpacingBetweenSlices',
+    condition: ({ instance }) => instance && instance.SpacingBetweenSlices,
+    contentF: ({ instance, formatters: { formatSpacing } }) =>
+      formatSpacing(instance.SpacingBetweenSlices),
+  };
+
+  // evibased, viewport top left corner dicom infos
   const topLeftItems = instances
     ? instances
         .map((instance, index) => {
@@ -267,9 +313,25 @@ function CustomizableViewportOverlay({
               instanceIndex: index,
             },
             {
-              ...seriesDescriptionItem,
+              ...patientIDItem,
               instanceIndex: index,
             },
+            {
+              ...clinicalTrialTimePointIDItem,
+              instanceIndex: index,
+            },
+            {
+              ...sliceThicknessItem,
+              instanceIndex: index,
+            },
+            {
+              ...spacingBetweenSlicesItem,
+              instanceIndex: index,
+            },
+            // {
+            //   ...seriesDescriptionItem,
+            //   instanceIndex: index,
+            // },
           ];
         })
         .flat()
@@ -281,73 +343,7 @@ function CustomizableViewportOverlay({
         /**
          * Inline default overlay items for a more standard expansion
          */
-        // evibased, comment out default items
-        // getContent(topLeftCustomization, [...topLeftItems], 'topLeftOverlayItem')
-        // evibased, dicom info top left corner
-        getContent(
-          topLeftCustomization,
-          // evibased info
-          [
-            {
-              id: 'PatientID',
-              customizationType: 'ohif.overlayItem',
-              // label: '受试者',
-              title: 'Patient ID',
-              attribute: 'PatientID',
-              condition: ({ instance }) => instance && instance.PatientID,
-            },
-            {
-              id: 'StudyDate',
-              customizationType: 'ohif.overlayItem',
-              label: '',
-              title: 'Study date',
-              condition: ({ instance }) =>
-                instance && !instance.ClinicalTrialTimePointID && instance.StudyDate,
-              contentF: ({ instance, formatters: { formatDate } }) =>
-                formatDate(instance.StudyDate),
-            },
-            {
-              id: 'ClinicalTrialTimePointID',
-              customizationType: 'ohif.overlayItem',
-              // label: '访视编号',
-              title: 'Clinical Timepoint',
-              // attribute: 'ClinicalTrialTimePointID',
-              condition: ({ instance }) => instance && instance.ClinicalTrialTimePointID,
-              contentF: ({ instance, formatters }) => {
-                return getTimepointName(instance.ClinicalTrialTimePointID);
-              },
-            },
-            {
-              id: 'SliceThickness',
-              customizationType: 'ohif.overlayItem',
-              label: '层厚',
-              title: 'SliceThickness',
-              // attribute: 'SliceThickness',
-              condition: ({ instance }) => instance && instance.SliceThickness,
-              contentF: ({ instance, formatters: { formatSpacing } }) =>
-                formatSpacing(instance.SliceThickness),
-            },
-            {
-              id: 'SpacingBetweenSlices',
-              customizationType: 'ohif.overlayItem',
-              label: '层间距',
-              title: 'SpacingBetweenSlices',
-              // attribute: 'SpacingBetweenSlices',
-              condition: ({ instance }) => instance && instance.SpacingBetweenSlices,
-              contentF: ({ instance, formatters: { formatSpacing } }) =>
-                formatSpacing(instance.SpacingBetweenSlices),
-            },
-            // {
-            //   id: 'SeriesDescription',
-            //   customizationType: 'ohif.overlayItem',
-            //   label: '',
-            //   title: 'Series description',
-            //   attribute: 'SeriesDescription',
-            //   condition: ({ instance }) => instance && instance.SeriesDescription,
-            // },
-          ],
-          'topLeftOverlayItem'
-        )
+        getContent(topLeftCustomization, [...topLeftItems], 'topLeftOverlayItem')
       }
       topRight={getContent(topRightCustomization, [], 'topRightOverlayItem')}
       bottomLeft={getContent(
@@ -380,30 +376,6 @@ function CustomizableViewportOverlay({
       )}
     />
   );
-}
-
-// evibased
-function formatSpacing(spacing) {
-  return `${parseFloat(spacing).toFixed(1)} mm`;
-}
-
-function getTimepointName(timepointId) {
-  if (timepointId === null || timepointId === undefined) {
-    return '未知';
-  }
-  // deprecated, remove timepoint prefix, 现在没有T前缀
-  timepointId = timepointId.startsWith('T') ? timepointId.slice(1) : timepointId;
-  let timepointName = '';
-  if (timepointId === '00' || timepointId === '0') {
-    timepointName = '基线';
-  } else if (timepointId.length === 3) {
-    // the 3rd character is the unscheduled visit number
-    const unscheduledVisitNumber = timepointId[2];
-    timepointName = `访视${timepointId.slice(0, 2)}后计划外(${unscheduledVisitNumber})`;
-  } else if (timepointId.length <= 2) {
-    timepointName = `访视${timepointId}`;
-  }
-  return timepointName;
 }
 
 // evibased
