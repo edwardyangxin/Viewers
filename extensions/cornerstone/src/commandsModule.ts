@@ -16,7 +16,7 @@ import { Types as OhifTypes } from '@ohif/core';
 import { vec3, mat4 } from 'gl-matrix';
 
 import CornerstoneViewportDownloadForm from './utils/CornerstoneViewportDownloadForm';
-import callInputDialog from './utils/callInputDialog';
+import { callLabelAutocompleteDialog, showLabelAnnotationPopup } from './utils/callInputDialog';
 import toggleImageSliceSync from './utils/imageSliceSync/toggleImageSliceSync';
 import { getFirstAnnotationSelected } from './utils/measurementServiceMappings/utils/selection';
 import getActiveViewportEnabledElement from './utils/getActiveViewportEnabledElement';
@@ -40,6 +40,7 @@ function commandsModule({
     cornerstoneViewportService,
     uiNotificationService,
     measurementService,
+    customizationService,
     colorbarService,
     hangingProtocolService,
     syncGroupService,
@@ -143,41 +144,18 @@ function commandsModule({
      * updated: set measurement data and label
      */
     setMeasurementLabel: ({ uid }) => {
+      const labelConfig = customizationService.get('measurementLabels');
       const measurement = measurementService.getMeasurement(uid);
-
-      callInputDialog(
-        uiDialogService,
-        measurement,
-        (label, actionId) => {
-          /** label in form:
-            {measurementLabelInfo: {
-              length: 221.56495778786802,
-              unit: "mm",
-              target: {
-                value: "Target-CR",
-                label: "Target(CR)",
-              },
-              location: {
-                value: "Liver",
-                label: "Liver",
-              },
+      showLabelAnnotationPopup(measurement, uiDialogService, labelConfig).then(
+        (val: Map<any, any>) => {
+          measurementService.update(
+            uid,
+            {
+              ...val,
             },
-            label: "Target|Liver"}
-          */
-          if (actionId === 'cancel') {
-            return;
-          }
-
-          // copy measurement
-          const updatedMeasurement = { ...measurement };
-          // update label data
-          updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
-          updatedMeasurement['label'] = label['label'];
-
-          // measurementService in platform core service module
-          measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
-        },
-        false // isArrowAnnotateInputDialog = false
+            true
+          );
+        }
       );
     },
 
@@ -253,9 +231,9 @@ function commandsModule({
 
       viewportGridService.setActiveViewportId(viewportId);
     },
-    // TODO: evibased, 箭头标注，重构，独立的command
-    arrowTextCallback: ({ callback, data }) => {
-      callInputDialog(uiDialogService, data, callback);
+    arrowTextCallback: ({ callback, data, uid }) => {
+      const labelConfig = customizationService.get('measurementLabels');
+      callLabelAutocompleteDialog(uiDialogService, callback, {}, labelConfig);
     },
     toggleCine: () => {
       const { viewports } = viewportGridService.getState();

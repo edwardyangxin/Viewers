@@ -1,11 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import {
-  useImageViewer,
-  Select,
-  useViewportGrid,
-  Input,
-} from '@ohif/ui';
+import { useImageViewer, Select, useViewportGrid, Input } from '@ohif/ui';
 import TimePointSummary from '../../ui/TimePointSummary';
 import MeasurementTable from '../../ui/MeasurementTable';
 import { DicomMetadataStore, utils } from '@ohif/core';
@@ -16,13 +11,16 @@ import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LesionMapping, targetKeyGroup, nonTargetKeyGroup, imageQualityOptions, imageQualityMapping, NonMeasurementTools} from '../../utils/mappings';
-import PastReportItem from '../../ui/PastReportItem';
 import {
-  getPastReportDialog,
-  getTimepointName,
-  getViewportId,
-} from '../../utils/utils';
+  LesionMapping,
+  targetKeyGroup,
+  nonTargetKeyGroup,
+  imageQualityOptions,
+  imageQualityMapping,
+  NonMeasurementTools,
+} from '../../utils/mappings';
+import PastReportItem from '../../ui/PastReportItem';
+import { getPastReportDialog, getTimepointName, getViewportId } from '../../utils/utils';
 import callInputDialog from '../../utils/callInputDialog';
 
 const { downloadCSVReport } = utils;
@@ -44,27 +42,31 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   const dataSource = dataSources[0];
   const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
-  const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(
-    Date.now().toString()
-  );
-  const debouncedMeasurementChangeTimestamp = useDebounce(
-    measurementChangeTimestamp,
-    200
-  );
+  const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(Date.now().toString());
+  const debouncedMeasurementChangeTimestamp = useDebounce(measurementChangeTimestamp, 200);
   const {
     measurementService,
     uiDialogService,
     displaySetService,
     userAuthenticationService,
+    customizationService,
   } = servicesManager.services;
-  const [
-    trackedMeasurements,
-    sendTrackedMeasurementsEvent,
-  ] = useTrackedMeasurements();
+  const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
-  const { trackedStudy, trackedSeries, taskInfo, successSaveReport, currentReportInfo,
-    currentTimepoint, lastTimepoint, comparedTimepoint, comparedReportInfo, 
-    username, userRoles, currentTask } = trackedMeasurements.context;
+  const {
+    trackedStudy,
+    trackedSeries,
+    taskInfo,
+    successSaveReport,
+    currentReportInfo,
+    currentTimepoint,
+    lastTimepoint,
+    comparedTimepoint,
+    comparedReportInfo,
+    username,
+    userRoles,
+    currentTask,
+  } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
   );
@@ -83,26 +85,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   useEffect(() => {
     const measurements = measurementService.getMeasurements();
     const filteredMeasurements = measurements.filter(
-      m =>
-        trackedStudy === m.referenceStudyUID &&
-        trackedSeries.includes(m.referenceSeriesUID)
+      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
     );
 
     const mappedMeasurements = filteredMeasurements.map(m =>
-      _mapMeasurementToDisplay(
-        m,
-        measurementService.VALUE_TYPES,
-        displaySetService
-      )
+      _mapMeasurementToDisplay(m, measurementService.VALUE_TYPES, displaySetService)
     );
     setDisplayMeasurements(mappedMeasurements);
     // eslint-ignore-next-line
-  }, [
-    measurementService,
-    trackedStudy,
-    trackedSeries,
-    debouncedMeasurementChangeTimestamp,
-  ]);
+  }, [measurementService, trackedStudy, trackedSeries, debouncedMeasurementChangeTimestamp]);
 
   const updateDisplayStudySummary = async () => {
     if (trackedMeasurements.matches('tracking')) {
@@ -145,13 +136,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   // evibased, remove dependency on updateDisplayStudySummary function, it will cause infinite loop
   useEffect(() => {
     updateDisplayStudySummary();
-  }, [
-    displayStudySummary.key,
-    trackedMeasurements,
-    trackedStudy,
-    currentTimepoint,
-    currentTask,
-  ]);
+  }, [displayStudySummary.key, trackedMeasurements, trackedStudy, currentTimepoint, currentTask]);
 
   // subscribe to measurementService changes
   // TODO: Better way to consolidated, debounce, check on change?
@@ -176,9 +161,19 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               measurementsPanelRef.current.scrollTop = measurementsPanelRef.current.scrollHeight;
             }, 300)();
             // evibased, 4种测量工具, call command setMeasurementLabel for newly added measurement(label is '' or 'no label')
-            if (['Length', 'Bidirectional', 'ArrowAnnotate', 'RectangleROI'].includes(data.measurement.toolName)) {
+            if (
+              ['Length', 'Bidirectional', 'ArrowAnnotate', 'RectangleROI'].includes(
+                data.measurement.toolName
+              )
+            ) {
               if (data.measurement.label === '' || data.measurement.label === 'no label') {
-                _editMeasurementLabel(commandsManager, uiDialogService, measurementService, data.measurement.uid, comparedReportInfo);
+                _editMeasurementLabel(
+                  commandsManager,
+                  uiDialogService,
+                  measurementService,
+                  data.measurement.uid,
+                  comparedReportInfo
+                );
               }
             }
           }
@@ -188,7 +183,13 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
     const edit = measurementService.EVENTS.TRACKED_MEASUREMENT_EDIT;
     const editSub = measurementService.subscribe(edit, data => {
-      _editMeasurementLabel(commandsManager, uiDialogService, measurementService, data.uid, comparedReportInfo);
+      _editMeasurementLabel(
+        commandsManager,
+        uiDialogService,
+        measurementService,
+        data.uid,
+        comparedReportInfo
+      );
     });
     subscriptions.push(editSub.unsubscribe);
 
@@ -202,9 +203,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   async function exportReport() {
     const measurements = measurementService.getMeasurements();
     const trackedMeasurements = measurements.filter(
-      m =>
-        trackedStudy === m.referenceStudyUID &&
-        trackedSeries.includes(m.referenceSeriesUID)
+      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
     );
 
     downloadCSVReport(trackedMeasurements, measurementService);
@@ -235,8 +234,33 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   // TODO: evibased, 重构，和extension cornerstone callInputDialog统一代码
   const onMeasurementItemEditHandler = ({ uid, isActive }) => {
     jumpToImage({ uid, isActive });
+    // evibased, edit label
+    _editMeasurementLabel(
+      commandsManager,
+      uiDialogService,
+      measurementService,
+      uid,
+      comparedReportInfo
+    );
 
-    _editMeasurementLabel(commandsManager, uiDialogService, measurementService, uid, comparedReportInfo);
+    // 参考auto label completion
+    // const labelConfig = customizationService.get('measurementLabels');
+    // const measurement = measurementService.getMeasurement(uid);
+    // const utilityModule = extensionManager.getModuleEntry(
+    //   '@ohif/extension-cornerstone.utilityModule.common'
+    // );
+    // const { showLabelAnnotationPopup } = utilityModule.exports;
+    // showLabelAnnotationPopup(measurement, uiDialogService, labelConfig).then(
+    //   (val: Map<any, any>) => {
+    //     measurementService.update(
+    //       uid,
+    //       {
+    //         ...val,
+    //       },
+    //       true
+    //     );
+    //   }
+    // );
   };
 
   const onMeasurementItemClickHandler = ({ uid, isActive }) => {
@@ -254,7 +278,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   useEffect(() => {
     console.log('successSaveReport:', successSaveReport);
     _refreshTaskInfo(successSaveReport);
-  }, [ successSaveReport, currentTask ]);
+  }, [successSaveReport, currentTask]);
 
   // update compared report info based on comparedTimepoint
   useEffect(() => {
@@ -279,7 +303,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const nonTargetFindings = [];
     const otherFindings = [];
     if (report) {
-      const displayMeasurements = report.measurements.map((m, index) => _mapComparedMeasurementToDisplay(m, index));
+      const displayMeasurements = report.measurements.map((m, index) =>
+        _mapComparedMeasurementToDisplay(m, index)
+      );
       for (const dm of displayMeasurements) {
         // get target info
         const lesionValue = dm.label.split('|')[1];
@@ -296,8 +322,12 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       }
     }
     // sort by index, get index from label, TODO: get index from measurementlabelInfo
-    targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
-    nonTargetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+    targetFindings.sort(
+      (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+    );
+    nonTargetFindings.sort(
+      (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+    );
     otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
     // update compared report
@@ -309,7 +339,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         otherFindings: otherFindings,
       },
     });
-  }, [ comparedTimepoint ]);
+  }, [comparedTimepoint]);
 
   // report loaded, update data on this page
   useEffect(() => {
@@ -327,7 +357,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         setImageQualityDescription('');
       }
     }
-  }, [ currentReportInfo ]);
+  }, [currentReportInfo]);
 
   async function _refreshTaskInfo(navigateToNextTask = false) {
     // get taskInfo
@@ -502,7 +532,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   }
   // sort by index, get index from label, TODO: get index from measurementLabelInfo
   targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
-  nonTargetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+  nonTargetFindings.sort(
+    (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+  );
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
   function _mapComparedMeasurementToDisplay(measurement, index) {
@@ -553,12 +585,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       trialTimePointId,
       reports,
     } = comparedTimepoint;
-    const {
-      report,
-      targetFindings,
-      nonTargetFindings,
-      otherFindings,
-    } = comparedReportInfo;
+    const { report, targetFindings, nonTargetFindings, otherFindings } = comparedReportInfo;
     const trialTimePointName = trialTimePointId ? getTimepointName(trialTimePointId) : '';
     let SOD = undefined;
     let response = undefined;
@@ -627,7 +654,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     <>
       <div className="ohif-scrollbar invisible-scrollbar flex flex-1 flex-col overflow-auto">
         <div
-          className="invisible-scrollbar overflow-y-visible overflow-x-visible"
+          className="invisible-scrollbar overflow-x-visible overflow-y-visible"
           ref={measurementsPanelRef}
           data-cy={'trackedMeasurements-panel'}
         >
@@ -721,16 +748,17 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
                   isBackupSave: true,
                 });
               }}
-            // todo: 对于查看报告的情况分类disable button：
-            // 1. 阅片任务，未选择影像质量，disable
-            // 2. 其他任务，不做disable？
-            // disabled={!imageQuality?.value}
+              // todo: 对于查看报告的情况分类disable button：
+              // 1. 阅片任务，未选择影像质量，disable
+              // 2. 其他任务，不做disable？
+              // disabled={!imageQuality?.value}
             />
           </div>
         )}
-        {(['review', 'reading'].includes(currentTask?.type) &&
-         comparedTimepoint && comparedReportInfo) && (
-          getComparedTimepointReport())}
+        {['review', 'reading'].includes(currentTask?.type) &&
+          comparedTimepoint &&
+          comparedReportInfo &&
+          getComparedTimepointReport()}
       </div>
     </>
   );
@@ -747,7 +775,13 @@ PanelMeasurementTableTracking.propTypes = {
   }).isRequired,
 };
 
-function _editMeasurementLabel(commandsManager, uiDialogService, measurementService, uid, comparedReportInfo) {
+function _editMeasurementLabel(
+  commandsManager,
+  uiDialogService,
+  measurementService,
+  uid,
+  comparedReportInfo
+) {
   const measurement = measurementService.getMeasurement(uid);
   const isNonMeasurementTool = measurement && NonMeasurementTools.includes(measurement.toolName);
 
@@ -801,14 +835,10 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
     SOPInstanceUID
   );
 
-  const displaySets = displaySetService.getDisplaySetsForSeries(
-    referenceSeriesUID
-  );
+  const displaySets = displaySetService.getDisplaySetsForSeries(referenceSeriesUID);
 
   if (!displaySets[0] || !displaySets[0].images) {
-    throw new Error(
-      'The tracked measurements panel should only be tracking "stack" displaySets.'
-    );
+    throw new Error('The tracked measurements panel should only be tracking "stack" displaySets.');
   }
 
   const {

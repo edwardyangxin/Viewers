@@ -1,62 +1,5 @@
 import React from 'react';
-import { Input, Dialog, ButtonEnums, Select } from '@ohif/ui';
-import i18n from '@ohif/i18n';
-
-// TODO: evibased, info mapping refactor to one location
-const targetIndexMapping = {
-  1: 1,
-  2: 2,
-  3: 3,
-  4: 4,
-  5: 5,
-  6: 6,
-  7: 7,
-  8: 8,
-  9: 9,
-  10: 10,
-};
-
-const target_info_mapping = {
-  Target: 'Target',
-  Target_CR: 'Target(CR)',
-  Target_UN: 'Target(UN未知)',
-  Non_Target: 'Non_Target',
-  Non_Target_Disappear: 'Non_Target(消失)',
-  Non_Target_Progress: 'Non_Target(发展Progress)',
-  Non_Target_New: 'Non_Target(新发New)',
-  Other: 'Other',
-};
-
-const location_info_mapping = {
-  Abdomen_Chest_Wall: 'Abdomen/Chest Wall',
-  Lung: 'Lung',
-  Lymph_Node: 'Lymph Node',
-  Liver: 'Liver',
-  Mediastinum_Hilum: 'Mediastinum/Hilum',
-  Pelvis: 'Pelvis',
-  Petritoneum_Omentum: 'Petritoneum/Omentum',
-  Retroperitoneum: 'Retroperitoneum',
-  Adrenal: 'Adrenal',
-  Bladder: 'Bladder',
-  Bone: 'Bone',
-  Braine: 'Braine',
-  Breast: 'Breast',
-  Colon: 'Colon',
-  Esophagus: 'Esophagus',
-  Extremities: 'Extremities',
-  Gallbladder: 'Gallbladder',
-  Kidney: 'Kidney',
-  Muscle: 'Muscle',
-  Neck: 'Neck',
-  Other_Soft_Tissue: 'Other Soft Tissue',
-  Ovary: 'Ovary',
-  Pancreas: 'Pancreas',
-  Prostate: 'Prostate',
-  Small_Bowel: 'Small Bowel',
-  Spleen: 'Spleen',
-  Stomach: 'Stomach',
-  Subcutaneous: 'Subcutaneous',
-};
+import { Input, Dialog, ButtonEnums, LabellingFlow } from '@ohif/ui';
 
 /**
  * TODO: evibased，使用统一的edit dialog，重构。保留原始的代码？
@@ -70,6 +13,7 @@ const location_info_mapping = {
  * @param {string?} dialogConfig.dialogTitle - title of the input dialog
  * @param {string?} dialogConfig.inputLabel - show label above the input
  */
+
 function callInputDialog(
   uiDialogService,
   measurement, // measurement entity
@@ -79,14 +23,14 @@ function callInputDialog(
 ) {
   const dialogId = 'dialog-enter-annotation';
 
-  const noMeasurement = measurement ? false : true
+  const noMeasurement = measurement ? false : true;
   // label for 保存尽量多的label信息，因为cornerstonejs只支持保存label到DicomSR中
   let label = measurement
     ? isArrowAnnotateInputDialog
       ? measurement.text
       : measurement.label
     : '1|target_info|location_info';
-  label = label.split("|")
+  label = label.split('|');
   if (label.length === 1) {
     label = [1, label[0], 'location_info'];
   } else if (label.length < 3) {
@@ -96,8 +40,8 @@ function callInputDialog(
 
   // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
   // if no measurementLabelInfo, get from label
-  const measurementLabelInfo = measurement && measurement['measurementLabelInfo'] ?
-    measurement['measurementLabelInfo'] : {};
+  const measurementLabelInfo =
+    measurement && measurement['measurementLabelInfo'] ? measurement['measurementLabelInfo'] : {};
 
   const valueDialog = {
     noMeasurement: noMeasurement,
@@ -117,11 +61,11 @@ function callInputDialog(
     targetIndex = measurementLabelInfo['targetIndex'];
   } else {
     // no target in measurementLabelInfo, get from label
-    let labelIndex = parseInt(label[0], 10);
+    const labelIndex = parseInt(label[0], 10);
     targetIndex = {
       value: labelIndex,
       label: labelIndex,
-    }
+    };
     measurementLabelInfo['targetIndex'] = targetIndex;
   }
 
@@ -130,12 +74,12 @@ function callInputDialog(
     targetValue = measurementLabelInfo['target'];
   } else {
     // no target in measurementLabelInfo, get from label
-    let labelTarget = label[1];
+    const labelTarget = label[1];
     if (labelTarget in target_info_mapping) {
       targetValue = {
         value: labelTarget,
         label: target_info_mapping[labelTarget],
-      }
+      };
     }
     measurementLabelInfo['target'] = targetValue;
   }
@@ -145,12 +89,12 @@ function callInputDialog(
     locationValue = measurementLabelInfo['location'];
   } else {
     // no target in measurementLabelInfo, get from label
-    let labelLocation = label[2];
+    const labelLocation = label[2];
     if (labelLocation in location_info_mapping) {
       locationValue = {
         value: labelLocation,
         label: location_info_mapping[labelLocation],
-      }
+      };
     }
     measurementLabelInfo['location'] = locationValue;
   }
@@ -206,11 +150,11 @@ function callInputDialog(
           for (const [key, value] of Object.entries(targetIndexMapping)) {
             targetIndexOptions.push({ value: key, label: value });
           }
-          let targetOptions = [];
+          const targetOptions = [];
           for (const [key, value] of Object.entries(target_info_mapping)) {
             targetOptions.push({ value: key, label: value });
           }
-          let locationOptions = [];
+          const locationOptions = [];
           for (const [key, value] of Object.entries(location_info_mapping)) {
             locationOptions.push({ value: key, label: value });
           }
@@ -299,6 +243,75 @@ function callInputDialog(
       },
     });
   }
+}
+
+export function callLabelAutocompleteDialog(uiDialogService, callback, dialogConfig, labelConfig) {
+  const exclusive = labelConfig ? labelConfig.exclusive : false;
+  const dropDownItems = labelConfig ? labelConfig.items : [];
+
+  const { validateFunc = value => true } = dialogConfig;
+
+  const labellingDoneCallback = value => {
+    if (typeof value === 'string') {
+      if (typeof validateFunc === 'function' && !validateFunc(value)) {
+        return;
+      }
+      callback(value, 'save');
+    } else {
+      callback('', 'cancel');
+    }
+    uiDialogService.dismiss({ id: 'select-annotation' });
+  };
+
+  uiDialogService.create({
+    id: 'select-annotation',
+    isDraggable: false,
+    showOverlay: true,
+    content: LabellingFlow,
+    defaultPosition: {
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    },
+    contentProps: {
+      labellingDoneCallback: labellingDoneCallback,
+      measurementData: { label: '' },
+      componentClassName: {},
+      labelData: dropDownItems,
+      exclusive: exclusive,
+    },
+  });
+}
+
+export function showLabelAnnotationPopup(measurement, uiDialogService, labelConfig) {
+  const exclusive = labelConfig ? labelConfig.exclusive : false;
+  const dropDownItems = labelConfig ? labelConfig.items : [];
+  return new Promise<Map<any, any>>((resolve, reject) => {
+    const labellingDoneCallback = value => {
+      uiDialogService.dismiss({ id: 'select-annotation' });
+      if (typeof value === 'string') {
+        measurement.label = value;
+      }
+      resolve(measurement);
+    };
+
+    uiDialogService.create({
+      id: 'select-annotation',
+      isDraggable: false,
+      showOverlay: true,
+      content: LabellingFlow,
+      defaultPosition: {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      },
+      contentProps: {
+        labellingDoneCallback: labellingDoneCallback,
+        measurementData: measurement,
+        componentClassName: {},
+        labelData: dropDownItems,
+        exclusive: exclusive,
+      },
+    });
+  });
 }
 
 export default callInputDialog;

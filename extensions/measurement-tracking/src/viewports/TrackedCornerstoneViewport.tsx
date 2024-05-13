@@ -170,11 +170,18 @@ function TrackedCornerstoneViewport(props) {
           // Only send the tracked measurements event for the active viewport to avoid
           // sending it more than once.
           if (viewportId === activeViewportId) {
+            const {
+              referenceStudyUID: StudyInstanceUID,
+              referenceSeriesUID: SeriesInstanceUID,
+              uid: measurementId,
+            } = measurement;
+
             sendTrackedMeasurementsEvent('SET_DIRTY', { SeriesInstanceUID });
             sendTrackedMeasurementsEvent('TRACK_SERIES', {
               viewportId,
               StudyInstanceUID,
               SeriesInstanceUID,
+              measurementId,
             });
           }
         }).unsubscribe
@@ -186,7 +193,13 @@ function TrackedCornerstoneViewport(props) {
         unsub();
       });
     };
-  }, [currentTimepoint, measurementService, sendTrackedMeasurementsEvent, viewportId, viewportGridService]);
+  }, [
+    currentTimepoint,
+    measurementService,
+    sendTrackedMeasurementsEvent,
+    viewportId,
+    viewportGridService,
+  ]);
 
   const switchMeasurement = useCallback(
     direction => {

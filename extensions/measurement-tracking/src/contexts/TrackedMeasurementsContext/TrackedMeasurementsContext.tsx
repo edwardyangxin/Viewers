@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Machine } from 'xstate';
 import { useMachine } from '@xstate/react';
 import { useViewportGrid } from '@ohif/ui';
-import { machineConfiguration, defaultOptions } from './measurementTrackingMachine';
+import { machineConfiguration, defaultOptions, RESPONSE } from './measurementTrackingMachine';
 import promptBeginTracking from './promptBeginTracking';
 import promptTrackNewSeries from './promptTrackNewSeries';
 import promptTrackNewStudy from './promptTrackNewStudy';
@@ -13,6 +13,7 @@ import promptHydrateStructuredReport from './promptHydrateStructuredReport';
 import hydrateStructuredReport from './hydrateStructuredReport';
 import updateBackendReport from './updateBackendReport';
 import { useAppConfig } from '@state';
+import promptLabelAnnotation from './promptLabelAnnotation';
 
 const TrackedMeasurementsContext = React.createContext();
 TrackedMeasurementsContext.displayName = 'TrackedMeasurementsContext';
@@ -32,7 +33,7 @@ function TrackedMeasurementsContextProvider(
 
   const [viewportGrid, viewportGridService] = useViewportGrid();
   const { activeViewportId, viewports } = viewportGrid;
-  const { measurementService, displaySetService } = servicesManager.services;
+  const { measurementService, displaySetService, customizationService } = servicesManager.services;
 
   const machineOptions = Object.assign({}, defaultOptions);
   machineOptions.actions = Object.assign({}, machineOptions.actions, {
@@ -193,11 +194,26 @@ function TrackedMeasurementsContextProvider(
       extensionManager,
       appConfig,
     }),
+    promptLabelAnnotation: promptLabelAnnotation.bind(null, {
+      servicesManager,
+      extensionManager,
+    }),
+    // evibased,
     updateBackendReport: updateBackendReport.bind(null, {
       servicesManager,
       extensionManager,
       appConfig,
     }),
+  });
+  machineOptions.guards = Object.assign({}, machineOptions.guards, {
+    isLabelOnMeasure: (ctx, evt, condMeta) => {
+      const labelConfig = customizationService.get('measurementLabels');
+      return labelConfig?.labelOnMeasure;
+    },
+    isLabelOnMeasureAndShouldKillMachine: (ctx, evt, condMeta) => {
+      const labelConfig = customizationService.get('measurementLabels');
+      return evt.data && evt.data.userResponse === RESPONSE.NO_NEVER && labelConfig?.labelOnMeasure;
+    },
   });
 
   // TODO: IMPROVE

@@ -62,10 +62,33 @@ const machineConfiguration = {
     off: {
       type: 'final',
     },
+    labellingOnly: {
+      on: {
+        TRACK_SERIES: [
+          {
+            target: 'promptLabelAnnotation',
+            actions: ['setPreviousState'],
+          },
+          {
+            target: 'off',
+          },
+        ],
+      },
+    },
     idle: {
       entry: 'clearContext',
       on: {
-        TRACK_SERIES: 'promptBeginTracking',
+        TRACK_SERIES: [
+          {
+            target: 'promptLabelAnnotation',
+            cond: 'isLabelOnMeasure',
+            actions: ['setPreviousState'],
+          },
+          {
+            target: 'promptBeginTracking',
+            actions: ['setPreviousState'],
+          },
+        ],
         // Unused? We may only do PROMPT_HYDRATE_SR now?
         SET_TRACKED_SERIES: [
           {
@@ -165,6 +188,10 @@ const machineConfiguration = {
             cond: 'shouldSetStudyAndSeries',
           },
           {
+            target: 'labellingOnly',
+            cond: 'isLabelOnMeasureAndShouldKillMachine',
+          },
+          {
             target: 'off',
             cond: 'shouldKillMachine',
           },
@@ -180,6 +207,11 @@ const machineConfiguration = {
     tracking: {
       on: {
         TRACK_SERIES: [
+          {
+            target: 'promptLabelAnnotation',
+            cond: 'isLabelOnMeasure',
+            actions: ['setPreviousState'],
+          },
           {
             target: 'promptTrackNewStudy',
             cond: 'isNewStudy',
@@ -371,6 +403,36 @@ const machineConfiguration = {
         },
       },
     },
+    promptLabelAnnotation: {
+      invoke: {
+        src: 'promptLabelAnnotation',
+        onDone: [
+          {
+            target: 'labellingOnly',
+            cond: 'wasLabellingOnly',
+          },
+          {
+            target: 'promptBeginTracking',
+            cond: 'wasIdle',
+          },
+          {
+            target: 'promptTrackNewStudy',
+            cond: 'wasTrackingAndIsNewStudy',
+          },
+          {
+            target: 'promptTrackNewSeries',
+            cond: 'wasTrackingAndIsNewSeries',
+          },
+          {
+            target: 'tracking',
+            cond: 'wasTracking',
+          },
+          {
+            target: 'off',
+          },
+        ],
+      },
+    },
     // evibased
     // add update backend report
     updateBackendReport: {
@@ -437,7 +499,7 @@ const defaultOptions = {
     }),
     // Promise resolves w/ `evt.data.*`
     setTrackedStudyAndSeries: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(setTrackedStudyAndSeries): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(setTrackedStudyAndSeries): ', evt.type, evt);
       return {
         prevTrackedStudy: ctx.trackedStudy,
         prevTrackedSeries: ctx.trackedSeries.slice(),
@@ -449,7 +511,7 @@ const defaultOptions = {
       };
     }),
     setTrackedStudyAndMultipleSeries: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(): ', evt.type, evt);
       const studyInstanceUID = evt.StudyInstanceUID || evt.data.StudyInstanceUID;
       const seriesInstanceUIDs = evt.SeriesInstanceUIDs || evt.data.SeriesInstanceUIDs;
 
@@ -464,56 +526,61 @@ const defaultOptions = {
       };
     }),
     setIsDirtyToClean: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(setIsDirtyToClean): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(setIsDirtyToClean): ', evt.type, evt);
 
       return {
         isDirty: false,
-      }
+      };
     }),
     setIsDirty: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(setIsDirty): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(setIsDirty): ', evt.type, evt);
 
       return {
         isDirty: true,
-      }
+      };
     }),
     ignoreSeries: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(ignoreSeries): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(ignoreSeries): ', evt.type, evt);
 
       return {
         prevIgnoredSeries: [...ctx.ignoredSeries],
         ignoredSeries: [...ctx.ignoredSeries, evt.data.SeriesInstanceUID],
-      }
+      };
     }),
     ignoreHydrationForSRSeries: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(ignoreHydrationForSRSeries): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(ignoreHydrationForSRSeries): ', evt.type, evt);
 
       return {
         ignoredSRSeriesForHydration: [
           ...ctx.ignoredSRSeriesForHydration,
           evt.data.srSeriesInstanceUID,
-      ],
-      }
+        ],
+      };
     }),
     addTrackedSeries: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(addTrackedSeries): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(addTrackedSeries): ', evt.type, evt);
 
       return {
         prevTrackedSeries: [...ctx.trackedSeries],
         trackedSeries: [...ctx.trackedSeries, evt.data.SeriesInstanceUID],
-      }
+      };
     }),
     removeTrackedSeries: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(removeTrackedSeries): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(removeTrackedSeries): ', evt.type, evt);
 
       return {
         prevTrackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
         trackedSeries: ctx.trackedSeries.slice().filter(ser => ser !== evt.SeriesInstanceUID),
       };
     }),
+    setPreviousState: assign((ctx, evt, meta) => {
+      return {
+        prevState: meta.state.value,
+      };
+    }),
     // evibased, actions
     updateCurrentReportInfo: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(updateCurrentReportInfo): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(updateCurrentReportInfo): ', evt.type, evt);
 
       return {
         currentReportInfo: evt.data.reportInfo,
@@ -521,7 +588,7 @@ const defaultOptions = {
       };
     }),
     successSaveReport: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(successSaveReport): ", evt.type, evt);
+      console.log('measurementTrackingMachine action(successSaveReport): ', evt.type, evt);
 
       return {
         successSaveReport: true,
@@ -529,13 +596,20 @@ const defaultOptions = {
     }),
     // evibased, compared timepoint
     updateComparedTimepointInfo: assign((ctx, evt) => {
-      console.log("measurementTrackingMachine action(updateComparedTimepointInfo): ", evt.type, evt);
+      console.log(
+        'measurementTrackingMachine action(updateComparedTimepointInfo): ',
+        evt.type,
+        evt
+      );
       const extensionManager = evt.extensionManager;
       const measurementService = evt.measurementService;
       const comparedViewportId = evt.comparedViewportId ? evt.comparedViewportId : 'default';
       const appConfig = evt.appConfig;
       // check comparedTimepoint studyInstanceUid
-      if (!evt.comparedTimepoint || ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid) {
+      if (
+        !evt.comparedTimepoint ||
+        ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid
+      ) {
         // no comparedTimepoint or same studyInstanceUid
         return {};
       } else {
@@ -545,14 +619,14 @@ const defaultOptions = {
 
       // create readonly measurements and annotations
       // default load first report
-      let reportData = evt.comparedTimepoint.reports? evt.comparedTimepoint.reports[0]: undefined;
+      let reportData = evt.comparedTimepoint.reports ? evt.comparedTimepoint.reports[0] : undefined;
       if (!reportData) {
         // timepoint without report
         return {
           comparedTimepoint: evt.comparedTimepoint,
         };
       }
-      
+
       // const reportInfo = reportData.report_info;
       let measurements = reportData.measurements;
 
@@ -565,7 +639,7 @@ const defaultOptions = {
           appConfig,
           measurement
         );
-         measurement.readonlyMeasurementUID = newReadonlyMeasurementUID;
+        measurement.readonlyMeasurementUID = newReadonlyMeasurementUID;
       }
 
       // auto jump to first measurement in compared viewport
@@ -601,10 +675,37 @@ const defaultOptions = {
         evt.SeriesInstanceUID === undefined || ctx.trackedSeries.includes(evt.SeriesInstanceUID)
       );
     },
+    wasLabellingOnly: (ctx, evt, condMeta) => {
+      return ctx.prevState === 'labellingOnly';
+    },
+    wasIdle: (ctx, evt, condMeta) => {
+      return ctx.prevState === 'idle';
+    },
+    wasTracking: (ctx, evt, condMeta) => {
+      return ctx.prevState === 'tracking';
+    },
+    wasTrackingAndIsNewStudy: (ctx, evt, condMeta) => {
+      return (
+        ctx.prevState === 'tracking' &&
+        !ctx.ignoredSeries.includes(evt.data.SeriesInstanceUID) &&
+        ctx.trackedStudy !== evt.data.StudyInstanceUID
+      );
+    },
+    wasTrackingAndIsNewSeries: (ctx, evt, condMeta) => {
+      return (
+        ctx.prevState === 'tracking' &&
+        !ctx.ignoredSeries.includes(evt.data.SeriesInstanceUID) &&
+        !ctx.trackedSeries.includes(evt.data.SeriesInstanceUID)
+      );
+    },
+
     shouldKillMachine: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.NO_NEVER,
     shouldAddSeries: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.ADD_SERIES,
     shouldSetStudyAndSeries: (ctx, evt) => {
-      if (ctx.currentTimepoint && ctx.currentTimepoint.studyInstanceUid !== evt.data.StudyInstanceUID) {
+      if (
+        ctx.currentTimepoint &&
+        ctx.currentTimepoint.studyInstanceUid !== evt.data.StudyInstanceUID
+      ) {
         return false;
       }
       return evt.data && evt.data.userResponse === RESPONSE.SET_STUDY_AND_SERIES;
@@ -638,8 +739,9 @@ const defaultOptions = {
       !ctx.ignoredSeries.includes(evt.SeriesInstanceUID) &&
       !ctx.trackedSeries.includes(evt.SeriesInstanceUID),
     // evibased, cond on success save report
-    ifSuccessSaveReport: (ctx, evt) => evt.data && evt.data.userResponse === RESPONSE.CREATE_REPORT && evt.data.successSaveReport,
+    ifSuccessSaveReport: (ctx, evt) =>
+      evt.data && evt.data.userResponse === RESPONSE.CREATE_REPORT && evt.data.successSaveReport,
   },
 };
 
-export { defaultOptions, machineConfiguration };
+export { defaultOptions, machineConfiguration, RESPONSE };
