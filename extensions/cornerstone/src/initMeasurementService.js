@@ -275,8 +275,13 @@ const connectMeasurementServiceToTools = (
   cornerstoneViewportService,
   measurementSource
 ) => {
-  const { MEASUREMENT_REMOVED, MEASUREMENTS_CLEARED, MEASUREMENT_UPDATED, RAW_MEASUREMENT_ADDED,
-    READONLY_MEASUREMENT_ADDED } = measurementService.EVENTS;
+  const {
+    MEASUREMENT_REMOVED,
+    MEASUREMENTS_CLEARED,
+    MEASUREMENT_UPDATED,
+    RAW_MEASUREMENT_ADDED,
+    READONLY_MEASUREMENT_ADDED,
+  } = measurementService.EVENTS;
 
   const csTools3DVer1MeasurementSource = measurementService.getSource(
     CORNERSTONE_3D_TOOLS_SOURCE_NAME,
@@ -357,6 +362,10 @@ const connectMeasurementServiceToTools = (
         imageId = dataSource.getImageIdsForInstance({ instance });
       }
 
+      /**
+       * This annotation is used by the cornerstone viewport.
+       * This is not the read-only annotation rendered by the SR viewport.
+       */
       const annotationManager = annotation.state.getAnnotationManager();
       annotationManager.addAnnotation({
         annotationUID: measurement.uid,
@@ -369,11 +378,16 @@ const connectMeasurementServiceToTools = (
           referencedImageId: imageId,
         },
         data: {
+          /**
+           * Don't remove this destructuring of data here.
+           * This is used to pass annotation specific data forward e.g. contour
+           */
+          ...(data.annotation.data || {}),
           text: data.annotation.data.text,
           handles: { ...data.annotation.data.handles },
           cachedStats: { ...data.annotation.data.cachedStats },
           label: data.annotation.data.label,
-          frameNumber: frameNumber,
+          frameNumber,
           measurementLabelInfo: measurement.measurementLabelInfo,
         },
       });

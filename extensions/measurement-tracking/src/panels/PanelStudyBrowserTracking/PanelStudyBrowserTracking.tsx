@@ -32,8 +32,8 @@ function PanelStudyBrowserTracking({
     uiDialogService,
     hangingProtocolService,
     uiNotificationService,
-    userAuthenticationService,
     measurementService,
+    userAuthenticationService, // evibased, get username and userRoles
   } = servicesManager.services;
   const navigate = useNavigate();
 
@@ -56,7 +56,9 @@ function PanelStudyBrowserTracking({
   const [jumpToDisplaySet, setJumpToDisplaySet] = useState(null);
   const [tabs, setTabs] = useState([]);
   const currentStudyInstanceUID = StudyInstanceUIDs[0];
-  const [comparedStudyInstanceUID, setComparedStudyInstanceUID] = useState(StudyInstanceUIDs.length > 1 ? StudyInstanceUIDs[1] : null);
+  const [comparedStudyInstanceUID, setComparedStudyInstanceUID] = useState(
+    StudyInstanceUIDs.length > 1 ? StudyInstanceUIDs[1] : null
+  );
   // if in followup compare mode by StudyInstanceUIDs length in URL
   const ifCompareMode = StudyInstanceUIDs.length > 1;
 
@@ -111,7 +113,12 @@ function PanelStudyBrowserTracking({
       const username = getUserName(userAuthenticationService);
 
       // apiv2 graphql, get current user task/timpoint/subject info
-      const userTasks = await getTaskByUserAndUID(appConfig['evibased']['graphqlDR'], authHeader?.Authorization, username, currentStudyInstanceUID);
+      const userTasks = await getTaskByUserAndUID(
+        appConfig['evibased']['graphqlDR'],
+        authHeader?.Authorization,
+        username,
+        currentStudyInstanceUID
+      );
       if (!userTasks || !userTasks.length) {
         // pop warning dialog
         console.error('no task found for user: ', username);
@@ -124,7 +131,9 @@ function PanelStudyBrowserTracking({
       const currentSubject = currentTimepoint.subject;
       // set ifReadonlyMode to commandsManager CORNERSTONE context
       // TODO: readonly mode refactor
-      const ifReadonlyMode = ['QC', 'QC-data', 'QC-report', 'arbitration'].includes(currentTask.type);
+      const ifReadonlyMode = ['QC', 'QC-data', 'QC-report', 'arbitration'].includes(
+        currentTask.type
+      );
       commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
       sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
         currentTask: currentTask,
@@ -144,7 +153,9 @@ function PanelStudyBrowserTracking({
       // qidoForStudyUID in format of [{mrn: 'patientId'}]
       let qidoStudiesForPatient = [];
       try {
-        qidoStudiesForPatient = await getStudiesForPatientByMRN([{mrn: currentSubject.subjectId}]);
+        qidoStudiesForPatient = await getStudiesForPatientByMRN([
+          { mrn: currentSubject.subjectId },
+        ]);
       } catch (error) {
         console.warn(error);
       }
@@ -160,7 +171,9 @@ function PanelStudyBrowserTracking({
 
       // evibased, filter attributes and get actuallyMappedStudies
       const subjectTimepoints = currentSubject.timepoints;
-      const currentTimepointIndex = subjectTimepoints.findIndex(tp => tp.UID === currentTimepoint.UID);
+      const currentTimepointIndex = subjectTimepoints.findIndex(
+        tp => tp.UID === currentTimepoint.UID
+      );
       if (currentTimepointIndex === -1) {
         console.error('current timepoint not found in subject timepoints');
         popContactAdminDialog(uiDialogService);
@@ -173,20 +186,29 @@ function PanelStudyBrowserTracking({
         return;
       }
 
-      const ifCurrentTimepointBaseline = currentTimepointIndex === 0 && currentTimepoint.cycle === '00';
-      const lastTimepoint = ifCurrentTimepointBaseline ? null : subjectTimepoints[currentTimepointIndex - 1];
+      const ifCurrentTimepointBaseline =
+        currentTimepointIndex === 0 && currentTimepoint.cycle === '00';
+      const lastTimepoint = ifCurrentTimepointBaseline
+        ? null
+        : subjectTimepoints[currentTimepointIndex - 1];
       let comparedTimepoint = null;
       const actuallyMappedStudies = [];
       for (const qidoStudy of mappedStudies) {
         // evibased, check if qidoStudy UID/TrialTimepointId matches subjectTimepoints info
-        const qidoStudyUIDIndex = subjectTimepoints.findIndex(tp => tp.UID === qidoStudy.StudyInstanceUID);
+        const qidoStudyUIDIndex = subjectTimepoints.findIndex(
+          tp => tp.UID === qidoStudy.StudyInstanceUID
+        );
         if (qidoStudyUIDIndex === -1) {
           console.error('qidoStudy not found in subject timepoints');
           popContactAdminDialog(uiDialogService);
           return;
         }
         if (qidoStudy.TrialTimePointId !== subjectTimepoints[qidoStudyUIDIndex].cycle) {
-          console.error('qidoStudy cycle not match timepoint cycle tag and timepoint', qidoStudy.TrialTimePointId, subjectTimepoints[qidoStudyUIDIndex].cycle);
+          console.error(
+            'qidoStudy cycle not match timepoint cycle tag and timepoint',
+            qidoStudy.TrialTimePointId,
+            subjectTimepoints[qidoStudyUIDIndex].cycle
+          );
           // TODO: evibased, 后续要报错,当不匹配时，暂时comment掉
           // popContactAdminDialog(uiDialogService);
           // return;
@@ -637,6 +659,12 @@ function PanelStudyBrowserTracking({
         sendTrackedMeasurementsEvent('UNTRACK_SERIES', {
           SeriesInstanceUID: displaySet.SeriesInstanceUID,
         });
+        const measurements = measurementService.getMeasurements();
+        measurements.forEach(m => {
+          if (m.referenceSeriesUID === displaySet.SeriesInstanceUID) {
+            measurementService.remove(m.uid);
+          }
+        });
       }}
       onClickThumbnail={() => {}}
       onDoubleClickThumbnail={onDoubleClickThumbnailHandler}
@@ -688,7 +716,12 @@ function _mapDataSourceStudies(studies) {
 }
 
 // evibased, fetch data from API backend
-async function _fetchBackendReports(appConfig, userAuthenticationService, currentTask, mappedStudies) {
+async function _fetchBackendReports(
+  appConfig,
+  userAuthenticationService,
+  currentTask,
+  mappedStudies
+) {
   console.log('fetching Backend reports for: ', mappedStudies);
   const subjectId = mappedStudies[0].PatientID;
   try {
@@ -714,7 +747,9 @@ async function _fetchBackendReports(appConfig, userAuthenticationService, curren
         subjectBySubjectId(subjectId: "${subjectId}") `;
     }
     const graphqlBody = JSON.stringify({
-      query: queryStr + `{
+      query:
+        queryStr +
+        `{
           subjectId
           history
           disease
