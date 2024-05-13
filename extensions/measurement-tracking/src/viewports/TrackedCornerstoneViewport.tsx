@@ -248,7 +248,7 @@ function TrackedCornerstoneViewport(props) {
     );
   };
 
-  // evibased, format ClinicalTrialTimePointID
+  // evibased, format ClinicalTrialTimePointID, deprecated
   const currentStudyInstanceUID = StudyInstanceUIDs[0];
   const comparedStudyInstanceUID = comparedTimepoint ? comparedTimepoint.studyInstanceUid : null;
   const clinicalTrialTimePointID =

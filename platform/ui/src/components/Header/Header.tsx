@@ -79,8 +79,12 @@ function Header({
               list={menuOptions}
               alignment="right"
             >
-            <span className="text-common-light mr-2 text-lg">{t('Evibased Viewer System')}</span>
-            <IconButton
+              {/* evibased, 当显示patient info时，不显示系统名 */}
+              {!(showPatientInfo === PatientInfoVisibility.VISIBLE ||
+              showPatientInfo === PatientInfoVisibility.VISIBLE_COLLAPSED) && (
+                <span className="text-common-light mr-2 text-lg">{t('Evibased Viewer System')}</span>
+              )}
+              <IconButton
                 id={'options-settings-icon'}
                 variant="text"
                 color="inherit"

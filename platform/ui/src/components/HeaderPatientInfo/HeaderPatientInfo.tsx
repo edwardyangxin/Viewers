@@ -115,7 +115,7 @@ function HeaderPatientInfo({ servicesManager }) {
         ) : (
           <div className="text-primary-active self-center text-[13px]">
             {' '}
-            {isMixedPatients ? 'Multiple Patients' : 'Patient'}
+            {isMixedPatients ? '访视出现多受试者信息' : '访视受试者信息'}
           </div>
         )}
       </div>
