@@ -324,7 +324,11 @@ function OutsideAlerter(props) {
      */
     function handleInteractionOutside(event) {
       // evibased, fix click outside dialog condition
-      if (wrapperRef.current && (wrapperRef.current.firstChild === event.target || !wrapperRef.current.contains(event.target))) {
+      if (
+        wrapperRef.current &&
+        (wrapperRef.current.firstChild === event.target ||
+          !wrapperRef.current.contains(event.target))
+      ) {
         props.onClickOutside();
       }
     }
