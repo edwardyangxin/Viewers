@@ -928,7 +928,7 @@ function WorkList({
     customizationService.get('ohif.dataSourceConfigurationComponent') ?? {};
 
   return (
-    <div className="flex h-screen flex-col bg-black ">
+    <div className="flex h-screen flex-col bg-black">
       {/* evibased, global header */}
       <Header
         isSticky
@@ -940,7 +940,7 @@ function WorkList({
       {/* evibased, investigational use dialog at bottom page, disabled in config */}
       <InvestigationalUseDialog dialogConfiguration={appConfig?.investigationalUseDialog} />
       {/* evibased, task/timepoints list */}
-      <div className="ohif-scrollbar ohif-scrollbar-stable-gutter flex grow flex-col overflow-y-auto">
+      <div className="ohif-scrollbar ohif-scrollbar-stable-gutter flex grow flex-col overflow-y-auto sm:px-5">
         {/* evibased, table header and filter functions */}
         <StudyListFilter
           numOfStudies={pageNumber * resultsPerPage > 100 ? 101 : numOfStudies}
