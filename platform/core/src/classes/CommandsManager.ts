@@ -207,7 +207,8 @@ export class CommandsManager {
 
     // Execute each command in the array
     let result: unknown;
-    commands.forEach(({ commandName, commandOptions, context }) => {
+    commands.forEach(command => {
+      const { commandName, commandOptions, context } = command;
       if (commandName) {
         result = this.runCommand(
           commandName,
@@ -218,7 +219,11 @@ export class CommandsManager {
           context
         );
       } else {
-        console.warn('No command name supplied in', toRun);
+        if (typeof command === 'function') {
+          result = command();
+        } else {
+          console.warn('No command name supplied in', toRun);
+        }
       }
     });
 

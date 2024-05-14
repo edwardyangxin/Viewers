@@ -115,6 +115,7 @@ function getMappedAnnotations(annotation, DisplaySetService) {
       unit: modalityUnit,
       mean,
       stdDev,
+      metadata,
       max,
       area,
       areaUnit,

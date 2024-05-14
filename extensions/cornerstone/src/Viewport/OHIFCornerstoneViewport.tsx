@@ -487,7 +487,10 @@ function _subscribeToJumpToMeasurementEvents(
           cornerstoneViewportService.getViewportIdToJump(
             jumpId,
             measurement.displaySetInstanceUID,
-            { referencedImageId: measurement.referencedImageId }
+            {
+              referencedImageId:
+                measurement.referencedImageId || measurement.metadata?.referencedImageId,
+            }
           );
       }
       if (cacheJumpToMeasurementEvent.cornerstoneViewport !== viewportId) {
@@ -595,6 +598,9 @@ function _jumpToMeasurement(
       imageIdIndex = referencedDisplaySet.images.findIndex(
         i => i.SOPInstanceUID === SOPInstanceUID
       );
+
+      // the index is reversed in the volume viewport
+      // imageIdIndex = referencedDisplaySet.images.length - 1 - imageIdIndex;
 
       const { viewPlaneNormal: viewportViewPlane } = viewport.getCamera();
 
