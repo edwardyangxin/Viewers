@@ -139,8 +139,8 @@ const moreTools = [
         createButton({
           id: 'Magnify',
           icon: 'tool-magnify',
-          label: 'Magnify',
-          tooltip: 'Magnify',
+          label: 'Zoom-in',
+          tooltip: 'Zoom-in',
           commands: setToolActiveToolbar,
           evaluate: 'evaluate.cornerstoneTool',
         }),
@@ -171,8 +171,8 @@ const moreTools = [
         createButton({
           id: 'AdvancedMagnify',
           icon: 'icon-tool-loupe',
-          label: 'Loupe',
-          tooltip: 'Loupe',
+          label: 'Magnify Probe',
+          tooltip: 'Magnify Probe',
           commands: 'toggleActiveDisabledToolbar',
           evaluate: 'evaluate.cornerstoneTool.toggle.ifStrictlyDisabled',
         }),

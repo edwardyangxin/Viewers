@@ -44,7 +44,8 @@ function PanelStudyBrowserTracking({
   // Tabs --> Studies --> DisplaySets --> Thumbnails
   const { StudyInstanceUIDs } = useImageViewer();
   // evibased, assume the 1st study for current timepoint study, and the 2nd study for compared study
-  const [{ activeViewportId, viewports }, viewportGridService] = useViewportGrid();
+  const [{ activeViewportId, viewports, isHangingProtocolLayout }, viewportGridService] =
+    useViewportGrid();
   const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   const [activeTabName, setActiveTabName] = useState('primary');
   const [expandedStudyInstanceUIDs, setExpandedStudyInstanceUIDs] = useState([
@@ -365,13 +366,15 @@ function PanelStudyBrowserTracking({
     setTabs(tabs);
   }, [studyDisplayList, displaySets, comparedStudyInstanceUID]);
 
+  // evibased, double click thumbnail
   const onDoubleClickThumbnailHandler = displaySetInstanceUID => {
     let updatedViewports = [];
     const viewportId = activeViewportId;
     try {
       updatedViewports = hangingProtocolService.getViewportsRequireUpdate(
         viewportId,
-        displaySetInstanceUID
+        displaySetInstanceUID,
+        isHangingProtocolLayout
       );
     } catch (error) {
       console.warn(error);
