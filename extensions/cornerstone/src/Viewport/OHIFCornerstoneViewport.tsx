@@ -446,6 +446,7 @@ const OHIFCornerstoneViewport = React.memo(props => {
             actions={viewportDialogState.actions}
             onSubmit={viewportDialogState.onSubmit}
             onOutsideClick={viewportDialogState.onOutsideClick}
+            onKeyPress={viewportDialogState.onKeyPress}
           />
         )}
       </div>

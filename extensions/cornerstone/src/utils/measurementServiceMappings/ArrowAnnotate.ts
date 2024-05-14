@@ -14,7 +14,8 @@ const Length = {
     csToolsEventDetail,
     displaySetService,
     cornerstoneViewportService,
-    getValueTypeFromToolType
+    getValueTypeFromToolType,
+    customizationService
   ) => {
     const { annotation, viewportId } = csToolsEventDetail;
     const { metadata, data, annotationUID } = annotation;
@@ -104,6 +105,46 @@ function getMappedAnnotations(annotation, displaySetService) {
   });
 
   return annotations;
+}
+
+/*
+evibased, to support report upload or csv report
+This function is used to convert the measurement data to a format that is
+suitable for the report generation (e.g. for the csv report). The report
+returns a list of columns and corresponding values.
+*/
+function _getReport(mappedAnnotations, points, FrameOfReferenceUID) {
+  const columns = [];
+  const values = [];
+
+  // Add Type
+  columns.push('AnnotationType');
+  values.push('Cornerstone:ArrowAnnotate');
+
+  // text no need
+  // mappedAnnotations.forEach(annotation => {
+  // const { text } = annotation;
+  // columns.push(`Text`);
+  // values.push(text);
+  // });
+
+  if (FrameOfReferenceUID) {
+    columns.push('FrameOfReferenceUID');
+    values.push(FrameOfReferenceUID);
+  }
+
+  if (points) {
+    columns.push('points');
+    // points has the form of [[x1, y1, z1], [x2, y2, z2], ...]
+    // convert it to string of [[x1 y1 z1];[x2 y2 z2];...]
+    // so that it can be used in the csv report
+    values.push(points.map(p => p.join(' ')).join(';'));
+  }
+
+  return {
+    columns,
+    values,
+  };
 }
 
 /*

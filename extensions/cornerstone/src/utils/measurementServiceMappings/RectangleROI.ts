@@ -9,7 +9,8 @@ const RectangleROI = {
     csToolsEventDetail,
     DisplaySetService,
     CornerstoneViewportService,
-    getValueTypeFromToolType
+    getValueTypeFromToolType,
+    customizationService
   ) => {
     const { annotation, viewportId } = csToolsEventDetail;
     const { metadata, data, annotationUID } = annotation;
@@ -48,7 +49,8 @@ const RectangleROI = {
     const mappedAnnotations = getMappedAnnotations(annotation, DisplaySetService);
 
     const displayText = getDisplayText(mappedAnnotations, displaySet, data.label);
-    const getReport = () => _getReport(mappedAnnotations, points, FrameOfReferenceUID);
+    const getReport = () =>
+      _getReport(mappedAnnotations, points, FrameOfReferenceUID, customizationService);
 
     return {
       uid: annotationUID,
@@ -126,7 +128,7 @@ This function is used to convert the measurement data to a format that is
 suitable for the report generation (e.g. for the csv report). The report
 returns a list of columns and corresponding values.
 */
-function _getReport(mappedAnnotations, points, FrameOfReferenceUID) {
+function _getReport(mappedAnnotations, points, FrameOfReferenceUID, customizationService) {
   const columns = [];
   const values = [];
 

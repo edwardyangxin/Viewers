@@ -46,15 +46,15 @@ const seriesInStudiesMap = new Map();
 
 // evibased, info mapping, TODO: move to extension?
 const timepointStatusMapping = {
-  'scheduled': '数据待上传',
-  'collecting': '数据上传中',
-  'appending': '数据补充中',
+  scheduled: '数据待上传',
+  collecting: '数据上传中',
+  appending: '数据补充中',
   'QC-data': '数据待审核',
-  'reviewing': '待阅片',
+  reviewing: '待阅片',
   'QC-report': '报告待审核',
-  'arbitration': '待仲裁',
-  'freezed': '报告数据锁定',
-  'archived': '报告数据已存档',
+  arbitration: '待仲裁',
+  freezed: '报告数据锁定',
+  archived: '报告数据已存档',
 };
 const timepointStatusOptions = Object.keys(timepointStatusMapping).map(key => ({
   value: key,
@@ -247,7 +247,9 @@ function WorkList({
           if (['doctor', 'data'].includes(group.name)) {
             const groupId = group.id;
             const groupName = group.name;
-            const url = new URL(appConfig['evibased']['keycloak_admin_url'] + `/realms/ohif/groups/${groupId}/members`);
+            const url = new URL(
+              appConfig['evibased']['keycloak_admin_url'] + `/realms/ohif/groups/${groupId}/members`
+            );
             const response = await fetch(url, fetchOptions);
             if (!response.ok) {
               console.log('failed to get group members');
@@ -349,7 +351,7 @@ function WorkList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expandedRows, studies]);
 
-  // evibase, timepoints state update for selection values 
+  // evibase, timepoints state update for selection values
   useEffect(() => {
     const newTimepointState = {};
     for (const study of studies) {
@@ -370,7 +372,7 @@ function WorkList({
     }
     setTimepointsState(newTimepointState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ studies ]);
+  }, [studies]);
 
   const isFiltering = (filterValues, defaultFilterValues) => {
     return !isEqual(filterValues, defaultFilterValues);
@@ -409,7 +411,10 @@ function WorkList({
       );
     // evibased,
     // deprecated, dicom tag trial id, remove "T" for old data, 现在没有前缀T
-    let trialTimePointIdstr = (trialTimePointId && trialTimePointId.startsWith('T') ? trialTimePointId.slice(1) : trialTimePointId) || date;
+    let trialTimePointIdstr =
+      (trialTimePointId && trialTimePointId.startsWith('T')
+        ? trialTimePointId.slice(1)
+        : trialTimePointId) || date;
     trialTimePointIdstr = timepoint ? String(timepoint.cycle) : trialTimePointIdstr; // use timepoint UID if exists instead of dicom tags
     const ifBaseline = trialTimePointIdstr === '0' || trialTimePointIdstr === '00';
     const trialTimePointName = getTimepointName(trialTimePointIdstr);
@@ -560,10 +565,11 @@ function WorkList({
               ).map((mode, i) => {
                 const modalitiesToCheck = modalities.replaceAll('/', '\\');
 
-                const { valid: isValidMode, description: invalidModeDescription } = mode.isValidMode({
-                  modalities: modalitiesToCheck,
-                  study,
-                });
+                const { valid: isValidMode, description: invalidModeDescription } =
+                  mode.isValidMode({
+                    modalities: modalitiesToCheck,
+                    study,
+                  });
                 // TODO: Modes need a default/target route? We mostly support a single one for now.
                 // We should also be using the route path, but currently are not
                 // mode.routeName
@@ -599,14 +605,19 @@ function WorkList({
                           if (!timepoints) {
                             query.append('StudyInstanceUIDs', studyInstanceUid);
                           } else {
-                            const currentStudyIndex = timepoints.findIndex(tp => tp.UID === studyInstanceUid);
+                            const currentStudyIndex = timepoints.findIndex(
+                              tp => tp.UID === studyInstanceUid
+                            );
                             if (currentStudyIndex === -1) {
                               query.append('StudyInstanceUIDs', studyInstanceUid);
                             } else if (currentStudyIndex === 0) {
                               query.append('StudyInstanceUIDs', studyInstanceUid);
                             } else {
                               const comparedTimepointUID = timepoints[currentStudyIndex - 1].UID;
-                              query.append('StudyInstanceUIDs', studyInstanceUid + `,${comparedTimepointUID}`);
+                              query.append(
+                                'StudyInstanceUIDs',
+                                studyInstanceUid + `,${comparedTimepointUID}`
+                              );
                               query.append('hangingprotocolId', '@ohif/timepointCompare');
                             }
                           }
@@ -669,7 +680,11 @@ function WorkList({
                       return;
                     }
                     console.log('update timepoint status: ', timepoint, timepointStatusValue);
-                    const newTimepoint = await _updateTimepointStatus(timepoint.id, timepointStatusValue, appConfig.evibased['apiv2_timepoints_url']);
+                    const newTimepoint = await _updateTimepointStatus(
+                      timepoint.id,
+                      timepointStatusValue,
+                      appConfig.evibased['apiv2_timepoints_url']
+                    );
                     if (!newTimepoint) {
                       console.log('fail to update timepoint status!');
                       return;
@@ -698,7 +713,7 @@ function WorkList({
                     console.info('new usernameTask:', usernameTask);
                   }}
                   options={userListForTask}
-                  // options={[{ value: 'data', label: 'data' }, 
+                  // options={[{ value: 'data', label: 'data' },
                   //           { value: 'jialei', label: 'jialei' },
                   //           { value: 'zhaoshijun', label: 'zhaoshijun' },
                   //           { value: 'quhaixian', label: 'quhaixian' },]}
@@ -714,10 +729,12 @@ function WorkList({
                     userTaskType = newSelection ? newSelection.value : null;
                     console.info('new userTaskType:', userTaskType);
                   }}
-                  options={[{ value: 'review', label: '判读' },
-                            { value: 'arbitration', label: '仲裁' },
-                            { value: 'QC-data', label: '数据质控' },
-                            { value: 'QC-report', label: '报告质控' }]}
+                  options={[
+                    { value: 'review', label: '判读' },
+                    { value: 'arbitration', label: '仲裁' },
+                    { value: 'QC-data', label: '数据质控' },
+                    { value: 'QC-report', label: '报告质控' },
+                  ]}
                 />
                 <Button
                   type={ButtonEnums.type.primary}
@@ -728,14 +745,21 @@ function WorkList({
                       return;
                     }
                     // check if user and type exists in tasks
-                    const taskFound = tasks.filter(task => task.username === usernameTask && task.type === userTaskType);
+                    const taskFound = tasks.filter(
+                      task => task.username === usernameTask && task.type === userTaskType
+                    );
                     if (taskFound?.length > 0) {
                       console.log('task already exists!');
                       return;
                     }
 
                     console.log('create new task: ', usernameTask, userTaskType);
-                    const newTask = await _createTask(usernameTask, userTaskType, studyInstanceUid, appConfig.evibased['apiv2_tasks_url']);
+                    const newTask = await _createTask(
+                      usernameTask,
+                      userTaskType,
+                      studyInstanceUid,
+                      appConfig.evibased['apiv2_tasks_url']
+                    );
                     if (!newTask) {
                       console.log('fail to create new task!');
                       return;
@@ -743,7 +767,10 @@ function WorkList({
                     // update timepointsState
                     const newTimepointsState = { ...timepointsState };
                     newTimepointsState[studyInstanceUid].tasks.push(newTask);
-                    newTimepointsState[studyInstanceUid].taskSelect = { username: usernameTask, type: userTaskType };
+                    newTimepointsState[studyInstanceUid].taskSelect = {
+                      username: usernameTask,
+                      type: userTaskType,
+                    };
                     setTimepointsState(newTimepointsState);
                     console.log('new task:', newTask);
                   }}
@@ -781,13 +808,18 @@ function WorkList({
                       return;
                     }
                     console.log('delete task: ', taskDeleteById);
-                    const success = await _deleteTask(taskDeleteById, appConfig.evibased['apiv2_tasks_url']);
+                    const success = await _deleteTask(
+                      taskDeleteById,
+                      appConfig.evibased['apiv2_tasks_url']
+                    );
                     if (!success) {
                       console.log('fail to delete task!');
                       return;
                     }
                     const newTimepointsState = { ...timepointsState };
-                    const newTasks = newTimepointsState[studyInstanceUid].tasks.filter(task => task.id !== taskDeleteById);
+                    const newTasks = newTimepointsState[studyInstanceUid].tasks.filter(
+                      task => task.id !== taskDeleteById
+                    );
                     newTimepointsState[studyInstanceUid].tasks = newTasks;
                     setTimepointsState(newTimepointsState);
                     console.log('success delete task:', taskDeleteById);
@@ -815,6 +847,17 @@ function WorkList({
 
   // evibased, top menu options defined here
   const menuOptions = [
+    // evibased, TODO: add evibased about like contact email etc.
+    // {
+    //   title: t('Header:About'),
+    //   icon: 'info',
+    //   onClick: () =>
+    //     show({
+    //       content: AboutModal,
+    //       title: t('AboutModal:About OHIF Viewer'),
+    //       contentProps: { versionNumber, commitHash },
+    //     }),
+    // },
     {
       title: t('Header:Preferences'),
       icon: 'settings',
@@ -841,19 +884,8 @@ function WorkList({
           },
         }),
     },
-    // evibased, TODO: add evibased about like contact email etc.
-    // {
-    //   title: t('Header:About'),
-    //   icon: 'info',
-    //   onClick: () =>
-    //     show({
-    //       content: AboutModal,
-    //       title: t('AboutModal:About OHIF Viewer'),
-    //       contentProps: { versionNumber, commitHash },
-    //     }),
-    // },
   ];
-  // evibased, add logout option to menu if oidc(Keycloak) enabled 
+  // evibased, add logout option to menu if oidc(Keycloak) enabled
   if (appConfig.oidc) {
     menuOptions.push({
       icon: 'power-off',
@@ -907,7 +939,7 @@ function WorkList({
       {/* evibased, investigational use dialog at bottom page, disabled in config */}
       <InvestigationalUseDialog dialogConfiguration={appConfig?.investigationalUseDialog} />
       {/* evibased, task/timepoints list */}
-      <div className="ohif-scrollbar flex grow flex-col overflow-y-auto">
+      <div className="ohif-scrollbar ohif-scrollbar-stable-gutter flex grow flex-col overflow-y-auto">
         {/* evibased, table header and filter functions */}
         <StudyListFilter
           numOfStudies={pageNumber * resultsPerPage > 100 ? 101 : numOfStudies}
@@ -924,7 +956,7 @@ function WorkList({
           projects={projects}
         />
         {/* evibased, manager show list anyway to enable timepoints filtering */}
-        {(hasStudies || ifManager) ? (
+        {hasStudies || ifManager ? (
           <div className="flex grow flex-col">
             <StudyListTable
               tableDataSource={tableDataSource.slice(offset, offsetAndTake)}
