@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { StudySummary, useImageViewer, Select, useViewportGrid, Input } from '@ohif/ui';
 import TimePointSummary from '../../ui/TimePointSummary';
 import MeasurementTable from '../../ui/MeasurementTable';
-import ActionButtons from '../../ActionButtons';
+import ActionButtons from './ActionButtons';
 import { DicomMetadataStore, utils } from '@ohif/core';
 import { useDebounce } from '@hooks';
 import { useAppConfig } from '@state';
@@ -42,7 +42,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   const dataSource = dataSources[0];
   const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
-  const { t } = useTranslation('MeasurementTable');
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(Date.now().toString());
   const debouncedMeasurementChangeTimestamp = useDebounce(measurementChangeTimestamp, 200);
   const {
