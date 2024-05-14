@@ -14,6 +14,9 @@ const defaultContextMenu = {
           commands: [
             {
               commandName: 'deleteMeasurement',
+              // we only have support for cornerstoneTools context menu since
+              // they are svg based
+              context: 'CORNERSTONE',
             },
           ],
         },

@@ -75,12 +75,7 @@ function initDefaultToolGroup(
       { toolName: toolNames.Magnify },
       { toolName: toolNames.SegmentationDisplay },
       { toolName: toolNames.CalibrationLine },
-      {
-        toolName: toolNames.AdvancedMagnify,
-        configuration: {
-          disableOnPassive: true,
-        },
-      },
+
       { toolName: toolNames.UltrasoundDirectional },
       { toolName: toolNames.PlanarFreehandROI },
       { toolName: toolNames.SplineROI },
@@ -92,7 +87,11 @@ function initDefaultToolGroup(
       //   { toolName: toolNames.ReferenceLines }
     ],
     // disabled by default
-    disabled: [],
+    disabled: [
+      {
+        toolName: toolNames.AdvancedMagnify,
+      },
+    ],
   };
 
   toolGroupService.createToolGroupAndAddTools(toolGroupId, tools);
@@ -248,6 +247,9 @@ function initMPRToolGroup(extensionManager, toolGroupService, commandsManager, m
             panSize: 10,
           },
         },
+      },
+      {
+        toolName: toolNames.AdvancedMagnify,
       },
       { toolName: toolNames.ReferenceLines },
     ],

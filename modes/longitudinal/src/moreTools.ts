@@ -11,20 +11,6 @@ const ReferenceLinesListeners: RunCommand = [
   },
 ];
 
-export const toggleEnabledDisabledToolbar = {
-  commandName: 'toggleEnabledDisabledToolbar',
-  commandOptions: {
-    toolGroupIds: ['default', 'mpr', 'SRToolGroup', 'volume3d'],
-  },
-};
-
-export const toggleActiveDisabledToolbar = {
-  commandName: 'toggleActiveDisabledToolbar',
-  commandOptions: {
-    toolGroupIds: ['default', 'mpr', 'SRToolGroup'],
-  },
-};
-
 const moreTools = [
   {
     id: 'MoreTools',
@@ -187,8 +173,8 @@ const moreTools = [
           icon: 'icon-tool-loupe',
           label: 'Loupe',
           tooltip: 'Loupe',
-          commands: toggleActiveDisabledToolbar,
-          evaluate: 'evaluate.cornerstoneTool.toggle',
+          commands: 'toggleActiveDisabledToolbar',
+          evaluate: 'evaluate.cornerstoneTool.toggle.ifStrictlyDisabled',
         }),
         createButton({
           id: 'UltrasoundDirectionalTool',
