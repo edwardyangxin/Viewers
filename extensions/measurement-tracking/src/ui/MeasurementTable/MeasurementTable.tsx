@@ -6,9 +6,9 @@ import { useTranslation } from 'react-i18next';
 import MeasurementItem from './MeasurementItem';
 import { organMapping } from '../../utils/mappings';
 
-const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager, ifTarget=false, canEdit=true }) => {
+const MeasurementTable = ({ data, title, onClick, onEdit, onDelete, servicesManager, ifTarget=false, canEdit=true }) => {
   servicesManager = servicesManager as ServicesManager;
-  const { customizationService } = servicesManager.services;
+  const { customizationService, measurementService } = servicesManager.services;
   const { t } = useTranslation('MeasurementTable');
   const amount = data.length;
 
@@ -17,6 +17,18 @@ const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager, ifTar
     contentProps: {},
   });
   const CustomMeasurementItem = itemCustomization.content;
+
+  const onMeasurementDeleteHandler = ({ uid }) => {
+    const measurement = measurementService.getMeasurement(uid);
+    onDelete?.({ uid });
+    measurementService.remove(
+      uid,
+      {
+        ...measurement,
+      },
+      true
+    );
+  };
 
   // target table warning
   const ifTargetWarning = ifTarget && amount > 5;
@@ -40,6 +52,7 @@ const MeasurementTable = ({ data, title, onClick, onEdit, servicesManager, ifTar
               item={measurementItem}
               onClick={onClick}
               onEdit={onEdit}
+              onDelete={onMeasurementDeleteHandler}
               canEdit={canEdit}
             />
           ))}
