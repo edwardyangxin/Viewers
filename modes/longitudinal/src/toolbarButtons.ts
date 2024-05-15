@@ -363,24 +363,46 @@ const toolbarButtons: Button[] = [
     },
     evaluate: ['evaluate.cornerstone.synchronizer', 'evaluate.not3D'],
   },
-  {
-    id: 'MPR',
-    uiType: 'ohif.radioGroup',
-    props: {
-      icon: 'icon-mpr',
-      label: 'MPR',
-      commands: [
-        {
-          commandName: 'toggleHangingProtocol',
-          commandOptions: {
-            protocolId: 'mpr',
-          },
-        },
-      ],
-      evaluate: 'evaluate.mpr',
-    },
-  },
-  // evibased, TODO: crosshairs not showing up when MRP mode is active
+  // evibased, new version for reference
+  // {
+  //   id: 'MPR',
+  //   uiType: 'ohif.radioGroup',
+  //   props: {
+  //     icon: 'icon-mpr',
+  //     label: 'MPR',
+  //     commands: [
+  //       {
+  //         commandName: 'toggleHangingProtocol',
+  //         commandOptions: {
+  //           protocolId: 'mpr',
+  //         },
+  //       },
+  //     ],
+  //     evaluate: 'evaluate.mpr',
+  //   },
+  // },
+  // evibased, old version, use layout selector for MPR mode for now
+  // {
+  //   id: 'HPdefault',
+  //   uiType: 'ohif.radioGroup',
+  //   props: {
+  //     icon: 'icon-mpr',
+  //     label: 'MPR',
+  //     commands: [
+  //       {
+  //         commandName: 'toggleHangingProtocol',
+  //         commandOptions: {
+  //           protocolId: 'mpr',
+  //         },
+  //       },
+  //     ],
+  //     evaluate: {
+  //       name: 'evaluate.mpr',
+  //       disabledText: '所选窗口无法重建MRP',
+  //     },
+  //   },
+  // },
+  // evibased, crosshairs when MRP mode is active
   {
     id: 'Crosshairs',
     uiType: 'ohif.radioGroup',
@@ -396,7 +418,7 @@ const toolbarButtons: Button[] = [
       },
       evaluate: {
         name: 'evaluate.cornerstoneTool',
-        disabledText: 'Select an MPR viewport to enable this tool',
+        disabledText: '在MPR模式下可用',
       },
     },
   },

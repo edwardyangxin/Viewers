@@ -210,6 +210,7 @@ const commandsModule = ({
       }
     },
 
+    // evibased, add protocolId === 'initialState' to go back to initial state
     toggleHangingProtocol: ({ protocolId, stageIndex }: HangingProtocolParams): boolean => {
       const {
         protocol,
@@ -227,7 +228,27 @@ const commandsModule = ({
           protocolId: 'default',
         };
         return actions.setHangingProtocol(previousState);
+      } else if (protocolId === 'initialState') {
+        // evibased, go back to initial state
+        const state = viewportGridService.getState();
+        const stateSyncReduce = reuseCachedLayouts(state, hangingProtocolService, stateSyncService);
+        const { hangingProtocolStageIndexMap } = stateSyncReduce;
+        // find previous state in hangingProtocolStageIndexMap, initial state should appear 1st
+        for (const key in hangingProtocolStageIndexMap) {
+          if (key.includes(activeStudy.StudyInstanceUID)) {
+            // found the 1st one
+            const previousState = hangingProtocolStageIndexMap[key];
+            return actions.setHangingProtocol(previousState);
+          }
+        }
+
+        // if not found, restore to default
+        const previousState = {
+          protocolId: 'default',
+        };
+        return actions.setHangingProtocol(previousState);
       } else {
+        // set protocol and stageIndex and store previous state
         stateSyncService.store({
           toggleHangingProtocol: {
             ...toggleHangingProtocol,

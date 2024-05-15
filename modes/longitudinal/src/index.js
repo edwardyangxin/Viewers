@@ -114,7 +114,7 @@ function modeFactory({ modeConfiguration }) {
         // 'Capture',
         'Layout',
         'StackImageSync',
-        'MPR',
+        // 'MPR', // evibased, use layout MPR instead
         'Crosshairs',
         'MoreTools',
       ]);

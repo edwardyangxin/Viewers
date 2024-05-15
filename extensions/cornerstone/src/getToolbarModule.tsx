@@ -6,6 +6,7 @@ const getToggledClassName = (isToggled: boolean) => {
     : '!text-common-bright hover:!bg-primary-dark hover:text-primary-light';
 };
 
+// evibased, 这里定义了所有的toolbar button的状态控制，比如是否disabled，是否toggled等等
 export default function getToolbarModule({ commandsManager, servicesManager }) {
   const {
     toolGroupService,

@@ -10,6 +10,7 @@ function LayoutPreset({
   commandOptions,
   classNames: classNameProps,
   disabled,
+  iconProps = {}, // evibased, change Icon props
 }) {
   return (
     <div
@@ -21,6 +22,7 @@ function LayoutPreset({
       <Icon
         name={icon}
         className="group-hover:text-primary-light"
+        {...iconProps}
       />
       {title && <div className="font-inter text-sm text-white">{title}</div>}
     </div>
@@ -38,6 +40,7 @@ LayoutPreset.propTypes = {
   commandOptions: PropTypes.object.isRequired,
   classNames: PropTypes.string,
   disabled: PropTypes.bool,
+  iconProps: PropTypes.object,
 };
 
 export default LayoutPreset;
