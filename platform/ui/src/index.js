@@ -111,6 +111,7 @@ export {
   ThumbnailList,
   ToolbarButton,
   Tooltip,
+  PortalTooltip, // evibased
   TooltipClipboard,
   Typography,
   Viewport,

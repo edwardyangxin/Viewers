@@ -712,6 +712,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             servicesManager={servicesManager}
             onClick={jumpToImage}
             onEdit={onMeasurementItemEditHandler}
+            tableID="target-findings" //evibased, add tableID when ID is needed
           />
           {/* non target lesions */}
           <MeasurementTable
@@ -720,6 +721,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             servicesManager={servicesManager}
             onClick={jumpToImage}
             onEdit={onMeasurementItemEditHandler}
+            tableID="non-target-findings" //evibased, add tableID when ID is needed
           />
           {/* other lesions */}
           {otherFindings.length > 0 && (
@@ -729,6 +731,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               servicesManager={servicesManager}
               onClick={jumpToImage}
               onEdit={onMeasurementItemEditHandler}
+              tableID="other-findings" //evibased, add tableID when ID is needed
             />
           )}
         </div>

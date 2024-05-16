@@ -256,6 +256,7 @@ module.exports = {
       wait: 'wait',
       text: 'text',
       move: 'move',
+      help: 'help', // evibased, added help cursor
       'not-allowed': 'not-allowed',
     },
     fill: {

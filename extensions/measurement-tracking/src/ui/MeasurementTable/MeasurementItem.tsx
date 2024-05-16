@@ -3,7 +3,18 @@ import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
 import { Icon } from '@ohif/ui';
+import WarningInfoTooltip from '../WarningInfoTooltip';
 
+/**
+ * 
+ * @param warningInfo = {
+    messages: [
+      'warning1',
+      'warning2',
+    ]
+  }
+ * @returns 
+ */
 const MeasurementItem = ({
   uid,
   index,
@@ -13,10 +24,14 @@ const MeasurementItem = ({
   onClick,
   onEdit,
   onDelete,
+  tableID, // evibased
   canEdit=true,
+  warningInfo={}, // evibased, for warning info tooltip
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [isIndexHovering, setIsIndexHovering] = useState(false);
+  // evibased
+  const [isWarningInfoHovering, setIsWarningInfoHovering] = useState(false);
 
   const onEditHandler = event => {
     event.stopPropagation();
@@ -45,7 +60,7 @@ const MeasurementItem = ({
       onMouseLeave={onMouseLeave}
       onClick={onClickHandler}
       role="button"
-      tabIndex="0"
+      tabIndex={0}
       data-cy={'measurement-item'}
     >
       <div
@@ -71,6 +86,33 @@ const MeasurementItem = ({
         ) : (
           <span>{index ? index : 'NA'}</span>
         )}
+        <div className="ml-1 mt-1">
+          <WarningInfoTooltip
+            id={'MeasurementItem' + tableID + index}
+            warningInfo={warningInfo}
+          ></WarningInfoTooltip>
+        </div>
+        {/* {warningInfo && Object.keys(warningInfo).length > 0 && (
+          <div
+            onMouseEnter={() => setIsWarningInfoHovering(true)}
+            onMouseLeave={() => setIsWarningInfoHovering(false)}
+          >
+            <Icon
+              name="status-alert-warning"
+              className="ml-1 mt-1 cursor-help transition duration-300 hover:opacity-80"
+            />
+            {isWarningInfoHovering && (
+              <div className="absolute z-50 bg-black p-2 text-base text-white">
+                {Object.keys(warningInfo).map((key, i) => (
+                  <div key={i}>
+                    <span>{key}: </span>
+                    <span>{warningInfo[key]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )} */}
       </div>
       <div className="relative flex flex-1 flex-col py-1 pl-2 pr-1">
         <span className="text-primary-light mb-1 text-base">{label}</span>

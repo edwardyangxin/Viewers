@@ -55,7 +55,7 @@ import ToolbarButton from './ToolbarButton';
 import ExpandableToolbarButton from './ExpandableToolbarButton';
 import LineChart from './LineChart';
 import ListMenu from './ListMenu';
-import Tooltip from './Tooltip';
+import { Tooltip, PortalTooltip } from './Tooltip';
 import TooltipClipboard from './TooltipClipboard';
 import Typography from './Typography';
 import Viewport from './Viewport';
@@ -176,6 +176,7 @@ export {
   ThumbnailList,
   ToolbarButton,
   Tooltip,
+  PortalTooltip,
   TooltipClipboard,
   Typography,
   Viewport,
