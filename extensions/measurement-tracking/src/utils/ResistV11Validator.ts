@@ -84,12 +84,23 @@ export class ResistV11Validator extends Validator {
     if (!(this.targetMeasurements && this.targetMeasurements.length > 0)) {
       console.info('No target measurements found to validate!');
       this.validationInfo.targetGroupWarningMessages.push('靶病灶不能为空');
-      return;
+    } else {
+      // target validation
+      // check index of targetMeasurement no more than 5
+      this.checkTargetMeasurementNumber();
+      // check number of measurements for same organ
+      this.checkNumberOfTargetMeasurementsForSameOrgan();
+      // check for measurable lesions
+      this.checkMeasurableLesions(this.targetMeasurements);
     }
-    // check index of targetMeasurement no more than 5
-    this.checkTargetMeasurementNumber();
-    // check number of measurements for same organ
-    this.checkNumberOfTargetMeasurementsForSameOrgan();
+
+    if (!(this.targetMeasurements && this.targetMeasurements.length > 0)) {
+      console.info('No non-target measurements found to validate!');
+    } else {
+      // non-target validation
+      // check for measurable lesions
+      this.checkMeasurableLesions(this.nonTargetMeasurements);
+    }
   }
 
   checkNumberOfTargetMeasurementsForSameOrgan() {
@@ -130,6 +141,40 @@ export class ResistV11Validator extends Validator {
       console.error('Target measurement index is invalid');
       this.validationInfo.targetMessages.push('靶病灶序号不能超过5个');
       this.validationInfo.targetMeasurementIndexValid = false;
+    }
+  }
+
+  checkMeasurableLesions(measurements: any) {
+    for (let i = 0; i < measurements.length; i++) {
+      const measurement = measurements[i];
+      const measurementLabelInfo = measurement.measurementLabelInfo;
+      const toolName = measurement.toolName;
+      if (toolName === 'Bidirectional') {
+        // short and long axis measurement
+        const mData = measurement.data;
+        try {
+          // length and width from data object
+          const keys = Object.keys(mData);
+          const firstKey = keys[0];
+          const length = mData[firstKey].length;
+          const width = mData[firstKey].width;
+          const organ = measurementLabelInfo.organ.value;
+
+          if (organ === 'Lymph_Node') {
+            if (width < 15) {
+              measurement.validationInfo.messages.push('淋巴结目标短径小于15mm为正常');
+              measurement.validationInfo.normalLesionFlag = true;
+            }
+          } else {
+            if (length < 10) {
+              measurement.validationInfo.messages.push('非淋巴结目标长径小于10mm为正常');
+              measurement.validationInfo.normalLesionFlag = true;
+            }
+          }
+        } catch {
+          console.error('failed to parse short and long axis from measurement', measurement);
+        } 
+      }
     }
   }
 }

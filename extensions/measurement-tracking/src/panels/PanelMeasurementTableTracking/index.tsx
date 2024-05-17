@@ -867,6 +867,8 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
     findingSites,
     finding,
     measurementLabelInfo, // evibased, add measurementLabelInfo
+    toolName, // evibased
+    data, // evibased
   } = measurement;
 
   const firstSite = findingSites?.[0];
@@ -895,7 +897,9 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
     isActive: selected,
     finding,
     findingSites,
-    measurementLabelInfo,
+    measurementLabelInfo, // evibased
+    toolName, // evibased
+    data, // evibased
   };
 }
 
