@@ -22,7 +22,7 @@ import {
 import PastReportItem from '../../ui/PastReportItem';
 import { getPastReportDialog, getTimepointName, getViewportId } from '../../utils/utils';
 import callInputDialog from '../../utils/callInputDialog';
-import { ResistV11Validator } from '../../utils/ ResistV11Validator';
+import { ResistV11Validator } from '../../utils/ResistV11Validator';
 
 const { downloadCSVReport } = utils;
 

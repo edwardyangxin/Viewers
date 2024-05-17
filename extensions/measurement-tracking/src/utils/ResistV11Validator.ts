@@ -83,10 +83,11 @@ export class ResistV11Validator extends Validator {
     console.log('run ResistV11Validator validate method');
     if (!(this.targetMeasurements && this.targetMeasurements.length > 0)) {
       console.info('No target measurements found to validate!');
+      this.validationInfo.targetGroupWarningMessages.push('靶病灶不能为空');
       return;
     }
     // check index of targetMeasurement no more than 5
-    this.checkTargetMeasurementIndex();
+    this.checkTargetMeasurementNumber();
     // check number of measurements for same organ
     this.checkNumberOfTargetMeasurementsForSameOrgan();
   }
@@ -114,7 +115,7 @@ export class ResistV11Validator extends Validator {
     }
   }
 
-  checkTargetMeasurementIndex() {
+  checkTargetMeasurementNumber() {
     let validFlag = true;
     for (let i = 0; i < this.targetMeasurements.length; i++) {
       const measurement = this.targetMeasurements[i];
