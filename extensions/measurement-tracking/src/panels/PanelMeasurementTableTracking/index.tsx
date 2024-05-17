@@ -22,6 +22,7 @@ import {
 import PastReportItem from '../../ui/PastReportItem';
 import { getPastReportDialog, getTimepointName, getViewportId } from '../../utils/utils';
 import callInputDialog from '../../utils/callInputDialog';
+import { ResistV11Validator } from '../../utils/ ResistV11Validator';
 
 const { downloadCSVReport } = utils;
 
@@ -513,6 +514,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   // );
 
   // evibased 按照target&nonTarget分组显示
+  // TODO: put these in a useEffect to avoid re-rendering?
   const targetFindings = [];
   const nonTargetFindings = [];
   const otherFindings = [];
@@ -537,43 +539,15 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   );
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
-  function _mapComparedMeasurementToDisplay(measurement, index) {
-    const {
-      readonlyMeasurementUID,
-      Width,
-      Length,
-      Unit,
-      StudyInstanceUID: studyInstanceUid,
-      Label: baseLabel,
-      AnnotationType: type,
-      label_info,
-    } = measurement;
-    const measurementType = type.split(':')[1];
-    const label = baseLabel || '(empty)';
-    // only bidirectional shows displayText for now
-    let displayText = ['无测量信息'];
-    if (measurementType === 'Length' && Length) {
-      displayText = [`${Length.toFixed(1)} mm`];
-    } else if (measurementType === 'Bidirectional' && Width && Length) {
-      displayText = [`${Length.toFixed(1)} x ${Width.toFixed(1)} mm`];
-    }
-    // const displayText = Width && Length ? [`${Length.toFixed(1)} x ${Width.toFixed(1)} mm`] : ['无测量信息'];
-
-    return {
-      uid: readonlyMeasurementUID,
-      measurementLabelInfo: label_info,
-      label,
-      baseLabel,
-      measurementType: measurementType,
-      displayText,
-      baseDisplayText: displayText,
-      isActive: false,
-      finding: undefined,
-      findingSites: undefined,
-    };
-  }
+  // validate target and non-target findings
+  const resistValidator = new ResistV11Validator();
+  resistValidator.setTargetMeasurements(targetFindings);
+  resistValidator.setNonTargetMeasurements(nonTargetFindings);
+  resistValidator.validate();
+  const validationInfo = resistValidator.getValidationInfo();
 
   // evibased, get compared timepoint report
+  // TODO: put these in a useEffect to avoid re-rendering?
   const getComparedTimepointReport = () => {
     const {
       studyInstanceUid,
@@ -619,7 +593,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         {extendedComparedReport && username && (
           <>
             <MeasurementTable
-              title={`${t('MeasurementTable:Target Findings')}(最多5个)`}
+              title={`${t('MeasurementTable:Target Findings')}`}
               ifTarget={true}
               data={targetFindings}
               servicesManager={servicesManager}
@@ -706,13 +680,14 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           </div>
           {/* target lesions */}
           <MeasurementTable
-            title={`${t('MeasurementTable:Target Findings')}(最多5个)`}
+            title={`${t('MeasurementTable:Target Findings')}`}
             ifTarget={true}
             data={targetFindings}
             servicesManager={servicesManager}
             onClick={jumpToImage}
             onEdit={onMeasurementItemEditHandler}
             tableID="target-findings" //evibased, add tableID when ID is needed
+            tableWarningInfo={validationInfo?.targetGroupWarningMessages}
           />
           {/* non target lesions */}
           <MeasurementTable
@@ -722,6 +697,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             onClick={jumpToImage}
             onEdit={onMeasurementItemEditHandler}
             tableID="non-target-findings" //evibased, add tableID when ID is needed
+            tableWarningInfo={validationInfo?.nonTargetGroupWarningMessages}
           />
           {/* other lesions */}
           {otherFindings.length > 0 && (
@@ -778,6 +754,7 @@ PanelMeasurementTableTracking.propTypes = {
   }).isRequired,
 };
 
+// evibased
 function _editMeasurementLabel(
   commandsManager,
   uiDialogService,
@@ -825,6 +802,43 @@ function _editMeasurementLabel(
   );
 }
 
+// evibased
+function _mapComparedMeasurementToDisplay(measurement, index) {
+  const {
+    readonlyMeasurementUID,
+    Width,
+    Length,
+    Unit,
+    StudyInstanceUID: studyInstanceUid,
+    Label: baseLabel,
+    AnnotationType: type,
+    label_info,
+  } = measurement;
+  const measurementType = type.split(':')[1];
+  const label = baseLabel || '(empty)';
+  // only bidirectional shows displayText for now
+  let displayText = ['无测量信息'];
+  if (measurementType === 'Length' && Length) {
+    displayText = [`${Length.toFixed(1)} mm`];
+  } else if (measurementType === 'Bidirectional' && Width && Length) {
+    displayText = [`${Length.toFixed(1)} x ${Width.toFixed(1)} mm`];
+  }
+  // const displayText = Width && Length ? [`${Length.toFixed(1)} x ${Width.toFixed(1)} mm`] : ['无测量信息'];
+
+  return {
+    uid: readonlyMeasurementUID,
+    measurementLabelInfo: label_info,
+    label,
+    baseLabel,
+    measurementType: measurementType,
+    displayText,
+    baseDisplayText: displayText,
+    isActive: false,
+    finding: undefined,
+    findingSites: undefined,
+  };
+}
+
 // TODO: This could be a measurementService mapper
 function _mapMeasurementToDisplay(measurement, types, displaySetService) {
   const { referenceStudyUID, referenceSeriesUID, SOPInstanceUID } = measurement;
@@ -852,6 +866,7 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
     selected,
     findingSites,
     finding,
+    measurementLabelInfo, // evibased, add measurementLabelInfo
   } = measurement;
 
   const firstSite = findingSites?.[0];
@@ -880,10 +895,11 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
     isActive: selected,
     finding,
     findingSites,
+    measurementLabelInfo,
   };
 }
 
-// evibased, convert measurements, based on core>utils>dowanloadCSVReport.js
+// evibased, deprecated? convert measurements, based on core>utils>dowanloadCSVReport.js
 function _convertToReportMeasurements(measurementData) {
   const columns = [
     'Patient ID',

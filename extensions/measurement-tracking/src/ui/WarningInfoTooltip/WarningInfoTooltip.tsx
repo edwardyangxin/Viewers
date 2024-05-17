@@ -4,12 +4,10 @@ import { PortalTooltip, Icon } from '@ohif/ui';
 
 /**
  * Displays a tooltip with a list of messages
- *   warningInfo = {
-    messages: [
+ *   warningInfo = [
       'warning1',
       'warning2',
     ],
-  };
  * @param param0
  * @returns
  */
@@ -22,7 +20,7 @@ const WarningInfoTooltip = ({
 }): React.ReactNode => {
   const [isOpen, setIsOpen] = useState(false);
 
-  if (warningInfo && Object.keys(warningInfo).length > 0 && warningInfo.messages) {
+  if (warningInfo && warningInfo.length > 0) {
     return (
       <>
         <Icon
@@ -56,7 +54,7 @@ const WarningInfoTooltip = ({
                 marginRight: '12px',
               }}
             >
-              {warningInfo.messages.map((message, index) => (
+              {warningInfo.map((message, index) => (
                 <li
                   style={{
                     marginTop: '6px',
@@ -77,7 +75,7 @@ const WarningInfoTooltip = ({
 };
 
 WarningInfoTooltip.propTypes = {
-  warningInfo: PropTypes.object,
+  warningInfo: PropTypes.array,
 };
 
 export default WarningInfoTooltip;

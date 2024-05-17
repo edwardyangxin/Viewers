@@ -9,12 +9,10 @@ import WarningInfoTooltip from '../WarningInfoTooltip';
 
 /**
  * 
- * @param warningInfo = {
-    messages: [
+ * @param tableWarningInfo = [
       'warning1',
       'warning2',
     ]
-  }
  * @returns 
  */
 const MeasurementTable = ({
@@ -27,7 +25,7 @@ const MeasurementTable = ({
   tableID, // evibased
   ifTarget = false,
   canEdit = true,
-  warningInfo = {}, // evibased, for warning info tooltip
+  tableWarningInfo = [], // evibased, for warning info tooltip
 }) => {
   servicesManager = servicesManager as ServicesManager;
   const { customizationService, measurementService } = servicesManager.services;
@@ -55,43 +53,21 @@ const MeasurementTable = ({
 
   // evibased
   // target table warning
-  const ifTargetWarning = ifTarget && amount > 5; // TODO: deprecated, using warningInfo instead 
-  const isWarningInfoExist = warningInfo && Object.keys(warningInfo).length !== 0;
+  const isWarningInfoExist = tableWarningInfo && tableWarningInfo.length !== 0;
 
   return (
     <div>
       <div
-        className={`${ifTargetWarning ? 'bg-red-500' : 'bg-secondary-main'} flex justify-between px-2 py-1`}
+        className={`${isWarningInfoExist ? 'bg-red-500' : 'bg-secondary-main'} flex justify-between px-2 py-1`}
       >
         <div className="flex items-center justify-start">
           <div>
             <span className="text-base font-bold uppercase tracking-widest text-white">{title}</span>
-            {/* {isWarningInfoExist && isWarningInfoHovering && (
-              <div className="absolute z-50 bg-black p-2 text-base text-white">
-                {Object.keys(warningInfo).map((key, i) => (
-                  <div key={i}>
-                    <span>{key}: </span>
-                    <span>{warningInfo[key]}</span>
-                  </div>
-                ))}
-              </div>
-            )} */}
           </div>
           <WarningInfoTooltip
             id={'MeasurementTable' + tableID}
-            warningInfo={warningInfo}
+            warningInfo={tableWarningInfo}
           ></WarningInfoTooltip>
-          {/* {isWarningInfoExist && (
-            <div
-            onMouseEnter={() => setIsWarningInfoHovering(true)}
-            onMouseLeave={() => setIsWarningInfoHovering(false)}
-            >
-              <Icon
-                name="status-alert-warning"
-                className="ml-1 cursor-help transition duration-300 hover:opacity-80"
-              />
-            </div>
-          )} */}
         </div>
         <span className="text-base font-bold text-white">{amount}</span>
       </div>
@@ -111,6 +87,7 @@ const MeasurementTable = ({
               onEdit={onEdit}
               onDelete={onMeasurementDeleteHandler}
               canEdit={canEdit}
+              warningInfo={measurementItem.validationInfo?.messages}
             />
           ))}
         {data.length === 0 && (
