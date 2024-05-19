@@ -3,8 +3,10 @@
  */
 class Validator {
   targetMeasurements: any;
+  lastTargetMeasurements: any; // last measuments for comparison
   targetMeasurementsByOrgan: any;
   nonTargetMeasurements: any;
+  lastNonTargetMeasurements: any; // last measuments for comparison
   nonTargetMeasurementsByOrgan: any;
   validationInfo: any;
   constructor() {
@@ -56,6 +58,63 @@ class Validator {
     return this.nonTargetMeasurements;
   }
 
+  setLastTargetMeasurements(lastTargetMeasurements) {
+    this.setLastMeasurements(true, lastTargetMeasurements);
+  }
+
+  getLastTargetMeasurements() {
+    return this.lastTargetMeasurements;
+  }
+
+  setLastNonTargetMeasurements(lastNonTargetMeasurements) {
+    this.setLastMeasurements(false, lastNonTargetMeasurements);
+  }
+
+  getLastNonTargetMeasurements() {
+    return this.lastNonTargetMeasurements;
+  }
+
+  setLastMeasurements(isTargetGroup: boolean, lastMeasurements: any) {
+    const measurements = isTargetGroup ? this.targetMeasurements : this.nonTargetMeasurements;
+
+    // if (!measurements) {
+    //   console.error('set the measurements first');
+    //   return;
+    // }
+    // find the last measurement for each measurement
+    for (let i = 0; i < measurements.length; i++) {
+      const measurement = measurements[i];
+      // find the 1st last measurement that has the same lesion index for now
+      const lastMeasurement = lastMeasurements.find(
+        m =>
+          m.measurementLabelInfo?.lesionIndex.value ===
+          measurement.measurementLabelInfo?.lesionIndex.value
+      );
+      measurement.lastMeasurement = lastMeasurement;
+    }
+
+    // find the follow-up measurement for each of last measurement
+    for (let i = 0; i < lastMeasurements.length; i++) {
+      const measurement = lastMeasurements[i];
+      // find the 1st follow-up measurement that has the same lesion index for now
+      const followUpMeasurement = measurements.find(
+        m =>
+          m.measurementLabelInfo?.lesionIndex.value ===
+          measurement.measurementLabelInfo?.lesionIndex.value
+      );
+      measurement.followUpMeasurement = followUpMeasurement;
+      measurement.validationInfo = {
+        messages: [],
+      };
+    }
+
+    if (isTargetGroup) {
+      this.lastTargetMeasurements = lastMeasurements;
+    } else {
+      this.lastNonTargetMeasurements = lastMeasurements;
+    }
+  }
+
   getValidationInfo() {
     return this.validationInfo;
   }
@@ -67,7 +126,6 @@ class Validator {
 
 /**
  * ResistV11Validator exposes methods to validate the data received from the ResistV11 device.
- * 
  */
 export class ResistV11Validator extends Validator {
   PROTOCOL = 'ResistV1.1';
@@ -84,26 +142,36 @@ export class ResistV11Validator extends Validator {
     if (!(this.targetMeasurements && this.targetMeasurements.length > 0)) {
       console.info('No target measurements found to validate!');
       this.validationInfo.targetGroupWarningMessages.push('靶病灶不能为空');
-    } else {
-      // target validation
-      // check index of targetMeasurement no more than 5
-      this.checkTargetMeasurementNumber();
-      // check number of measurements for same organ
-      this.checkNumberOfTargetMeasurementsForSameOrgan();
-      // check for measurable lesions
-      this.checkMeasurableLesions(this.targetMeasurements);
     }
 
-    if (!(this.targetMeasurements && this.targetMeasurements.length > 0)) {
-      console.info('No non-target measurements found to validate!');
-    } else {
-      // non-target validation
-      // check for measurable lesions
-      this.checkMeasurableLesions(this.nonTargetMeasurements);
+    // target validation
+    let ifTargetGroup = true;
+    // check index of targetMeasurement no more than 5
+    this.checkTargetMeasurementNumber();
+    // check number of measurements for same organ
+    this.checkNumberOfTargetMeasurementsForSameOrgan();
+    // check for measurable lesions
+    this.checkMeasurableLesions(ifTargetGroup);
+    if (this.lastTargetMeasurements) {
+      // compare with last measurements
+      this.checkLastMeasurements(ifTargetGroup);
+    }
+
+    // non-target validation
+    ifTargetGroup = false;
+    // check for measurable lesions
+    this.checkMeasurableLesions(ifTargetGroup);
+    if (this.lastNonTargetMeasurements) {
+      // compare with last measurements
+      this.checkLastMeasurements(ifTargetGroup);
     }
   }
 
-  checkNumberOfTargetMeasurementsForSameOrgan() {
+  private checkNumberOfTargetMeasurementsForSameOrgan() {
+    if (!this.targetMeasurementsByOrgan) {
+      return;
+    }
+
     for (const organ in this.targetMeasurementsByOrgan) {
       const measurements = this.targetMeasurementsByOrgan[organ];
       const indexCounter = [];
@@ -126,7 +194,11 @@ export class ResistV11Validator extends Validator {
     }
   }
 
-  checkTargetMeasurementNumber() {
+  private checkTargetMeasurementNumber() {
+    if (!this.targetMeasurements) {
+      return;
+    }
+
     let validFlag = true;
     for (let i = 0; i < this.targetMeasurements.length; i++) {
       const measurement = this.targetMeasurements[i];
@@ -144,7 +216,12 @@ export class ResistV11Validator extends Validator {
     }
   }
 
-  checkMeasurableLesions(measurements: any) {
+  private checkMeasurableLesions(ifTargetGroup: boolean) {
+    const measurements = ifTargetGroup ? this.targetMeasurements : this.nonTargetMeasurements;
+    if (!measurements) {
+      return;
+    }
+
     for (let i = 0; i < measurements.length; i++) {
       const measurement = measurements[i];
       const measurementLabelInfo = measurement.measurementLabelInfo;
@@ -173,7 +250,94 @@ export class ResistV11Validator extends Validator {
           }
         } catch {
           console.error('failed to parse short and long axis from measurement', measurement);
-        } 
+        }
+      }
+    }
+  }
+
+  private checkLastMeasurements(ifTargetGroup: boolean) {
+    // check missing follow-up measurement
+    this.checkMissingFollowUpMeasurement(ifTargetGroup);
+
+    // check measurement is the same organ or side as last measurement
+    this.checkMeasurementConsistency(ifTargetGroup);
+  }
+
+  private checkMissingFollowUpMeasurement(ifTargetGroup: boolean) {
+    const lastMeasurements = ifTargetGroup
+      ? this.lastTargetMeasurements
+      : this.lastNonTargetMeasurements;
+
+    if (!lastMeasurements) {
+      return;
+    }
+
+    let groupWarningFlag = false;
+    let groupWarningMessage = '';
+
+    for (let i = 0; i < lastMeasurements.length; i++) {
+      const lastMeasurement = lastMeasurements[i];
+      if (!lastMeasurement.followUpMeasurement) {
+        console.error('Missing follow-up measurement');
+        lastMeasurement.validationInfo.messages.push('缺少本期对应测量');
+        lastMeasurement.validationInfo.missingFollowUpMeasurement = true;
+        groupWarningFlag = true;
+        groupWarningMessage = '往期测量缺少本期对应测量';
+      }
+    }
+    if (groupWarningFlag) {
+      console.error('Missing follow-up measurement');
+      if (ifTargetGroup) {
+        this.validationInfo.targetGroupWarningMessages.push(groupWarningMessage);
+      } else {
+        this.validationInfo.nonTargetGroupWarningMessages.push(groupWarningMessage);
+      }
+    }
+  }
+
+  private checkMeasurementConsistency(ifTargetGroup: boolean) {
+    const measurements = ifTargetGroup ? this.targetMeasurements : this.nonTargetMeasurements;
+    if (!measurements) {
+      return;
+    }
+
+    let groupWarningFlag = false;
+    let groupWarningMessage = '';
+
+    for (let i = 0; i < measurements.length; i++) {
+      const measurement = measurements[i];
+      const lastMeasurement = measurement.lastMeasurement;
+
+      if (lastMeasurement) {
+        const measurementLabelInfo = measurement.measurementLabelInfo;
+        const lastMeasurementLabelInfo = lastMeasurement.measurementLabelInfo;
+
+        if (
+          measurementLabelInfo.organ.value !== lastMeasurementLabelInfo.organ.value ||
+          measurementLabelInfo.organLocation?.value !== lastMeasurementLabelInfo.organLocation?.value ||
+          measurementLabelInfo.organLateral?.value !== lastMeasurementLabelInfo.organLateral?.value
+        ) {
+          console.error('Last measurement is not the same organ or side');
+          measurement.validationInfo.messages.push('与往期测量的器官或位置不一致');
+          measurement.validationInfo.lastMeasurementNotSameOrganOrSide = true;
+          groupWarningFlag = true;
+          groupWarningMessage = '与往期测量不一致的器官或位置';
+        }
+      } else {
+        console.error('Last measurement not found');
+        measurement.validationInfo.messages.push('对应的往期访视测量未找到!');
+        measurement.validationInfo.lastMeasurementNotFound = true;
+        groupWarningFlag = true;
+        groupWarningMessage = '本期测量没有对应的往期测量';
+      }
+    }
+
+    if (groupWarningFlag) {
+      console.error('Last measurement is not the same organ or side');
+      if (ifTargetGroup) {
+        this.validationInfo.targetGroupWarningMessages.push(groupWarningMessage);
+      } else {
+        this.validationInfo.nonTargetGroupWarningMessages.push(groupWarningMessage);
       }
     }
   }
