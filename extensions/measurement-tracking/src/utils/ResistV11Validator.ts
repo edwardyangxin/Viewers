@@ -283,11 +283,19 @@ export class ResistV11Validator extends Validator {
             if (width < 15) {
               measurement.validationInfo.messages.push('淋巴结目标短径小于15mm为正常');
               measurement.validationInfo.normalLesionFlag = true;
+              if (this.isBaseline) {
+                groupWarningFlag = true;
+                groupWarningMessages.push('基线包含正常病灶');
+              }
             }
           } else {
             if (length < 10) {
               measurement.validationInfo.messages.push('非淋巴结目标长径小于10mm为正常');
               measurement.validationInfo.normalLesionFlag = true;
+              if (this.isBaseline) {
+                groupWarningFlag = true;
+                groupWarningMessages.push('基线包含正常病灶');
+              }
             }
           }
         } catch {
