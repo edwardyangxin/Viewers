@@ -541,6 +541,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
   // validate target and non-target findings
   const resistValidator = new ResistV11Validator();
+  resistValidator.setBaseline(currentTimepoint?.ifBaseline);
   resistValidator.setTargetMeasurements(targetFindings);
   resistValidator.setNonTargetMeasurements(nonTargetFindings);
   if (comparedTimepoint && comparedReportInfo) {

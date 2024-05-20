@@ -2,6 +2,7 @@
  * Validator is a base class that can be extended by other validator classes.
  */
 class Validator {
+  isBaseline: boolean;
   targetMeasurements: any;
   lastTargetMeasurements: any; // last measuments for comparison
   targetMeasurementsByOrgan: any;
@@ -14,6 +15,10 @@ class Validator {
       targetGroupWarningMessages: [],
       nonTargetGroupWarningMessages: [],
     };
+  }
+
+  setBaseline(isBaseline) {
+    this.isBaseline = isBaseline;
   }
 
   setTargetMeasurements(targetMeasurements) {
@@ -146,11 +151,13 @@ export class ResistV11Validator extends Validator {
 
     // target validation
     let ifTargetGroup = true;
+    // check organ info
+    this.checkMeasurementOrganInfo(ifTargetGroup);
     // check index of targetMeasurement no more than 5
     this.checkTargetMeasurementNumber();
     // check number of measurements for same organ
     this.checkNumberOfTargetMeasurementsForSameOrgan();
-    // check for measurable lesions
+    // check for measurable lesions(1. 双径测量长度提示；2. 基线靶病灶需使用双径测量)
     this.checkMeasurableLesions(ifTargetGroup);
     if (this.lastTargetMeasurements) {
       // compare with last measurements
@@ -159,11 +166,43 @@ export class ResistV11Validator extends Validator {
 
     // non-target validation
     ifTargetGroup = false;
+    // check organ info
+    this.checkMeasurementOrganInfo(ifTargetGroup);
     // check for measurable lesions
     this.checkMeasurableLesions(ifTargetGroup);
     if (this.lastNonTargetMeasurements) {
       // compare with last measurements
       this.checkLastMeasurements(ifTargetGroup);
+    }
+  }
+
+  checkMeasurementOrganInfo(ifTargetGroup: boolean) {
+    const measurements = ifTargetGroup ? this.targetMeasurements : this.nonTargetMeasurements;
+    if (!measurements) {
+      return;
+    }
+
+    let groupWarningFlag = false;
+    let groupWarningMessages = '';
+
+    for (let i = 0; i < measurements.length; i++) {
+      const measurement = measurements[i];
+      const measurementLabelInfo = measurement.measurementLabelInfo;
+      if (!measurementLabelInfo?.organ?.value) {
+        console.error('Organ info is missing');
+        measurement.validationInfo.messages.push('器官信息不能为空');
+        measurement.validationInfo.organInfoMissing = true;
+        groupWarningFlag = true;
+        groupWarningMessages = '器官信息不能为空';
+      }
+    }
+
+    if (groupWarningFlag) {
+      if (ifTargetGroup) {
+        this.validationInfo.targetGroupWarningMessages.push(groupWarningMessages);
+      } else {
+        this.validationInfo.nonTargetGroupWarningMessages.push(groupWarningMessages);
+      }
     }
   }
 
@@ -222,6 +261,9 @@ export class ResistV11Validator extends Validator {
       return;
     }
 
+    let groupWarningFlag = false;
+    let groupWarningMessages = [];
+
     for (let i = 0; i < measurements.length; i++) {
       const measurement = measurements[i];
       const measurementLabelInfo = measurement.measurementLabelInfo;
@@ -251,6 +293,20 @@ export class ResistV11Validator extends Validator {
         } catch {
           console.error('failed to parse short and long axis from measurement', measurement);
         }
+      } else if (ifTargetGroup && this.isBaseline) {
+        // baseline target measurement should be measurable
+        measurement.validationInfo.messages.push('基线靶病灶需使用双径测量');
+        measurement.validationInfo.baselineTargetMeasurementNotBidirectional = true;
+        groupWarningFlag = true;
+        groupWarningMessages.push('基线靶病灶需使用双径测量');
+      }
+    }
+
+    if (groupWarningFlag) {
+      if (ifTargetGroup) {
+        this.validationInfo.targetGroupWarningMessages.push(...groupWarningMessages);
+      } else {
+        this.validationInfo.nonTargetGroupWarningMessages.push(...groupWarningMessages);
       }
     }
   }
