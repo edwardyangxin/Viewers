@@ -6,6 +6,9 @@ class Validator {
   targetMeasurements: any;
   lastTargetMeasurements: any; // last measuments for comparison
   targetMeasurementsByOrgan: any;
+  newLesionMeasurements: any;
+  newLesionMeasurementsByOrgan: any;
+  lastNewLesionMeasurements: any; // last measuments for comparison
   nonTargetMeasurements: any;
   lastNonTargetMeasurements: any; // last measuments for comparison
   nonTargetMeasurementsByOrgan: any;
@@ -13,6 +16,7 @@ class Validator {
   constructor() {
     this.validationInfo = {
       targetGroupWarningMessages: [],
+      newLesionGroupWarningMessages: [],
       nonTargetGroupWarningMessages: [],
     };
   }
@@ -21,42 +25,32 @@ class Validator {
     this.isBaseline = isBaseline;
   }
 
-  setTargetMeasurements(targetMeasurements) {
-    this.targetMeasurements = targetMeasurements;
-    this.targetMeasurementsByOrgan = {};
-    for (let i = 0; i < targetMeasurements.length; i++) {
-      const measurement = targetMeasurements[i];
-      const measurementLabelInfo = measurement.measurementLabelInfo;
-      measurement.validationInfo = {
-        messages: [],
-      };
+  getValidationInfo() {
+    return this.validationInfo;
+  }
 
-      if (!this.targetMeasurementsByOrgan[measurementLabelInfo?.organ?.value]) {
-        this.targetMeasurementsByOrgan[measurementLabelInfo?.organ?.value] = [];
-      }
-      this.targetMeasurementsByOrgan[measurementLabelInfo?.organ?.value].push(measurement);
-    }
+  validate() {
+    throw new Error('NotImplementedError');
+  }
+
+  setTargetMeasurements(targetMeasurements) {
+    this.setMeasurements(targetMeasurements, 'target');
   }
 
   getTargetMeasurements() {
     return this.targetMeasurements;
   }
 
-  setNonTargetMeasurements(nonTargetMeasurements) {
-    this.nonTargetMeasurements = nonTargetMeasurements;
-    this.nonTargetMeasurementsByOrgan = {};
-    for (let i = 0; i < nonTargetMeasurements.length; i++) {
-      const measurement = nonTargetMeasurements[i];
-      const measurementLabelInfo = measurement.measurementLabelInfo;
-      measurement.validationInfo = {
-        messages: [],
-      };
+  setNewLesionMeasurements(newLesionMeasurements) {
+    this.setMeasurements(newLesionMeasurements, 'newLesion');
+  }
 
-      if (!this.nonTargetMeasurementsByOrgan[measurementLabelInfo?.organ?.value]) {
-        this.nonTargetMeasurementsByOrgan[measurementLabelInfo?.organ?.value] = [];
-      }
-      this.nonTargetMeasurementsByOrgan[measurementLabelInfo?.organ?.value].push(measurement);
-    }
+  getNewLesionMeasurements() {
+    return this.newLesionMeasurements;
+  }
+
+  setNonTargetMeasurements(nonTargetMeasurements) {
+    this.setMeasurements(nonTargetMeasurements, 'nonTarget');
   }
 
   getNonTargetMeasurements() {
@@ -64,23 +58,57 @@ class Validator {
   }
 
   setLastTargetMeasurements(lastTargetMeasurements) {
-    this.setLastMeasurements(true, lastTargetMeasurements);
+    this.setLastMeasurements(lastTargetMeasurements, 'target');
   }
 
   getLastTargetMeasurements() {
     return this.lastTargetMeasurements;
   }
 
+  setLastNewLesionMeasurements(lastNewLesionMeasurements) {
+    this.setLastMeasurements(lastNewLesionMeasurements, 'newLesion');
+  }
+
+  getLastNewLesionMeasurements() {
+    return this.lastNewLesionMeasurements;
+  }
+
   setLastNonTargetMeasurements(lastNonTargetMeasurements) {
-    this.setLastMeasurements(false, lastNonTargetMeasurements);
+    this.setLastMeasurements(lastNonTargetMeasurements, 'nonTarget');
   }
 
   getLastNonTargetMeasurements() {
     return this.lastNonTargetMeasurements;
   }
 
-  setLastMeasurements(isTargetGroup: boolean, lastMeasurements: any) {
-    const measurements = isTargetGroup ? this.targetMeasurements : this.nonTargetMeasurements;
+  setMeasurements(measurements: any[], groupName: string) {
+    const measurementPropertyName = `${groupName}Measurements`;
+    const measurementByOrganPropertyName = `${groupName}MeasurementsByOrgan`;
+
+    this[measurementPropertyName] = measurements;
+    this[measurementByOrganPropertyName] = {};
+
+    for (let i = 0; i < measurements.length; i++) {
+      const measurement = measurements[i];
+      const measurementLabelInfo = measurement.measurementLabelInfo;
+      measurement.validationInfo = {
+        messages: [],
+      };
+
+      if (!this[measurementByOrganPropertyName][measurementLabelInfo?.organ?.value]) {
+        this[measurementByOrganPropertyName][measurementLabelInfo?.organ?.value] = [];
+      }
+      this[measurementByOrganPropertyName][measurementLabelInfo?.organ?.value].push(measurement);
+    }
+  }
+
+  setLastMeasurements(lastMeasurements: any[], groupName: string) {
+    const measurementPropertyName = `${groupName}Measurements`;
+    const groupNameCapitalized = groupName.charAt(0).toUpperCase() + groupName.slice(1);
+    const lastMeasurementPropertyName = `last${groupNameCapitalized}Measurements`;
+
+    // find matching follow-up measurement for each of last measurement
+    const measurements = this[measurementPropertyName];
 
     // if (!measurements) {
     //   console.error('set the measurements first');
@@ -113,19 +141,7 @@ class Validator {
       };
     }
 
-    if (isTargetGroup) {
-      this.lastTargetMeasurements = lastMeasurements;
-    } else {
-      this.lastNonTargetMeasurements = lastMeasurements;
-    }
-  }
-
-  getValidationInfo() {
-    return this.validationInfo;
-  }
-
-  validate() {
-    throw new Error('NotImplementedError');
+    this[lastMeasurementPropertyName] = lastMeasurements;
   }
 }
 
@@ -154,37 +170,32 @@ export class ResistV11Validator extends Validator {
     this.checkCavitation();
     // check organ info
     this.checkMeasurementOrganInfo();
+    // check for measurable lesions(1. 双径测量长度提示；2. 基线靶病灶需使用双径测量)
+    this.checkMeasurableLesions();
+    // compare with last measurements
+    this.checkLastMeasurements();
 
-    // target validation
-    let ifTargetGroup = true;
+    // target validation specific
     // check index of targetMeasurement no more than 5
     this.checkTargetMeasurementNumber();
     // check number of measurements for same organ
     this.checkNumberOfTargetMeasurementsForSameOrgan();
-    // check for measurable lesions(1. 双径测量长度提示；2. 基线靶病灶需使用双径测量)
-    this.checkMeasurableLesions(ifTargetGroup);
-    if (this.lastTargetMeasurements) {
-      // compare with last measurements
-      this.checkLastMeasurements(ifTargetGroup);
-    }
 
-    // non-target validation
-    ifTargetGroup = false;
-    // check for measurable lesions
-    this.checkMeasurableLesions(ifTargetGroup);
-    if (this.lastNonTargetMeasurements) {
-      // compare with last measurements
-      this.checkLastMeasurements(ifTargetGroup);
-    }
+    // new lesion validation specific
+    // 1. 不能在基线中出现新病灶
+    this.checkNewLesionMeasurements();
   }
 
-  checkCavitation() {
+  private checkCavitation() {
     this.checkCavitationForGroup('target');
+    this.checkCavitationForGroup('newLesion');
     this.checkCavitationForGroup('nonTarget');
   }
 
-  checkCavitationForGroup(groupName: string) {
-    const measurements = groupName === 'target' ? this.targetMeasurements : this.nonTargetMeasurements;
+  private checkCavitationForGroup(groupName: string) {
+    const measurementPropertyName = `${groupName}Measurements`;
+
+    const measurements = this[measurementPropertyName];
     if (!measurements) {
       return;
     }
@@ -205,21 +216,21 @@ export class ResistV11Validator extends Validator {
     }
 
     if (groupWarningFlag) {
-      if (groupName === 'target') {
-        this.validationInfo.targetGroupWarningMessages.push(...groupWarningMessages);
-      } else {
-        this.validationInfo.nonTargetGroupWarningMessages.push(...groupWarningMessages);
-      }
+      const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
+      this.validationInfo[groupWarningPropertyName].push(...groupWarningMessages);
     }
   }
 
-  checkMeasurementOrganInfo() {
+  private checkMeasurementOrganInfo() {
     this.checkMeasurementOrganInfoForGroup('target');
+    this.checkMeasurementOrganInfoForGroup('newLesion');
     this.checkMeasurementOrganInfoForGroup('nonTarget');
   }
 
-  checkMeasurementOrganInfoForGroup(groupName: string) {
-    const measurements = groupName === 'target' ? this.targetMeasurements : this.nonTargetMeasurements;
+  private checkMeasurementOrganInfoForGroup(groupName: string) {
+    const measurementPropertyName = `${groupName}Measurements`;
+
+    const measurements = this[measurementPropertyName];
     if (!measurements) {
       return;
     }
@@ -240,11 +251,176 @@ export class ResistV11Validator extends Validator {
     }
 
     if (groupWarningFlag) {
-      if (ifTargetGroup) {
-        this.validationInfo.targetGroupWarningMessages.push(groupWarningMessages);
-      } else {
-        this.validationInfo.nonTargetGroupWarningMessages.push(groupWarningMessages);
+      const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
+      this.validationInfo[groupWarningPropertyName].push(groupWarningMessages);
+    }
+  }
+
+  private checkMeasurableLesions() {
+    this.checkMeasurableLesionsForGroup('target');
+    this.checkMeasurableLesionsForGroup('newLesion');
+    this.checkMeasurableLesionsForGroup('nonTarget');
+  }
+
+  private checkMeasurableLesionsForGroup(groupName: string) {
+    const measurementPropertyName = `${groupName}Measurements`;
+
+    const measurements = this[measurementPropertyName];
+    if (!measurements) {
+      return;
+    }
+
+    let groupWarningFlag = false;
+    const groupWarningMessages = [];
+
+    for (let i = 0; i < measurements.length; i++) {
+      const measurement = measurements[i];
+      const measurementLabelInfo = measurement.measurementLabelInfo;
+      const toolName = measurement.toolName;
+      if (toolName === 'Bidirectional') {
+        // short and long axis measurement
+        const mData = measurement.data;
+        try {
+          // length and width from data object
+          const keys = Object.keys(mData);
+          const firstKey = keys[0];
+          const length = mData[firstKey].length;
+          const width = mData[firstKey].width;
+          const organ = measurementLabelInfo.organ.value;
+
+          if (organ === 'Lymph_Node') {
+            if (width < 15) {
+              measurement.validationInfo.messages.push('淋巴结目标短径小于15mm为正常');
+              measurement.validationInfo.normalLesionFlag = true;
+              if (this.isBaseline) {
+                groupWarningFlag = true;
+                groupWarningMessages.push('基线包含正常病灶');
+              }
+            }
+          } else {
+            if (length < 10) {
+              measurement.validationInfo.messages.push('非淋巴结目标长径小于10mm为正常');
+              measurement.validationInfo.normalLesionFlag = true;
+              if (this.isBaseline) {
+                groupWarningFlag = true;
+                groupWarningMessages.push('基线包含正常病灶');
+              }
+            }
+          }
+        } catch {
+          console.error('failed to parse short and long axis from measurement', measurement);
+        }
+      } else if (groupName === 'target' && this.isBaseline) {
+        // baseline target measurement should be measurable
+        measurement.validationInfo.messages.push('基线靶病灶需使用双径测量');
+        measurement.validationInfo.baselineTargetMeasurementNotBidirectional = true;
+        groupWarningFlag = true;
+        groupWarningMessages.push('基线靶病灶需使用双径测量');
       }
+    }
+
+    if (groupWarningFlag) {
+      const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
+      this.validationInfo[groupWarningPropertyName].push(...groupWarningMessages);
+    }
+  }
+
+  private checkLastMeasurements() {
+    this.checkLastMeasurementsForGroup('target');
+    this.checkLastMeasurementsForGroup('newLesion');
+    this.checkLastMeasurementsForGroup('nonTarget');
+  }
+
+  private checkLastMeasurementsForGroup(groupName: string) {
+    // baseline has no last measurements to compare
+    if (this.isBaseline) {
+      return;
+    }
+
+    // check missing follow-up measurement
+    this.checkMissingFollowUpMeasurement(groupName);
+
+    // check measurement is the same organ or side as last measurement
+    this.checkMeasurementConsistency(groupName);
+  }
+
+  private checkMissingFollowUpMeasurement(groupName: string) {
+    const groupNameCapitalized = groupName.charAt(0).toUpperCase() + groupName.slice(1);
+    const lastMeasurementPropertyName = `last${groupNameCapitalized}Measurements`;
+
+    const lastMeasurements = this[lastMeasurementPropertyName];
+
+    if (!lastMeasurements) {
+      return;
+    }
+
+    let groupWarningFlag = false;
+    let groupWarningMessage = '';
+
+    for (let i = 0; i < lastMeasurements.length; i++) {
+      const lastMeasurement = lastMeasurements[i];
+      if (!lastMeasurement.followUpMeasurement) {
+        console.error('Missing follow-up measurement');
+        lastMeasurement.validationInfo.messages.push('缺少本期对应测量');
+        lastMeasurement.validationInfo.missingFollowUpMeasurement = true;
+        groupWarningFlag = true;
+        groupWarningMessage = '往期测量缺少本期对应测量';
+      }
+    }
+
+    if (groupWarningFlag) {
+      const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
+      this.validationInfo[groupWarningPropertyName].push(groupWarningMessage);
+    }
+  }
+
+  private checkMeasurementConsistency(groupName: string) {
+    const measurementPropertyName = `${groupName}Measurements`;
+
+    const measurements = this[measurementPropertyName];
+    if (!measurements) {
+      return;
+    }
+
+    let groupWarningFlag = false;
+    let groupWarningMessage = '';
+
+    for (let i = 0; i < measurements.length; i++) {
+      const measurement = measurements[i];
+      const lastMeasurement = measurement.lastMeasurement;
+
+      if (lastMeasurement) {
+        const measurementLabelInfo = measurement.measurementLabelInfo;
+        const lastMeasurementLabelInfo = lastMeasurement.measurementLabelInfo;
+
+        if (
+          measurementLabelInfo.organ.value !== lastMeasurementLabelInfo.organ.value ||
+          measurementLabelInfo.organLocation?.value !== lastMeasurementLabelInfo.organLocation?.value ||
+          measurementLabelInfo.organLateral?.value !== lastMeasurementLabelInfo.organLateral?.value
+        ) {
+          console.error('Last measurement is not the same organ or side');
+          measurement.validationInfo.messages.push('与往期测量的器官或位置不一致');
+          measurement.validationInfo.lastMeasurementNotSameOrganOrSide = true;
+          groupWarningFlag = true;
+          groupWarningMessage = '与往期测量不一致的器官或位置';
+        }
+      } else if (groupName === 'newLesion') {
+        measurement.validationInfo.messages.push('首次出现的新病灶');
+        measurement.validationInfo.lastMeasurementNotFound = true;
+        groupWarningFlag = true;
+        groupWarningMessage = '首次发现新病灶';
+      } else {
+        console.error('Last measurement not found');
+        measurement.validationInfo.messages.push('没有对应的往期测量!');
+        measurement.validationInfo.lastMeasurementNotFound = true;
+        groupWarningFlag = true;
+        groupWarningMessage = '本期测量存在没有对应的往期测量，请检查是否为新发病灶';
+      }
+    }
+
+    if (groupWarningFlag) {
+      const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
+      this.validationInfo[groupWarningPropertyName].push(groupWarningMessage);
     }
   }
 
@@ -297,154 +473,10 @@ export class ResistV11Validator extends Validator {
     }
   }
 
-  private checkMeasurableLesions(ifTargetGroup: boolean) {
-    const measurements = ifTargetGroup ? this.targetMeasurements : this.nonTargetMeasurements;
-    if (!measurements) {
-      return;
-    }
-
-    let groupWarningFlag = false;
-    let groupWarningMessages = [];
-
-    for (let i = 0; i < measurements.length; i++) {
-      const measurement = measurements[i];
-      const measurementLabelInfo = measurement.measurementLabelInfo;
-      const toolName = measurement.toolName;
-      if (toolName === 'Bidirectional') {
-        // short and long axis measurement
-        const mData = measurement.data;
-        try {
-          // length and width from data object
-          const keys = Object.keys(mData);
-          const firstKey = keys[0];
-          const length = mData[firstKey].length;
-          const width = mData[firstKey].width;
-          const organ = measurementLabelInfo.organ.value;
-
-          if (organ === 'Lymph_Node') {
-            if (width < 15) {
-              measurement.validationInfo.messages.push('淋巴结目标短径小于15mm为正常');
-              measurement.validationInfo.normalLesionFlag = true;
-              if (this.isBaseline) {
-                groupWarningFlag = true;
-                groupWarningMessages.push('基线包含正常病灶');
-              }
-            }
-          } else {
-            if (length < 10) {
-              measurement.validationInfo.messages.push('非淋巴结目标长径小于10mm为正常');
-              measurement.validationInfo.normalLesionFlag = true;
-              if (this.isBaseline) {
-                groupWarningFlag = true;
-                groupWarningMessages.push('基线包含正常病灶');
-              }
-            }
-          }
-        } catch {
-          console.error('failed to parse short and long axis from measurement', measurement);
-        }
-      } else if (ifTargetGroup && this.isBaseline) {
-        // baseline target measurement should be measurable
-        measurement.validationInfo.messages.push('基线靶病灶需使用双径测量');
-        measurement.validationInfo.baselineTargetMeasurementNotBidirectional = true;
-        groupWarningFlag = true;
-        groupWarningMessages.push('基线靶病灶需使用双径测量');
-      }
-    }
-
-    if (groupWarningFlag) {
-      if (ifTargetGroup) {
-        this.validationInfo.targetGroupWarningMessages.push(...groupWarningMessages);
-      } else {
-        this.validationInfo.nonTargetGroupWarningMessages.push(...groupWarningMessages);
-      }
-    }
-  }
-
-  private checkLastMeasurements(ifTargetGroup: boolean) {
-    // check missing follow-up measurement
-    this.checkMissingFollowUpMeasurement(ifTargetGroup);
-
-    // check measurement is the same organ or side as last measurement
-    this.checkMeasurementConsistency(ifTargetGroup);
-  }
-
-  private checkMissingFollowUpMeasurement(ifTargetGroup: boolean) {
-    const lastMeasurements = ifTargetGroup
-      ? this.lastTargetMeasurements
-      : this.lastNonTargetMeasurements;
-
-    if (!lastMeasurements) {
-      return;
-    }
-
-    let groupWarningFlag = false;
-    let groupWarningMessage = '';
-
-    for (let i = 0; i < lastMeasurements.length; i++) {
-      const lastMeasurement = lastMeasurements[i];
-      if (!lastMeasurement.followUpMeasurement) {
-        console.error('Missing follow-up measurement');
-        lastMeasurement.validationInfo.messages.push('缺少本期对应测量');
-        lastMeasurement.validationInfo.missingFollowUpMeasurement = true;
-        groupWarningFlag = true;
-        groupWarningMessage = '往期测量缺少本期对应测量';
-      }
-    }
-    if (groupWarningFlag) {
-      console.error('Missing follow-up measurement');
-      if (ifTargetGroup) {
-        this.validationInfo.targetGroupWarningMessages.push(groupWarningMessage);
-      } else {
-        this.validationInfo.nonTargetGroupWarningMessages.push(groupWarningMessage);
-      }
-    }
-  }
-
-  private checkMeasurementConsistency(ifTargetGroup: boolean) {
-    const measurements = ifTargetGroup ? this.targetMeasurements : this.nonTargetMeasurements;
-    if (!measurements) {
-      return;
-    }
-
-    let groupWarningFlag = false;
-    let groupWarningMessage = '';
-
-    for (let i = 0; i < measurements.length; i++) {
-      const measurement = measurements[i];
-      const lastMeasurement = measurement.lastMeasurement;
-
-      if (lastMeasurement) {
-        const measurementLabelInfo = measurement.measurementLabelInfo;
-        const lastMeasurementLabelInfo = lastMeasurement.measurementLabelInfo;
-
-        if (
-          measurementLabelInfo.organ.value !== lastMeasurementLabelInfo.organ.value ||
-          measurementLabelInfo.organLocation?.value !== lastMeasurementLabelInfo.organLocation?.value ||
-          measurementLabelInfo.organLateral?.value !== lastMeasurementLabelInfo.organLateral?.value
-        ) {
-          console.error('Last measurement is not the same organ or side');
-          measurement.validationInfo.messages.push('与往期测量的器官或位置不一致');
-          measurement.validationInfo.lastMeasurementNotSameOrganOrSide = true;
-          groupWarningFlag = true;
-          groupWarningMessage = '与往期测量不一致的器官或位置';
-        }
-      } else {
-        console.error('Last measurement not found');
-        measurement.validationInfo.messages.push('对应的往期访视测量未找到!');
-        measurement.validationInfo.lastMeasurementNotFound = true;
-        groupWarningFlag = true;
-        groupWarningMessage = '本期测量没有对应的往期测量';
-      }
-    }
-
-    if (groupWarningFlag) {
-      console.error('Last measurement is not the same organ or side');
-      if (ifTargetGroup) {
-        this.validationInfo.targetGroupWarningMessages.push(groupWarningMessage);
-      } else {
-        this.validationInfo.nonTargetGroupWarningMessages.push(groupWarningMessage);
-      }
+  private checkNewLesionMeasurements() {
+    if (this.isBaseline && this.newLesionMeasurements) {
+      console.error('Baseline should not have new lesion measurements');
+      this.validationInfo.newLesionGroupWarningMessages.push('基线不能出现新病灶!');
     }
   }
 }

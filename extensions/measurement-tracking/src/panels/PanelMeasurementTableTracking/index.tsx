@@ -18,6 +18,7 @@ import {
   imageQualityOptions,
   imageQualityMapping,
   NonMeasurementTools,
+  newLesionKeyGroup,
 } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
 import { getPastReportDialog, getTimepointName, getViewportId } from '../../utils/utils';
@@ -301,6 +302,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const report = reports?.[0];
 
     const targetFindings = [];
+    const newLesionFindings = [];
     const nonTargetFindings = [];
     const otherFindings = [];
     if (report) {
@@ -315,6 +317,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           otherFindings.push(dm);
         } else if (targetKeyGroup.includes(lesionValue)) {
           targetFindings.push(dm);
+        } else if (newLesionKeyGroup.includes(lesionValue)) {
+          // new lesion group check before non target group, non target group includes new lesion keys
+          newLesionFindings.push(dm);
         } else if (nonTargetKeyGroup.includes(lesionValue)) {
           nonTargetFindings.push(dm);
         } else {
@@ -324,6 +329,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     }
     // sort by index, get index from label, TODO: get index from measurementlabelInfo
     targetFindings.sort(
+      (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+    );
+    newLesionFindings.sort(
       (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
     );
     nonTargetFindings.sort(
@@ -336,6 +344,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       comparedReportInfo: {
         report: report,
         targetFindings: targetFindings,
+        newLesionFindings: newLesionFindings,
         nonTargetFindings: nonTargetFindings,
         otherFindings: otherFindings,
       },
@@ -516,6 +525,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   // evibased 按照target&nonTarget分组显示
   // TODO: put these in a useEffect to avoid re-rendering?
   const targetFindings = [];
+  const newLesionFindings = [];
   const nonTargetFindings = [];
   const otherFindings = [];
   for (const dm of displayMeasurements) {
@@ -526,6 +536,9 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       otherFindings.push(dm);
     } else if (targetKeyGroup.includes(lesionValue)) {
       targetFindings.push(dm);
+    } else if (newLesionKeyGroup.includes(lesionValue)) {
+      // new lesion group check before non target group, non target group includes new lesion keys
+      newLesionFindings.push(dm);
     } else if (nonTargetKeyGroup.includes(lesionValue)) {
       nonTargetFindings.push(dm);
     } else {
@@ -534,23 +547,33 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   }
   // sort by index, get index from label, TODO: get index from measurementLabelInfo
   targetFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+  newLesionFindings.sort(
+    (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
+  );
   nonTargetFindings.sort(
     (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
   );
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
   // validate target and non-target findings
-  const resistValidator = new ResistV11Validator();
-  resistValidator.setBaseline(currentTimepoint?.ifBaseline);
-  resistValidator.setTargetMeasurements(targetFindings);
-  resistValidator.setNonTargetMeasurements(nonTargetFindings);
-  if (comparedTimepoint && comparedReportInfo) {
-    const { report, targetFindings, nonTargetFindings, otherFindings } = comparedReportInfo;
-    resistValidator.setLastTargetMeasurements(targetFindings);
-    resistValidator.setLastNonTargetMeasurements(nonTargetFindings);
+  let validationInfo = undefined;
+  try {
+    const resistValidator = new ResistV11Validator();
+    resistValidator.setBaseline(currentTimepoint?.ifBaseline);
+    resistValidator.setTargetMeasurements(targetFindings);
+    resistValidator.setNewLesionMeasurements(newLesionFindings);
+    resistValidator.setNonTargetMeasurements(nonTargetFindings);
+    if (comparedTimepoint && comparedReportInfo) {
+      const { report, targetFindings, newLesionFindings, nonTargetFindings, otherFindings } = comparedReportInfo;
+      resistValidator.setLastTargetMeasurements(targetFindings);
+      resistValidator.setLastNewLesionMeasurements(newLesionFindings);
+      resistValidator.setLastNonTargetMeasurements(nonTargetFindings);
+    }
+    resistValidator.validate();
+    validationInfo = resistValidator.getValidationInfo();
+  } catch (error) {
+    console.error('validation error:', error);
   }
-  resistValidator.validate();
-  const validationInfo = resistValidator.getValidationInfo();
 
   // evibased, get compared timepoint report
   // TODO: put these in a useEffect to avoid re-rendering?
@@ -565,7 +588,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       trialTimePointId,
       reports,
     } = comparedTimepoint;
-    const { report, targetFindings, nonTargetFindings, otherFindings } = comparedReportInfo;
+    const { report, targetFindings, newLesionFindings, nonTargetFindings, otherFindings } = comparedReportInfo;
     const trialTimePointName = trialTimePointId ? getTimepointName(trialTimePointId) : '';
     let SOD = undefined;
     let response = undefined;
@@ -602,14 +625,27 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               title={`${t('MeasurementTable:Target Findings')}`}
               ifTarget={true}
               data={targetFindings}
+              tableID="comp-target-findings"
               servicesManager={servicesManager}
               onClick={jumpToComparedMeasurement}
               canEdit={false}
             />
+            {newLesionFindings.length > 0 && (
+              <MeasurementTable
+                title={t('MeasurementTable:Non-Target Findings')}
+                data={newLesionFindings}
+                ifNewLesion={true}
+                tableID="comp-new-lesion-findings"
+                servicesManager={servicesManager}
+                onClick={jumpToComparedMeasurement}
+                canEdit={false}
+              />
+            )}
             {nonTargetFindings.length > 0 && (
               <MeasurementTable
                 title={t('MeasurementTable:Non-Target Findings')}
                 data={nonTargetFindings}
+                tableID="comp-non-target-findings"
                 servicesManager={servicesManager}
                 onClick={jumpToComparedMeasurement}
                 canEdit={false}
@@ -619,6 +655,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               <MeasurementTable
                 title={t('MeasurementTable:Other Findings')}
                 data={otherFindings}
+                tableID="comp-other-findings"
                 servicesManager={servicesManager}
                 onClick={jumpToComparedMeasurement}
                 canEdit={false}
@@ -695,6 +732,19 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             tableID="target-findings" //evibased, add tableID when ID is needed
             tableWarningInfo={validationInfo?.targetGroupWarningMessages}
           />
+          {/* new lesions */}
+          {newLesionFindings.length > 0 && (
+            <MeasurementTable
+              title={'新发病灶'}
+              ifNewLesion={true}
+              data={newLesionFindings}
+              servicesManager={servicesManager}
+              onClick={jumpToImage}
+              onEdit={onMeasurementItemEditHandler}
+              tableID="new-lesion-findings" //evibased, add tableID when ID is needed
+              tableWarningInfo={validationInfo?.newLesionGroupWarningMessages}
+            />
+          )}
           {/* non target lesions */}
           <MeasurementTable
             title={t('MeasurementTable:Non-Target Findings')}

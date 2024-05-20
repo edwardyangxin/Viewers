@@ -24,6 +24,7 @@ const MeasurementTable = ({
   servicesManager,
   tableID, // evibased
   ifTarget = false,
+  ifNewLesion = false,
   canEdit = true,
   tableWarningInfo = [], // evibased, for warning info tooltip
 }) => {
@@ -53,7 +54,7 @@ const MeasurementTable = ({
 
   // evibased
   // target table warning
-  const isWarningInfoExist = tableWarningInfo && tableWarningInfo.length !== 0;
+  const isWarningInfoExist = ifNewLesion || (tableWarningInfo && tableWarningInfo.length !== 0);
 
   return (
     <div>
@@ -65,7 +66,7 @@ const MeasurementTable = ({
             <span className="text-base font-bold uppercase tracking-widest text-white">{title}</span>
           </div>
           <WarningInfoTooltip
-            id={'MeasurementTable' + tableID}
+            id={'MT' + tableID}
             warningInfo={tableWarningInfo}
           ></WarningInfoTooltip>
         </div>
