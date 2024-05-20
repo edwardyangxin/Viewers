@@ -149,10 +149,14 @@ export class ResistV11Validator extends Validator {
       this.validationInfo.targetGroupWarningMessages.push('靶病灶不能为空');
     }
 
+    // all measurements validation
+    // check cavitation
+    this.checkCavitation();
+    // check organ info
+    this.checkMeasurementOrganInfo();
+
     // target validation
     let ifTargetGroup = true;
-    // check organ info
-    this.checkMeasurementOrganInfo(ifTargetGroup);
     // check index of targetMeasurement no more than 5
     this.checkTargetMeasurementNumber();
     // check number of measurements for same organ
@@ -166,8 +170,6 @@ export class ResistV11Validator extends Validator {
 
     // non-target validation
     ifTargetGroup = false;
-    // check organ info
-    this.checkMeasurementOrganInfo(ifTargetGroup);
     // check for measurable lesions
     this.checkMeasurableLesions(ifTargetGroup);
     if (this.lastNonTargetMeasurements) {
@@ -176,8 +178,48 @@ export class ResistV11Validator extends Validator {
     }
   }
 
-  checkMeasurementOrganInfo(ifTargetGroup: boolean) {
-    const measurements = ifTargetGroup ? this.targetMeasurements : this.nonTargetMeasurements;
+  checkCavitation() {
+    this.checkCavitationForGroup('target');
+    this.checkCavitationForGroup('nonTarget');
+  }
+
+  checkCavitationForGroup(groupName: string) {
+    const measurements = groupName === 'target' ? this.targetMeasurements : this.nonTargetMeasurements;
+    if (!measurements) {
+      return;
+    }
+
+    let groupWarningFlag = false;
+    let groupWarningMessages = [];
+
+    for (let i = 0; i < measurements.length; i++) {
+      const measurement = measurements[i];
+      const measurementLabelInfo = measurement.measurementLabelInfo;
+      const cavitation = measurementLabelInfo.cavitation;
+      if (cavitation) {
+        measurement.validationInfo.messages.push('病灶存在空腔');
+        measurement.validationInfo.cavitationFlag = true;
+        // groupWarningFlag = true;
+        // groupWarningMessages.push('存在空腔');
+      }
+    }
+
+    if (groupWarningFlag) {
+      if (groupName === 'target') {
+        this.validationInfo.targetGroupWarningMessages.push(...groupWarningMessages);
+      } else {
+        this.validationInfo.nonTargetGroupWarningMessages.push(...groupWarningMessages);
+      }
+    }
+  }
+
+  checkMeasurementOrganInfo() {
+    this.checkMeasurementOrganInfoForGroup('target');
+    this.checkMeasurementOrganInfoForGroup('nonTarget');
+  }
+
+  checkMeasurementOrganInfoForGroup(groupName: string) {
+    const measurements = groupName === 'target' ? this.targetMeasurements : this.nonTargetMeasurements;
     if (!measurements) {
       return;
     }
