@@ -281,6 +281,16 @@ function CustomizableViewportOverlay({
     },
   };
 
+  const modalityItem = {
+    id: 'Modality',
+    customizationType: 'ohif.overlayItem',
+    // label: '模态',
+    title: 'Modality',
+    // attribute: 'Modality',
+    condition: ({ instance }) => instance && instance.Modality,
+    contentF: ({ instance, formatters }) => instance.Modality,
+  };
+
   const sliceThicknessItem = {
     id: 'SliceThickness',
     customizationType: 'ohif.overlayItem',
@@ -318,6 +328,10 @@ function CustomizableViewportOverlay({
             },
             {
               ...clinicalTrialTimePointIDItem,
+              instanceIndex: index,
+            },
+            {
+              ...modalityItem,
               instanceIndex: index,
             },
             {

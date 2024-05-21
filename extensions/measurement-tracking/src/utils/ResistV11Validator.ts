@@ -383,7 +383,7 @@ export class ResistV11Validator extends Validator {
     }
 
     let groupWarningFlag = false;
-    let groupWarningMessage = '';
+    const groupWarningMessage = [];
 
     for (let i = 0; i < measurements.length; i++) {
       const measurement = measurements[i];
@@ -402,25 +402,33 @@ export class ResistV11Validator extends Validator {
           measurement.validationInfo.messages.push('与往期测量的器官或位置不一致');
           measurement.validationInfo.lastMeasurementNotSameOrganOrSide = true;
           groupWarningFlag = true;
-          groupWarningMessage = '与往期测量不一致的器官或位置';
+          groupWarningMessage.push('与往期测量不一致的器官或位置');
+        }
+
+        if (measurement.modality !== lastMeasurement.modality) {
+          console.error('Last measurement is not the same modality');
+          measurement.validationInfo.messages.push('与往期测量的模态不一致');
+          measurement.validationInfo.lastMeasurementNotSameModality = true;
+          groupWarningFlag = true;
+          groupWarningMessage.push('存在与往期测量模态不一致');
         }
       } else if (groupName === 'newLesion') {
         measurement.validationInfo.messages.push('首次出现的新病灶');
         measurement.validationInfo.lastMeasurementNotFound = true;
         groupWarningFlag = true;
-        groupWarningMessage = '首次发现新病灶';
+        groupWarningMessage.push('首次发现新病灶');
       } else {
         console.error('Last measurement not found');
         measurement.validationInfo.messages.push('没有对应的往期测量!');
         measurement.validationInfo.lastMeasurementNotFound = true;
         groupWarningFlag = true;
-        groupWarningMessage = '本期测量存在没有对应的往期测量，请检查是否为新发病灶';
+        groupWarningMessage.push('本期测量存在没有对应的往期测量，请检查是否为新发病灶');
       }
     }
 
     if (groupWarningFlag) {
       const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
-      this.validationInfo[groupWarningPropertyName].push(groupWarningMessage);
+      this.validationInfo[groupWarningPropertyName].push(...groupWarningMessage);
     }
   }
 

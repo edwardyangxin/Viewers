@@ -307,7 +307,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const otherFindings = [];
     if (report) {
       const displayMeasurements = report.measurements.map((m, index) =>
-        _mapComparedMeasurementToDisplay(m, index)
+        _mapComparedMeasurementToDisplay(m, index, displaySetService)
       );
       for (const dm of displayMeasurements) {
         // get target info
@@ -859,17 +859,21 @@ function _editMeasurementLabel(
 }
 
 // evibased
-function _mapComparedMeasurementToDisplay(measurement, index) {
+function _mapComparedMeasurementToDisplay(measurement, index, displaySetService) {
   const {
     readonlyMeasurementUID,
     Width,
     Length,
     Unit,
     StudyInstanceUID: studyInstanceUid,
+    SeriesInstanceUID: seriesInstanceUid,
     Label: baseLabel,
     AnnotationType: type,
     label_info,
   } = measurement;
+
+  const displaySets = displaySetService.getDisplaySetsForSeries(seriesInstanceUid);
+
   const measurementType = type.split(':')[1];
   const label = baseLabel || '(empty)';
   // only bidirectional shows displayText for now
@@ -883,6 +887,7 @@ function _mapComparedMeasurementToDisplay(measurement, index) {
 
   return {
     uid: readonlyMeasurementUID,
+    modality: displaySets[0]?.Modality,
     measurementLabelInfo: label_info,
     label,
     baseLabel,
@@ -902,11 +907,12 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
   // TODO: We don't deal with multiframe well yet, would need to update
   // This in OHIF-312 when we add FrameIndex to measurements.
 
-  const instance = DicomMetadataStore.getInstance(
-    referenceStudyUID,
-    referenceSeriesUID,
-    SOPInstanceUID
-  );
+  // deprecated
+  // const instance = DicomMetadataStore.getInstance(
+  //   referenceStudyUID,
+  //   referenceSeriesUID,
+  //   SOPInstanceUID
+  // );
 
   const displaySets = displaySetService.getDisplaySetsForSeries(referenceSeriesUID);
 
@@ -956,6 +962,7 @@ function _mapMeasurementToDisplay(measurement, types, displaySetService) {
     measurementLabelInfo, // evibased
     toolName, // evibased
     data, // evibased
+    modality: displaySets[0]?.Modality, // evibased
   };
 }
 

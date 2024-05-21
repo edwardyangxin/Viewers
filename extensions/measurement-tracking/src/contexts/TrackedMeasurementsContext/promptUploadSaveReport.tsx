@@ -285,6 +285,7 @@ function _getCommonRowItems(measurement, seriesMetadata) {
   return {
     'Patient ID': firstInstance.PatientID, // Patient ID
     'Patient Name': firstInstance.PatientName?.Alphabetic || '', // Patient Name
+    Modality: firstInstance.Modality, // Modality
     StudyInstanceUID: measurement.referenceStudyUID, // StudyInstanceUID
     SeriesInstanceUID: measurement.referenceSeriesUID, // SeriesInstanceUID
     SOPInstanceUID: measurement.SOPInstanceUID, // SOPInstanceUID
