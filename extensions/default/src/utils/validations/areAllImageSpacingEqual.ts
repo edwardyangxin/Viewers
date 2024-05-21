@@ -9,6 +9,7 @@ import { DisplaySetMessageList } from '@ohif/core';
 
 /**
  * Checks if series has spacing issues
+ * evibased, 通过ImagePositionPatient tag 检查spacing
  * @param {*} instances
  * @param {*} warnings
  */

@@ -5,7 +5,7 @@ import checkMultiFrame from './utils/validations/checkMultiframe';
 import checkSingleFrames from './utils/validations/checkSingleFrames';
 /**
  * Checks if a series is reconstructable to a 3D volume.
- *
+ * evibased, displaySet data checks/validations, displaySet messages 数据检查
  * @param {Object[]} instances An array of `OHIFInstanceMetadata` objects.
  */
 export default function getDisplaySetMessages(
@@ -19,6 +19,7 @@ export default function getDisplaySetMessages(
     return messages;
   }
 
+  // evibased, 没有实例
   if (!instances.length) {
     messages.addMessage(DisplaySetMessage.CODES.NO_VALID_INSTANCES);
     return;
@@ -37,12 +38,14 @@ export default function getDisplaySetMessages(
 
   const isMultiframe = NumberOfFrames > 1;
   // Can't reconstruct if all instances don't have the ImagePositionPatient.
+  // evibased，没有位置信息，ImagePositionPatient tag 为空
   if (!isMultiframe && !instances.every(instance => instance.ImagePositionPatient)) {
     messages.addMessage(DisplaySetMessage.CODES.NO_POSITION_INFORMATION);
   }
 
   const sortedInstances = sortInstancesByPosition(instances);
 
+  // evibased, TODO: multiframe check
   isMultiframe
     ? checkMultiFrame(sortedInstances[0], messages)
     : checkSingleFrames(sortedInstances, messages);

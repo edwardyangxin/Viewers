@@ -17,6 +17,7 @@ import Modes from './Modes.json';
 import PatientInfo from './PatientInfo.json';
 import Notification from './Notification.json';
 import Modals from './Modals.json';
+import Messages from './Messages.json';
 import WindowLevelActionMenu from './WindowLevelActionMenu.json';
 import Local from './Local.json';
 import ErrorBoundary from './ErrorBoundary.json';
@@ -39,6 +40,7 @@ export default {
     StudyBrowser,
     ThumbnailTracked,
     Modes,
+    Messages,
     PatientInfo,
     Notification,
     Modals,
