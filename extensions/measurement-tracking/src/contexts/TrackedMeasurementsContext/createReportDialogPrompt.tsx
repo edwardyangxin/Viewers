@@ -39,8 +39,10 @@ export default function CreateReportDialogPrompt(
     currentTask,
   } = ctx;
   let taskType = null;
+  let reportProtocol = 'RESIST1.1';
   if (currentTask) {
     taskType = currentTask.type;
+    reportProtocol = currentTask.protocol || 'RESIST1.1';
   }
   const ifReviewTask = ['review', 'reading'].includes(taskType);
   const ifArbitrationTask = taskType === 'arbitration';
@@ -184,7 +186,7 @@ export default function CreateReportDialogPrompt(
       showOverlay: true,
       dialogWidth: '1200px',
       contentProps: {
-        title: i18n.t('MeasurementTable:Create Report'),
+        title: `创建报告(参考标准:${reportProtocol})`,
         value: {
           imageQuality: imageQuality,
           targetFindings: targetFindings,
