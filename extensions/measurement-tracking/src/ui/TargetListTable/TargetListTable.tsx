@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import TargetListTableRow from './TargetListTableRow.tsx';
+import TargetListTableRow from './TargetListTableRow';
 
 const TargetListTable = ({ tableDataSource }) => {
   return (
@@ -13,7 +13,7 @@ const TargetListTable = ({ tableDataSource }) => {
               return (
                 <TargetListTableRow
                   tableData={tableData}
-                  key={i}
+                  tableId={i}
                 />
               );
             })}

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
 import { Icon } from '@ohif/ui';
+import WarningInfoTooltip from '../WarningInfoTooltip';
 
 function getGridWidthClass(gridCol) {
   const widthClasses = {
@@ -37,8 +38,8 @@ function getGridWidthClass(gridCol) {
 
 const TargetListTableRow = props => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const { tableData } = props;
-  const { row, expandedContent} = tableData;
+  const { tableData, tableId } = props;
+  const { row, expandedContent } = tableData;
   return (
     <>
       <tr className="select-none">
@@ -72,7 +73,7 @@ const TargetListTableRow = props => {
                   onClick={() => setIsExpanded(!isExpanded)}
                 >
                   {row.map((cell, index) => {
-                    const { content, title, gridCol } = cell;
+                    const { content, title, gridCol, warningInfo } = cell;
                     return (
                       <td
                         key={index}
@@ -84,7 +85,7 @@ const TargetListTableRow = props => {
                         style={{
                           maxWidth: 0,
                         }}
-                        title={title} // title attribute for tooltip
+                        title={title} // title for tooltip
                       >
                         <div className="flex">
                           {index === 0 && (
@@ -99,16 +100,23 @@ const TargetListTableRow = props => {
                           <div
                             className={classnames({ 'overflow-hidden': true }, { truncate: true })}
                           >
-                            {/* 列的内容 */}
+                            {/* 列的title */}
                             {content}
                           </div>
+                          {index === 0 && (
+                            <WarningInfoTooltip
+                              id={'ReportGroup' + tableId + index}
+                              position="right"
+                              warningInfo={warningInfo}
+                            ></WarningInfoTooltip>
+                          )}
                         </div>
                       </td>
                     );
                   })}
                 </tr>
                 {isExpanded && (
-                  // expanded row content below the row
+                  // evibased, table的下拉详细内容，expanded row content below the row
                   <tr className="max-h-0 w-full select-text overflow-hidden bg-slate-300">
                     <td colSpan={row.length}>{expandedContent}</td>
                   </tr>
@@ -138,6 +146,7 @@ TargetListTableRow.propTypes = {
     expandedContent: PropTypes.node.isRequired,
     dataCY: PropTypes.string,
   }),
+  tableId: PropTypes.number.isRequired,
 };
 
 export default TargetListTableRow;

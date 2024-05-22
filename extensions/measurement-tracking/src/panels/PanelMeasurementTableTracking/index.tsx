@@ -564,7 +564,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     resistValidator.setNewLesionMeasurements(newLesionFindings);
     resistValidator.setNonTargetMeasurements(nonTargetFindings);
     if (comparedTimepoint && comparedReportInfo) {
-      const { report, targetFindings, newLesionFindings, nonTargetFindings, otherFindings } = comparedReportInfo;
+      const { targetFindings, newLesionFindings, nonTargetFindings } = comparedReportInfo;
       resistValidator.setLastTargetMeasurements(targetFindings);
       resistValidator.setLastNewLesionMeasurements(newLesionFindings);
       resistValidator.setLastNonTargetMeasurements(nonTargetFindings);

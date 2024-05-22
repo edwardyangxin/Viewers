@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { TableBody, TableRow, TableCell } from '@ohif/ui';
 import ReportTableHead from '../ReportTableHead';
 import ReportTable from '../ReportTable';
+import WarningInfoTooltip from '../WarningInfoTooltip';
 
 const TargetListExpandedRow = ({
   tableTitle,
@@ -33,21 +34,34 @@ const TargetListExpandedRow = ({
           </ReportTableHead>
 
           <TableBody>
-            {tableDataSource.map((row, i) => (
-              <TableRow key={i}>
-                {Object.keys(row).map(cellKey => {
-                  const content = row[cellKey];
-                  return (
-                    <TableCell
-                      cellsNum={cellsNum}
-                      key={cellKey}
-                    >
-                      {content}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+            {tableDataSource.map((row, i) => {
+              const warningInfo = row.warningInfo;
+              delete row.warningInfo;
+              return <TableRow key={i}>
+                      {Object.keys(row).map(cellKey => {
+                        const content = row[cellKey];
+                        const ifIndexCell = cellKey === 'index';
+                        const lesionIndex = row.index
+                        return (
+                          <TableCell
+                            cellsNum={cellsNum}
+                            key={cellKey}
+                          >
+                            <div className="flex">
+                              <span className="truncate">{content}</span>
+                              {ifIndexCell && warningInfo && warningInfo.length > 0 && (
+                                <WarningInfoTooltip
+                                  id={`ReportGroupMeas${lesionIndex}${i}`}
+                                  position="right"
+                                  warningInfo={warningInfo}
+                                ></WarningInfoTooltip>
+                              )}
+                            </div>
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>;
+            })}
           </TableBody>
         </ReportTable>
       </div>
@@ -56,8 +70,10 @@ const TargetListExpandedRow = ({
 };
 
 TargetListExpandedRow.propTypes = {
+  tableTitle: PropTypes.string,
   tableDataSource: PropTypes.arrayOf(PropTypes.object),
   tableColumns: PropTypes.object,
+  tabelBgColor: PropTypes.string,
   children: PropTypes.node,
 };
 

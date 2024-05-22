@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ButtonEnums, Dialog, Input, Select } from '@ohif/ui';
+import { ButtonEnums, Input, Select } from '@ohif/ui';
 import i18n from '@ohif/i18n';
 import {
   nonTargetKeyGroup,
@@ -14,6 +14,7 @@ import {
 import TargetListTable, { TargetListExpandedRow } from '../../ui/TargetListTable';
 import { locationStrBuilder } from '../../utils/utils';
 import ReportDialog from '../../ui/ReportDialog';
+import { ResistV11Validator } from '../../utils/ResistV11Validator';
 
 export const CREATE_REPORT_DIALOG_RESPONSE = {
   CANCEL: 0,
@@ -35,6 +36,8 @@ export default function CreateReportDialogPrompt(
     currentTimepoint,
     baselineTimepoint,
     lowestSODTimepoint,
+    comparedTimepoint,
+    comparedReportInfo,
     userRoles,
     currentTask,
   } = ctx;
@@ -92,6 +95,26 @@ export default function CreateReportDialogPrompt(
   );
   // do not show otherFindings in report?
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
+
+  // validate target and non-target findings
+  let validationInfo = undefined;
+  try {
+    const resistValidator = new ResistV11Validator();
+    resistValidator.setBaseline(currentTimepoint?.ifBaseline);
+    resistValidator.setTargetMeasurements(targetFindings);
+    resistValidator.setNewLesionMeasurements(newLesionFindings);
+    resistValidator.setNonTargetMeasurements(nonTargetFindings);
+    if (comparedTimepoint && comparedReportInfo) {
+      const { targetFindings, newLesionFindings, nonTargetFindings } = comparedReportInfo;
+      resistValidator.setLastTargetMeasurements(targetFindings);
+      resistValidator.setLastNewLesionMeasurements(newLesionFindings);
+      resistValidator.setLastNonTargetMeasurements(nonTargetFindings);
+    }
+    resistValidator.validate();
+    validationInfo = resistValidator.getValidationInfo();
+  } catch (error) {
+    console.error('validation error:', error);
+  }
 
   // initial SOD
   const autoCalculatedSOD = calSODFromTargets(targetFindings);
@@ -192,6 +215,7 @@ export default function CreateReportDialogPrompt(
           targetFindings: targetFindings,
           nonTargetFindings: nonTargetFindings,
           newLesionFindings: newLesionFindings,
+          validationInfo: validationInfo,
           SOD: autoCalculatedSOD, // always use auto calculated SOD as initial value, 加载报告currentReportInfo.SOD后，可能会修改Measurement
           autoCalculatedSOD: autoCalculatedSOD,
           targetResponse: currentReportInfo ? currentReportInfo.targetResponse : 'Baseline',
@@ -255,6 +279,7 @@ export default function CreateReportDialogPrompt(
                         value.targetFindings,
                         value.nonTargetFindings,
                         value.newLesionFindings,
+                        value.validationInfo,
                         value.SOD,
                         value.autoCalculatedSOD
                       )}
@@ -277,20 +302,21 @@ export default function CreateReportDialogPrompt(
                     </div>
                     <div className="w-1/3">
                       {ifBaseline ? (
-                        <label className="text-[14px] leading-[1.2] text-black">靶病灶评估(基线)</label>
+                        <label className="text-[14px] leading-[1.2] text-black">
+                          靶病灶评估(基线)
+                        </label>
                       ) : (
+                        // TODO: 优化UI，文字多，字符串拼接复杂
                         <label className="text-[14px] leading-[1.2] text-black whitespace-pre-line">
-                          {
-                          `靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${(
-                            parseFloat(value.SOD) - baselineSOD) >= 0 ? '+' : ''}${(
+                          {`靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${
+                            (parseFloat(value.SOD) - baselineSOD) >= 0 ? '+' : ''}${(
                             ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) *
                             100).toFixed(1)}%;
                           与最低SOD(${lowestSOD}mm)变化:${(
                             parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
                             parseFloat(value.SOD) - lowestSOD).toFixed(1)}mm & ${(
                             parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
-                            ((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(1)}%)`
-                          }
+                            ((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(1)}%)`}
                         </label>
                       )}
                       <Select
@@ -456,6 +482,7 @@ function getTargetExpandedContent(targetFindings) {
             lesionLocation: lesionLocationStr,
             diameter: `${diameter.toFixed(1)} mm`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
+            warningInfo: dm.validationInfo?.messages,
           };
         })}
       />
@@ -494,6 +521,7 @@ function getTargetExpandedContent(targetFindings) {
               lesionLocation: lesionLocationStr,
               diameter: `${diameter.toFixed(1)} mm`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
+              warningInfo: dm.validationInfo?.messages,
             };
           })}
         />
@@ -524,6 +552,7 @@ function getNonTargetExpandedContent(nonTargetFindings) {
             lesionLocation: lesionLocationStr,
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
+            warningInfo: dm.validationInfo?.messages,
           };
         })}
       />
@@ -566,6 +595,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
             lesionLocation: lesionLocationStr,
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
+            warningInfo: dm.validationInfo?.messages,
           };
         })}
       />
@@ -593,6 +623,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
               lesionLocation: organStr,
               displayText: `${dm.displayText.join(' ')}`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
+              warningInfo: dm.validationInfo?.messages,
             };
           })}
         />
@@ -601,7 +632,14 @@ function getNewLesionExpandedContent(newLesionFindings) {
   );
 }
 
-function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings, SOD, autoCalculatedSOD) {
+function getTableDataSource(
+  targetFindings,
+  nonTargetFindings,
+  newLesionFindings,
+  validationInfo,
+  SOD,
+  autoCalculatedSOD
+) {
   const tableDataSource = [];
   // target
   tableDataSource.push({
@@ -610,6 +648,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
         key: 'targetGroup',
         content: <span>靶病灶</span>,
         gridCol: 4,
+        warningInfo: validationInfo?.targetGroupWarningMessages,
       },
       {
         key: 'count',
@@ -631,6 +670,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
         key: 'nonTargetGroup',
         content: <span>非靶病灶</span>,
         gridCol: 4,
+        warningInfo: validationInfo?.nonTargetGroupWarningMessages,
       },
       {
         key: 'count',
@@ -648,6 +688,7 @@ function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings
           key: 'newLesionGroup',
           content: <span>新发病灶</span>,
           gridCol: 4,
+          warningInfo: validationInfo?.newLesionGroupWarningMessages,
         },
         {
           key: 'count',
