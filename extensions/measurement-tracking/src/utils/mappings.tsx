@@ -30,8 +30,11 @@ function generateIndexMapping(start, end) {
 const targetIndexMapping = generateIndexMapping(1, 5); // 1-5
 const nonTargetIndexMapping = generateIndexMapping(1, 20); // 1-20
 
+// 可测量选项
 const LesionMeasurementMapping = {
   Target: '靶病灶',
+  Target_Fusion: '靶病灶(融合)',
+  Target_Recurrence: '靶病灶(复发)',
   Non_Target: '非靶病灶',
   Non_Target_Nodal_NP: '非靶病灶(淋巴结<10mm)',
   Non_Target_Progress: '非靶病灶(进展)',
@@ -40,6 +43,7 @@ const LesionMeasurementMapping = {
   Other: '其他',
 };
 
+// 不可测量选项
 const LesionMapping = {
   Target: '靶病灶',
   Target_NM: '靶病灶(太小无法测量)',

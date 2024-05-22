@@ -6,12 +6,15 @@ class Validator {
   targetMeasurements: any;
   lastTargetMeasurements: any; // last measuments for comparison
   targetMeasurementsByOrgan: any;
+  targetMeasurementsByIndex: any;
   newLesionMeasurements: any;
   newLesionMeasurementsByOrgan: any;
+  newLesionMeasurementsByIndex: any;
   lastNewLesionMeasurements: any; // last measuments for comparison
   nonTargetMeasurements: any;
   lastNonTargetMeasurements: any; // last measuments for comparison
   nonTargetMeasurementsByOrgan: any;
+  nonTargetMeasurementsByIndex: any;
   validationInfo: any;
   constructor() {
     this.validationInfo = {
@@ -84,9 +87,11 @@ class Validator {
   setMeasurements(measurements: any[], groupName: string) {
     const measurementPropertyName = `${groupName}Measurements`;
     const measurementByOrganPropertyName = `${groupName}MeasurementsByOrgan`;
+    const measurementByIndexPropertyName = `${groupName}MeasurementsByIndex`;
 
     this[measurementPropertyName] = measurements;
     this[measurementByOrganPropertyName] = {};
+    this[measurementByIndexPropertyName] = {};
 
     for (let i = 0; i < measurements.length; i++) {
       const measurement = measurements[i];
@@ -99,6 +104,12 @@ class Validator {
         this[measurementByOrganPropertyName][measurementLabelInfo?.organ?.value] = [];
       }
       this[measurementByOrganPropertyName][measurementLabelInfo?.organ?.value].push(measurement);
+
+      const indexNumber = Number(measurementLabelInfo?.lesionIndex?.value);
+      if (!this[measurementByIndexPropertyName][indexNumber]) {
+        this[measurementByIndexPropertyName][indexNumber] = [];
+      }
+      this[measurementByIndexPropertyName][indexNumber].push(measurement);
     }
   }
 
@@ -166,6 +177,10 @@ export class ResistV11Validator extends Validator {
     }
 
     // all measurements validation
+    // check index continuous
+    this.checkIndexContinuous();
+    // check lesion split
+    this.checkLesionSplit();
     // check cavitation
     this.checkCavitation();
     // check organ info
@@ -186,6 +201,48 @@ export class ResistV11Validator extends Validator {
     this.checkNewLesionMeasurements();
   }
 
+  private checkIndexContinuous() {
+    this.checkIndexContinuousForGroup('target');
+    this.checkIndexContinuousForGroup('newLesion');
+    this.checkIndexContinuousForGroup('nonTarget');
+  }
+
+  private checkIndexContinuousForGroup(groupName: string) {
+    const measurementPropertyName = `${groupName}Measurements`;
+    const measurements = this[measurementPropertyName];
+    if (!measurements || measurements.length === 0) {
+      return;
+    }
+
+    const measurementByIndexPropertyName = `${groupName}MeasurementsByIndex`;
+    const measurementByIndex = this[measurementByIndexPropertyName];
+
+    let groupWarningFlag = false;
+    const groupWarningMessages = [];
+
+    // get all index in number and sort
+    let indexKeys = Object.keys(measurementByIndex).map(Number);
+    indexKeys = indexKeys.sort((a, b) => a - b);
+
+    if (indexKeys[0] !== 1) {
+      this.validationInfo[`${groupName}GroupWarningMessages`].push('病灶序号从1开始');
+    } else {
+      for (let i = 1; i < indexKeys.length; i++) {
+        if (indexKeys[i] - indexKeys[i - 1] !== 1) {
+          console.error('Index is not continuous');
+          groupWarningFlag = true;
+          groupWarningMessages.push('病灶序号不连续');
+          break;
+        }
+      }
+    }
+
+    if (groupWarningFlag) {
+      const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
+      this.validationInfo[groupWarningPropertyName].push(...groupWarningMessages);
+    }
+  }
+
   private checkCavitation() {
     this.checkCavitationForGroup('target');
     this.checkCavitationForGroup('newLesion');
@@ -196,7 +253,7 @@ export class ResistV11Validator extends Validator {
     const measurementPropertyName = `${groupName}Measurements`;
 
     const measurements = this[measurementPropertyName];
-    if (!measurements) {
+    if (!measurements || measurements.length === 0) {
       return;
     }
 
@@ -231,7 +288,7 @@ export class ResistV11Validator extends Validator {
     const measurementPropertyName = `${groupName}Measurements`;
 
     const measurements = this[measurementPropertyName];
-    if (!measurements) {
+    if (!measurements || measurements.length === 0) {
       return;
     }
 
@@ -266,7 +323,7 @@ export class ResistV11Validator extends Validator {
     const measurementPropertyName = `${groupName}Measurements`;
 
     const measurements = this[measurementPropertyName];
-    if (!measurements) {
+    if (!measurements || measurements.length === 0) {
       return;
     }
 
@@ -378,7 +435,7 @@ export class ResistV11Validator extends Validator {
     const measurementPropertyName = `${groupName}Measurements`;
 
     const measurements = this[measurementPropertyName];
-    if (!measurements) {
+    if (!measurements || measurements.length === 0) {
       return;
     }
 
@@ -429,6 +486,46 @@ export class ResistV11Validator extends Validator {
     if (groupWarningFlag) {
       const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
       this.validationInfo[groupWarningPropertyName].push(...groupWarningMessage);
+    }
+  }
+
+  private checkLesionSplit() {
+    this.checkLesionSplitForGroup('target');
+    this.checkLesionSplitForGroup('newLesion');
+    this.checkLesionSplitForGroup('nonTarget');
+  }
+
+  checkLesionSplitForGroup(groupName: string) {
+    const measurementPropertyName = `${groupName}Measurements`;
+
+    const measurements = this[measurementPropertyName];
+    if (!measurements || measurements.length === 0) {
+      return;
+    }
+
+    const measurementByIndexPropertyName = `${groupName}MeasurementsByIndex`;
+    const measurementByIndex = this[measurementByIndexPropertyName];
+
+    let groupWarningFlag = false;
+    let groupWarningMessages = '';
+
+    for (const key in measurementByIndex) {
+      const measurementList = measurementByIndex[key];
+      if (measurementList.length > 1) {
+        console.error('Lesion is split');
+        groupWarningFlag = true;
+        groupWarningMessages = '存在病灶分裂';
+        for (let i = 0; i < measurementList.length; i++) {
+          const measurement = measurementList[i];
+          measurement.validationInfo.messages.push('同一病灶序号(病灶分裂)');
+          measurement.validationInfo.lesionSplit = true;
+        }
+      }
+    }
+
+    if (groupWarningFlag) {
+      const groupWarningPropertyName = `${groupName}GroupWarningMessages`;
+      this.validationInfo[groupWarningPropertyName].push(groupWarningMessages);
     }
   }
 
