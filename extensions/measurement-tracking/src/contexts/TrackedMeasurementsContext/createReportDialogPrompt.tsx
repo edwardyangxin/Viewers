@@ -15,6 +15,7 @@ import TargetListTable, { TargetListExpandedRow } from '../../ui/TargetListTable
 import { locationStrBuilder } from '../../utils/utils';
 import ReportDialog from '../../ui/ReportDialog';
 import { ResistV11Validator } from '../../utils/ResistV11Validator';
+import WarningInfoTooltip from '../../ui/WarningInfoTooltip';
 
 export const CREATE_REPORT_DIALOG_RESPONSE = {
   CANCEL: 0,
@@ -257,6 +258,28 @@ export default function CreateReportDialogPrompt(
           };
 
           const imageQualified = value.imageQuality?.selection?.value === 'image_qualified';
+          // SOD input info
+          const SODStr = parseFloat(value.SOD).toFixed(1);
+          const autoCalculatedSODStr = parseFloat(value.autoCalculatedSOD).toFixed(1);
+          const ifWarningSOD = SODStr !== autoCalculatedSODStr;
+          const SODInputLabelStr = ifWarningSOD
+            ? `直径总和SOD(回车计算公式,单位mm,自动计算结果:${autoCalculatedSODStr}mm)`
+            : `直径总和SOD(回车计算公式,单位mm)`;
+          // SOD change info
+          let SODChangeInfo = [];
+          if (!ifBaseline) {
+            SODChangeInfo = [
+              `与基线SOD(${baselineSOD}mm)对比:${
+                (parseFloat(value.SOD) - baselineSOD) >= 0 ? '+' : ''}${(
+                ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) *
+                100).toFixed(1)}%;`,
+              `与最低SOD(${lowestSOD}mm)对比:${(
+                parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
+                parseFloat(value.SOD) - lowestSOD).toFixed(1)}mm & ${(
+                parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
+                ((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(1)}%;`,
+            ];
+          }
 
           return (
             <>
@@ -289,8 +312,8 @@ export default function CreateReportDialogPrompt(
                   <div className="mt-3 flex grow flex-row justify-evenly">
                     <div className="w-1/3">
                       <Input
-                        label={`直径总和SOD(回车计算公式,单位mm,自动计算:${parseFloat(autoCalculatedSOD).toFixed(1)}mm)`}
-                        labelClassName="text-black text-[14px] leading-[1.2]"
+                        label={SODInputLabelStr}
+                        labelClassName={`${ifWarningSOD && 'text-red-500'} text-black text-[14px] leading-[1.2]`}
                         className="border-primary-main bg-slate-300 text-black"
                         transparent={true}
                         type="text"
@@ -306,17 +329,16 @@ export default function CreateReportDialogPrompt(
                           靶病灶评估(基线)
                         </label>
                       ) : (
-                        // TODO: 优化UI，文字多，字符串拼接复杂
-                        <label className="text-[14px] leading-[1.2] text-black whitespace-pre-line">
-                          {`靶病灶评估(与基线SOD(${baselineSOD}mm)变化:${
-                            (parseFloat(value.SOD) - baselineSOD) >= 0 ? '+' : ''}${(
-                            ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) *
-                            100).toFixed(1)}%;
-                          与最低SOD(${lowestSOD}mm)变化:${(
-                            parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
-                            parseFloat(value.SOD) - lowestSOD).toFixed(1)}mm & ${(
-                            parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
-                            ((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(1)}%)`}
+                        <label className="whitespace-pre-line text-[14px] leading-[1.2] text-black">
+                          <div className="flex">
+                            {'靶病灶评估(SOD变化信息:'}
+                            <WarningInfoTooltip
+                              id="SODChangeInfo"
+                              warningInfo={SODChangeInfo}
+                              position="right"
+                            ></WarningInfoTooltip>
+                            {')'}
+                          </div>
                         </label>
                       )}
                       <Select
@@ -646,6 +668,17 @@ function getTableDataSource(
   autoCalculatedSOD
 ) {
   const tableDataSource = [];
+  const SODStr = parseFloat(SOD).toFixed(1);
+  const autoCalculatedSODStr = parseFloat(autoCalculatedSOD).toFixed(1);
+  const ifWarningSOD = SODStr !== autoCalculatedSODStr;
+  const SODContent = (
+    <span>
+      {`径线和(SOD):${SODStr}mm`}
+      {ifWarningSOD && (
+        <span className="text-red-500">{`(自动计算结果:${autoCalculatedSODStr}mm)`}</span>
+      )}
+    </span>
+  );
   // target
   tableDataSource.push({
     row: [
@@ -662,7 +695,7 @@ function getTableDataSource(
       },
       {
         key: 'SOD',
-        content: <span>{`径线和(SOD):${parseFloat(SOD).toFixed(1)}mm(自动计算:${parseFloat(autoCalculatedSOD).toFixed(1)}mm)`}</span>,
+        content: SODContent,
         gridCol: 3,
       },
     ],
