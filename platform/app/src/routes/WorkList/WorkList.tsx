@@ -1035,6 +1035,7 @@ async function _createTask(usernameTask, userTaskType, studyInstanceUid, postTas
     type: userTaskType,
     username: usernameTask,
     status: 'create',
+    protocol: 'RESIST1.1',
     timepoint: {
       uid: studyInstanceUid,
     },
