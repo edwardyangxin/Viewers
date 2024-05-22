@@ -8,6 +8,7 @@ import WarningInfoTooltip from '../WarningInfoTooltip';
 
 const TargetListExpandedRow = ({
   tableTitle,
+  tableId,
   tableColumns,
   tableDataSource,
   tabelBgColor = 'bg-slate-300',
@@ -51,7 +52,7 @@ const TargetListExpandedRow = ({
                               <span className="truncate">{content}</span>
                               {ifIndexCell && warningInfo && warningInfo.length > 0 && (
                                 <WarningInfoTooltip
-                                  id={`ReportGroupMeas${lesionIndex}${i}`}
+                                  id={`${tableId}Meas${lesionIndex}${i}`}
                                   position="right"
                                   warningInfo={warningInfo}
                                 ></WarningInfoTooltip>

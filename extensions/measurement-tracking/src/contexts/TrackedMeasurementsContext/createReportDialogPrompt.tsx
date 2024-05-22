@@ -447,6 +447,7 @@ function getTargetExpandedContent(targetFindings) {
     <>
       <TargetListExpandedRow
         tableTitle="非淋巴结靶病灶"
+        tableId="targetNN"
         tableColumns={{
           index: '序号',
           lesionType: '靶病灶类型',
@@ -489,6 +490,7 @@ function getTargetExpandedContent(targetFindings) {
       {NymphNodes.length > 0 && (
         <TargetListExpandedRow
           tableTitle="淋巴结靶病灶"
+          tableId="targetN"
           tableColumns={{
             index: '序号',
             lesionType: '靶病灶类型',
@@ -534,7 +536,8 @@ function getNonTargetExpandedContent(nonTargetFindings) {
   return (
     <>
       <TargetListExpandedRow
-        // tableTitle="非靶病灶"
+        tableTitle="非靶病灶"
+        tableId="nonTarget"
         tableColumns={{
           index: '序号',
           lesionType: '非靶病灶类型',
@@ -577,6 +580,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
     <>
       <TargetListExpandedRow
         tableTitle="疑似新发病灶"
+        tableId="suspectedNewLesion"
         tabelBgColor="bg-red-800"
         tableColumns={{
           index: '序号',
@@ -602,6 +606,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
       {newLeisions.length > 0 && (
         <TargetListExpandedRow
           tableTitle="确认新发病灶"
+          tableId="newLesion"
           tabelBgColor="bg-red-500"
           tableColumns={{
             index: '序号',
