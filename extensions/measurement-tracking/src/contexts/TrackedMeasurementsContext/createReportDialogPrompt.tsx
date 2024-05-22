@@ -149,7 +149,7 @@ export default function CreateReportDialogPrompt(
           let returnVal = {
             ...value,
             reportInfo: {
-              SOD: value.SOD,
+              SOD: parseFloat(value.SOD),
               autoCalculatedSOD: value.autoCalculatedSOD,
               targetResponse: value.targetResponse,
               nonTargetResponse: value.nonTargetResponse,
@@ -251,6 +251,7 @@ export default function CreateReportDialogPrompt(
                   result = result.toFixed(1);
                 } catch (error) {
                   console.log('failed to calculate SOD', error);
+                  result = value.autoCalculatedSOD;
                 }
               }
               setValue(value => ({ ...value, SOD: result }));
@@ -317,7 +318,7 @@ export default function CreateReportDialogPrompt(
                         className="border-primary-main bg-slate-300 text-black"
                         transparent={true}
                         type="text"
-                        value={parseFloat(value.SOD).toFixed(1)}
+                        value={value.SOD}
                         onChange={onSODInputChangeHandler}
                         onKeyUp={onSODInputKeyUpHandler}
                         disabled={!ifReviewTask}
