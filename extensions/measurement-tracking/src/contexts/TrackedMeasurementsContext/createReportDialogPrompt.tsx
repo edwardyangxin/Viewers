@@ -186,7 +186,7 @@ export default function CreateReportDialogPrompt(
       showOverlay: true,
       dialogWidth: '1200px',
       contentProps: {
-        title: `创建报告(参考标准:${reportProtocol})`,
+        title: `创建报告(${reportProtocol})`,
         value: {
           imageQuality: imageQuality,
           targetFindings: targetFindings,
@@ -232,14 +232,18 @@ export default function CreateReportDialogPrompt(
             }
           };
 
+          const imageQualified = value.imageQuality?.selection?.value === 'image_qualified';
+
           return (
             <>
               <div className="flex h-full flex-col bg-slate-300 ">
                 {/* image quality */}
                 <div className="flex flex-row justify-between pl-2 pb-2">
                   <div className="flex flex-row">
-                    <span className="text-black text-[14px] leading-[1.2]">
-                      {`图像质量: ${value.imageQuality?.selection?.label} (${value.imageQuality?.description})`}
+                    <span
+                      className={`${!imageQualified && 'bg-red-500'} text-[14px] leading-[1.2] text-black`}
+                    >
+                      {`图像质量: ${value.imageQuality?.selection?.label}${value.imageQuality?.description ? ' (' + value.imageQuality?.description + ')' : ''}`}
                     </span>
                   </div>
                 </div>
