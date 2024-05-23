@@ -210,7 +210,7 @@ export default function CreateReportDialogPrompt(
       showOverlay: true,
       dialogWidth: '1200px',
       contentProps: {
-        title: `创建报告(${reportProtocol})`,
+        title: `创建报告`,
         value: {
           imageQuality: imageQuality,
           targetFindings: targetFindings,
@@ -285,15 +285,24 @@ export default function CreateReportDialogPrompt(
           return (
             <>
               <div className="flex h-full flex-col bg-slate-300 ">
-                {/* image quality */}
+                {/* subtitle: 1. 图像质量； 2. 评估章程 */}
                 <div className="flex flex-row justify-between pl-2 pb-2">
-                  <div className="flex flex-row">
-                    <span
-                      className={`${!imageQualified && 'bg-red-500'} text-[14px] leading-[1.2] text-black`}
+                  <span
+                    className={`${!imageQualified && 'bg-red-500'} text-[14px] leading-[1.2] text-black`}
+                  >
+                    {`图像质量: ${value.imageQuality?.selection?.label}${value.imageQuality?.description ? ' (' + value.imageQuality?.description + ')' : ''}`}
+                  </span>
+                  <span className="ml-2 text-[14px] text-black">
+                    {`评估标准:${reportProtocol}(点击查看:`}
+                    <a
+                      href="https://evi-based.com/static/RECISTGuidelines.pdf"
+                      target="_blank"
+                      rel="noreferrer"
                     >
-                      {`图像质量: ${value.imageQuality?.selection?.label}${value.imageQuality?.description ? ' (' + value.imageQuality?.description + ')' : ''}`}
-                    </span>
-                  </div>
+                      <span className="text-primary-main">评估章程</span>
+                    </a>
+                    {')'}
+                  </span>
                 </div>
                 <div className="flex grow flex-col overflow-visible">
                   {/* target/non-target table */}
