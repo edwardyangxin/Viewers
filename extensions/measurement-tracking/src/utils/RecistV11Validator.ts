@@ -152,17 +152,57 @@ class Validator {
   }
 }
 
+const RecistV11OverallResponseMapping = {
+  CR: [
+    {targetResponse: 'CR', nonTargetResponse: ['CR', 'ND'], newLesionSuspected: false, newLesionConfirmed: false},
+  ],
+  PR: [
+    {targetResponse: 'CR', nonTargetResponse: ['NCR_NPD', 'NE'], newLesionSuspected: false, newLesionConfirmed: false},
+    {targetResponse: 'PR', nonTargetResponse: [], newLesionSuspected: false, newLesionConfirmed: false},
+  ],
+  SD: [],
+  PD: [],
+  NE: [],
+};
+
 /**
  * RecistV11Validator exposes methods to validate the data received from the RecistV11 device.
  */
 export class RecistV11Validator extends Validator {
   PROTOCOL = 'RecistV1.1';
   VERSION = 'V1';
+  targetResponse;
+  nonTargetResponse;
+  newLesionSuspected;
+  newLesionConfirmed;
+  overallResponse;
+  overallResponseMapping = RecistV11OverallResponseMapping;
+
   constructor() {
     console.log('init RecistV11Validator...');
     super();
     this.validationInfo.protocol = this.PROTOCOL; // indicate the protocol of the validator
     this.validationInfo.version = this.VERSION; // indicate the version of the validator
+  }
+
+  setTargetResponse(targetResponse) {
+    this.targetResponse = targetResponse;
+  }
+
+  setNonTargetResponse(nonTargetResponse) {
+    this.nonTargetResponse = nonTargetResponse;
+  }
+
+  setNewLesionSuspected(newLesionSuspected) {
+    this.newLesionSuspected = newLesionSuspected;
+  }
+
+  setNewLesionConfirmed(newLesionConfirmed) {
+    this.newLesionConfirmed = newLesionConfirmed;
+  }
+
+  setOverallResponse(overallResponse) {
+    this.overallResponse = overallResponse;
   }
 
   validate() {

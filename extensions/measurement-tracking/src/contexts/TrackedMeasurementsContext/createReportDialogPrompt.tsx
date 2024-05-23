@@ -99,21 +99,22 @@ export default function CreateReportDialogPrompt(
   otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
   // validate target and non-target findings
+  let validator = undefined;
   let validationInfo = undefined;
   try {
-    const recistValidator = new RecistV11Validator();
-    recistValidator.setBaseline(currentTimepoint?.ifBaseline);
-    recistValidator.setTargetMeasurements(targetFindings);
-    recistValidator.setNewLesionMeasurements(newLesionFindings);
-    recistValidator.setNonTargetMeasurements(nonTargetFindings);
+    validator = new RecistV11Validator();
+    validator.setBaseline(currentTimepoint?.ifBaseline);
+    validator.setTargetMeasurements(targetFindings);
+    validator.setNewLesionMeasurements(newLesionFindings);
+    validator.setNonTargetMeasurements(nonTargetFindings);
     if (comparedTimepoint && comparedReportInfo) {
       const { targetFindings, newLesionFindings, nonTargetFindings } = comparedReportInfo;
-      recistValidator.setLastTargetMeasurements(targetFindings);
-      recistValidator.setLastNewLesionMeasurements(newLesionFindings);
-      recistValidator.setLastNonTargetMeasurements(nonTargetFindings);
+      validator.setLastTargetMeasurements(targetFindings);
+      validator.setLastNewLesionMeasurements(newLesionFindings);
+      validator.setLastNonTargetMeasurements(nonTargetFindings);
     }
-    recistValidator.validate();
-    validationInfo = recistValidator.getValidationInfo();
+    validator.validate();
+    validationInfo = validator.getValidationInfo();
   } catch (error) {
     console.error('validation error:', error);
   }
@@ -217,6 +218,7 @@ export default function CreateReportDialogPrompt(
           targetFindings: targetFindings,
           nonTargetFindings: nonTargetFindings,
           newLesionFindings: newLesionFindings,
+          validator: validator,
           validationInfo: validationInfo,
           SOD: autoCalculatedSOD, // always use auto calculated SOD as initial value, 加载报告currentReportInfo.SOD后，可能会修改Measurement
           autoCalculatedSOD: autoCalculatedSOD,
@@ -359,7 +361,9 @@ export default function CreateReportDialogPrompt(
                         value={[value.targetResponse]}
                         onChange={(newSelection, action) => {
                           // console.info('newSelection:', newSelection, 'action:', action);
-                          setValue(value => ({ ...value, targetResponse: newSelection?.value }));
+                          const validator = value.validator;
+                          validator.setTargetResponse(newSelection?.value);
+                          setValue(value => ({ ...value, targetResponse: newSelection?.value, validator}));
                         }}
                         options={targetResponseOptions}
                         isDisabled={!ifReviewTask || ifBaseline}
