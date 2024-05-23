@@ -14,8 +14,9 @@ import {
 import TargetListTable, { TargetListExpandedRow } from '../../ui/TargetListTable';
 import { locationStrBuilder } from '../../utils/utils';
 import ReportDialog from '../../ui/ReportDialog';
-import { ResistV11Validator } from '../../utils/ResistV11Validator';
+import { RecistV11Validator } from '../../utils/RecistV11Validator';
 import WarningInfoTooltip from '../../ui/WarningInfoTooltip';
+import PictureInfoTooltip from '../../ui/PictureInfoTooltip';
 
 export const CREATE_REPORT_DIALOG_RESPONSE = {
   CANCEL: 0,
@@ -43,10 +44,10 @@ export default function CreateReportDialogPrompt(
     currentTask,
   } = ctx;
   let taskType = null;
-  let reportProtocol = 'RESIST1.1';
+  let reportProtocol = 'RECIST1.1';
   if (currentTask) {
     taskType = currentTask.type;
-    reportProtocol = currentTask.protocol || 'RESIST1.1';
+    reportProtocol = currentTask.protocol || 'RECIST1.1';
   }
   const ifReviewTask = ['review', 'reading'].includes(taskType);
   const ifArbitrationTask = taskType === 'arbitration';
@@ -100,19 +101,19 @@ export default function CreateReportDialogPrompt(
   // validate target and non-target findings
   let validationInfo = undefined;
   try {
-    const resistValidator = new ResistV11Validator();
-    resistValidator.setBaseline(currentTimepoint?.ifBaseline);
-    resistValidator.setTargetMeasurements(targetFindings);
-    resistValidator.setNewLesionMeasurements(newLesionFindings);
-    resistValidator.setNonTargetMeasurements(nonTargetFindings);
+    const recistValidator = new RecistV11Validator();
+    recistValidator.setBaseline(currentTimepoint?.ifBaseline);
+    recistValidator.setTargetMeasurements(targetFindings);
+    recistValidator.setNewLesionMeasurements(newLesionFindings);
+    recistValidator.setNonTargetMeasurements(nonTargetFindings);
     if (comparedTimepoint && comparedReportInfo) {
       const { targetFindings, newLesionFindings, nonTargetFindings } = comparedReportInfo;
-      resistValidator.setLastTargetMeasurements(targetFindings);
-      resistValidator.setLastNewLesionMeasurements(newLesionFindings);
-      resistValidator.setLastNonTargetMeasurements(nonTargetFindings);
+      recistValidator.setLastTargetMeasurements(targetFindings);
+      recistValidator.setLastNewLesionMeasurements(newLesionFindings);
+      recistValidator.setLastNonTargetMeasurements(nonTargetFindings);
     }
-    resistValidator.validate();
-    validationInfo = resistValidator.getValidationInfo();
+    recistValidator.validate();
+    validationInfo = recistValidator.getValidationInfo();
   } catch (error) {
     console.error('validation error:', error);
   }
@@ -382,7 +383,17 @@ export default function CreateReportDialogPrompt(
                       />
                     </div>
                     <div className="w-1/3">
-                      <label className="text-[14px] leading-[1.2] text-black">{ifBaseline ? '总体评估(基线)' : '总体评估'}</label>
+                      <label className="text-[14px] leading-[1.2] text-black">
+                        <div className="flex">
+                          {ifBaseline ? '总体评估(基线, 参照表:' : '总体评估(参照表:'}
+                          <PictureInfoTooltip
+                            id="RECIST11Table"
+                            pictureLink={'https://evi-based.com/static/resist11_table.jpg'}
+                            position="left"
+                          ></PictureInfoTooltip>
+                          {')'}
+                        </div>
+                      </label>
                       <Select
                         id="response"
                         isClearable={false}

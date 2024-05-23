@@ -157,20 +157,20 @@ class Validator {
 }
 
 /**
- * ResistV11Validator exposes methods to validate the data received from the ResistV11 device.
+ * RecistV11Validator exposes methods to validate the data received from the RecistV11 device.
  */
-export class ResistV11Validator extends Validator {
-  PROTOCOL = 'ResistV1.1';
+export class RecistV11Validator extends Validator {
+  PROTOCOL = 'RecistV1.1';
   VERSION = 'V1';
   constructor() {
-    console.log('init ResistV11Validator...');
+    console.log('init RecistV11Validator...');
     super();
     this.validationInfo.protocol = this.PROTOCOL; // indicate the protocol of the validator
     this.validationInfo.version = this.VERSION; // indicate the version of the validator
   }
 
   validate() {
-    console.log('run ResistV11Validator validate method');
+    console.log('run RecistV11Validator validate method');
     if (!(this.targetMeasurements && this.targetMeasurements.length > 0)) {
       console.info('No target measurements found to validate!');
       this.validationInfo.targetGroupWarningMessages.push('靶病灶不能为空');
@@ -257,8 +257,8 @@ export class ResistV11Validator extends Validator {
       return;
     }
 
-    let groupWarningFlag = false;
-    let groupWarningMessages = [];
+    const groupWarningFlag = false;
+    const groupWarningMessages = [];
 
     for (let i = 0; i < measurements.length; i++) {
       const measurement = measurements[i];
@@ -452,7 +452,8 @@ export class ResistV11Validator extends Validator {
 
         if (
           measurementLabelInfo.organ.value !== lastMeasurementLabelInfo.organ.value ||
-          measurementLabelInfo.organLocation?.value !== lastMeasurementLabelInfo.organLocation?.value ||
+          measurementLabelInfo.organLocation?.value !==
+            lastMeasurementLabelInfo.organLocation?.value ||
           measurementLabelInfo.organLateral?.value !== lastMeasurementLabelInfo.organLateral?.value
         ) {
           console.error('Last measurement is not the same organ or side');

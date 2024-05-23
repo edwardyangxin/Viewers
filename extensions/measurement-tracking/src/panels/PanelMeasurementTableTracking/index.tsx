@@ -23,7 +23,7 @@ import {
 import PastReportItem from '../../ui/PastReportItem';
 import { getPastReportDialog, getTimepointName, getViewportId } from '../../utils/utils';
 import callInputDialog from '../../utils/callInputDialog';
-import { ResistV11Validator } from '../../utils/ResistV11Validator';
+import { RecistV11Validator } from '../../utils/RecistV11Validator';
 
 const { downloadCSVReport } = utils;
 
@@ -558,19 +558,19 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   // validate target and non-target findings
   let validationInfo = undefined;
   try {
-    const resistValidator = new ResistV11Validator();
-    resistValidator.setBaseline(currentTimepoint?.ifBaseline);
-    resistValidator.setTargetMeasurements(targetFindings);
-    resistValidator.setNewLesionMeasurements(newLesionFindings);
-    resistValidator.setNonTargetMeasurements(nonTargetFindings);
+    const recistValidator = new RecistV11Validator();
+    recistValidator.setBaseline(currentTimepoint?.ifBaseline);
+    recistValidator.setTargetMeasurements(targetFindings);
+    recistValidator.setNewLesionMeasurements(newLesionFindings);
+    recistValidator.setNonTargetMeasurements(nonTargetFindings);
     if (comparedTimepoint && comparedReportInfo) {
       const { targetFindings, newLesionFindings, nonTargetFindings } = comparedReportInfo;
-      resistValidator.setLastTargetMeasurements(targetFindings);
-      resistValidator.setLastNewLesionMeasurements(newLesionFindings);
-      resistValidator.setLastNonTargetMeasurements(nonTargetFindings);
+      recistValidator.setLastTargetMeasurements(targetFindings);
+      recistValidator.setLastNewLesionMeasurements(newLesionFindings);
+      recistValidator.setLastNonTargetMeasurements(nonTargetFindings);
     }
-    resistValidator.validate();
-    validationInfo = resistValidator.getValidationInfo();
+    recistValidator.validate();
+    validationInfo = recistValidator.getValidationInfo();
   } catch (error) {
     console.error('validation error:', error);
   }
@@ -588,7 +588,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       trialTimePointId,
       reports,
     } = comparedTimepoint;
-    const { report, targetFindings, newLesionFindings, nonTargetFindings, otherFindings } = comparedReportInfo;
+    const { report, targetFindings, newLesionFindings, nonTargetFindings, otherFindings } =
+      comparedReportInfo;
     const trialTimePointName = trialTimePointId ? getTimepointName(trialTimePointId) : '';
     let SOD = undefined;
     let response = undefined;
