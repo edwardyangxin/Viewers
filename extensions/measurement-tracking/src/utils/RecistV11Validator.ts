@@ -121,10 +121,6 @@ class Validator {
     // find matching follow-up measurement for each of last measurement
     const measurements = this[measurementPropertyName];
 
-    // if (!measurements) {
-    //   console.error('set the measurements first');
-    //   return;
-    // }
     // find the last measurement for each measurement
     for (let i = 0; i < measurements.length; i++) {
       const measurement = measurements[i];
@@ -558,7 +554,7 @@ export class RecistV11Validator extends Validator {
   }
 
   private checkTargetMeasurementNumber() {
-    if (!this.targetMeasurements) {
+    if (!this.targetMeasurements || this.targetMeasurements.length === 0) {
       return;
     }
 
@@ -580,7 +576,7 @@ export class RecistV11Validator extends Validator {
   }
 
   private checkNewLesionMeasurements() {
-    if (this.isBaseline && this.newLesionMeasurements) {
+    if (this.isBaseline && this.newLesionMeasurements && this.newLesionMeasurements.length > 0) {
       console.error('Baseline should not have new lesion measurements');
       this.validationInfo.newLesionGroupWarningMessages.push('基线不能出现新病灶!');
     }
