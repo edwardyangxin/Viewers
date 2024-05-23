@@ -21,11 +21,11 @@ const TargetListExpandedRow = ({
         <ReportTable>
           <ReportTableHead>
             <TableRow>
-              {Object.keys(tableColumns).map(columnKey => {
+              {Object.keys(tableColumns).map((columnKey, i) => {
                 return (
                   <TableCell
                     cellsNum={cellsNum}
-                    key={columnKey}
+                    key={tableId + columnKey + i}
                   >
                     {tableColumns[columnKey]}
                   </TableCell>
@@ -38,30 +38,32 @@ const TargetListExpandedRow = ({
             {tableDataSource.map((row, i) => {
               const warningInfo = row.warningInfo;
               delete row.warningInfo;
-              return <TableRow key={i}>
-                      {Object.keys(row).map(cellKey => {
-                        const content = row[cellKey];
-                        const ifIndexCell = cellKey === 'index';
-                        const lesionIndex = row.index
-                        return (
-                          <TableCell
-                            cellsNum={cellsNum}
-                            key={cellKey}
-                          >
-                            <div className="flex">
-                              <span className="truncate">{content}</span>
-                              {ifIndexCell && warningInfo && warningInfo.length > 0 && (
-                                <WarningInfoTooltip
-                                  id={`${tableId}Meas${lesionIndex}${i}`}
-                                  position="right"
-                                  warningInfo={warningInfo}
-                                ></WarningInfoTooltip>
-                              )}
-                            </div>
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>;
+              return (
+                <TableRow key={tableId + 'Row' + i}>
+                  {Object.keys(row).map((cellKey, j) => {
+                    const content = row[cellKey];
+                    const ifIndexCell = cellKey === 'index';
+                    const lesionIndex = row.index;
+                    return (
+                      <TableCell
+                        cellsNum={cellsNum}
+                        key={tableId + 'Cell' + lesionIndex + j}
+                      >
+                        <div className="flex">
+                          <span className="truncate">{content}</span>
+                          {ifIndexCell && warningInfo && warningInfo.length > 0 && (
+                            <WarningInfoTooltip
+                              id={`${tableId}Meas${lesionIndex}${i}`}
+                              position="right"
+                              warningInfo={warningInfo}
+                            ></WarningInfoTooltip>
+                          )}
+                        </div>
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
             })}
           </TableBody>
         </ReportTable>
@@ -72,6 +74,7 @@ const TargetListExpandedRow = ({
 
 TargetListExpandedRow.propTypes = {
   tableTitle: PropTypes.string,
+  tableId: PropTypes.string,
   tableDataSource: PropTypes.arrayOf(PropTypes.object),
   tableColumns: PropTypes.object,
   tabelBgColor: PropTypes.string,

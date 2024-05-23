@@ -710,12 +710,12 @@ function getTableDataSource(
         warningInfo: validationInfo?.targetGroupWarningMessages,
       },
       {
-        key: 'count',
+        key: 'targetCount',
         content: <span>{`数量:${targetFindings.length}`}</span>,
         gridCol: 3,
       },
       {
-        key: 'SOD',
+        key: 'targetSOD',
         content: SODContent,
         gridCol: 3,
       },
@@ -732,7 +732,7 @@ function getTableDataSource(
         warningInfo: validationInfo?.nonTargetGroupWarningMessages,
       },
       {
-        key: 'count',
+        key: 'nonTargetcount',
         content: <span>{`数量:${nonTargetFindings.length}`}</span>,
         gridCol: 3,
       },
@@ -750,7 +750,7 @@ function getTableDataSource(
           warningInfo: validationInfo?.newLesionGroupWarningMessages,
         },
         {
-          key: 'count',
+          key: 'newLesionCount',
           content: <span>{`数量:${newLesionFindings.length}`}</span>,
           gridCol: 3,
         },

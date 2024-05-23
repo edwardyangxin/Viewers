@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { StudySummary, useImageViewer, Select, useViewportGrid, Input } from '@ohif/ui';
+import { useImageViewer, Select, useViewportGrid, Input } from '@ohif/ui';
 import TimePointSummary from '../../ui/TimePointSummary';
 import MeasurementTable from '../../ui/MeasurementTable';
 import ActionButtons from './ActionButtons';
@@ -29,10 +29,10 @@ const { downloadCSVReport } = utils;
 
 // evibased, 右边栏上部显示的信息
 const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
-  key: undefined,
+  key: undefined, // deprecated
   timepoint: undefined,
-  modality: '', // 'deprecated',
-  description: '', // 'deprecated',
+  modality: '', // deprecated
+  description: '', // deprecated
   currentTask: undefined,
   taskInfo: undefined, // task info
 };
@@ -41,7 +41,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   const navigate = useNavigate();
   const { t } = useTranslation();
   const dataSources = extensionManager.getDataSources();
-  const dataSource = dataSources[0];
+  const dataSource = dataSources[0]; // evibased, datasource never changed
   const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(Date.now().toString());
@@ -97,48 +97,37 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     // eslint-ignore-next-line
   }, [measurementService, trackedStudy, trackedSeries, debouncedMeasurementChangeTimestamp]);
 
-  const updateDisplayStudySummary = async () => {
-    if (trackedMeasurements.matches('tracking')) {
-      const StudyInstanceUID = trackedStudy;
-      const studyMeta = DicomMetadataStore.getStudy(StudyInstanceUID);
-      const instanceMeta = studyMeta.series[0].instances[0];
-      const { StudyDate, StudyDescription, ClinicalTrialTimePointID } = instanceMeta;
+  const updateDisplayStudySummary = () => {
+    // old study summary info, tracked study and series info
+    // const StudyInstanceUID = trackedStudy;
+    // const studyMeta = DicomMetadataStore.getStudy(StudyInstanceUID);
+    // const instanceMeta = studyMeta.series[0].instances[0];
+    // const { StudyDate, StudyDescription, ClinicalTrialTimePointID } = instanceMeta;
 
-      const modalities = new Set();
-      studyMeta.series.forEach(series => {
-        if (trackedSeries.includes(series.SeriesInstanceUID)) {
-          modalities.add(series.instances[0].Modality);
-        }
-      });
-      const modality = Array.from(modalities).join('/');
+    // const modalities = new Set();
+    // studyMeta.series.forEach(series => {
+    //   if (trackedSeries.includes(series.SeriesInstanceUID)) {
+    //     modalities.add(series.instances[0].Modality);
+    //   }
+    // });
+    // const modality = Array.from(modalities).join('/');
 
-      if (displayStudySummary.key !== StudyInstanceUID) {
-        setDisplayStudySummary({
-          key: StudyInstanceUID,
-          timepoint: currentTimepoint?.trialTimePointId,
-          modality,
-          description: StudyDescription,
-          currentTask: currentTask,
-          taskInfo: taskInfo,
-        });
-      }
-    } else if (trackedStudy === '' || trackedStudy === undefined) {
-      setDisplayStudySummary({
-        key: undefined, //
-        timepoint: currentTimepoint?.trialTimePointId,
-        modality: '', // 'CT',
-        description: '', // 'CHEST/ABD/PELVIS W CONTRAST',
-        currentTask: currentTask,
-        taskInfo: taskInfo,
-      });
-    }
+    // evibased, study summary info at top right corner
+    setDisplayStudySummary({
+      key: null,
+      timepoint: currentTimepoint?.trialTimePointId,
+      modality: null,
+      description: null,
+      currentTask: currentTask,
+      taskInfo: taskInfo,
+    });
   };
 
   // update DisplayStudySummary
   // evibased, remove dependency on updateDisplayStudySummary function, it will cause infinite loop
   useEffect(() => {
     updateDisplayStudySummary();
-  }, [displayStudySummary.key, trackedMeasurements, trackedStudy, currentTimepoint, currentTask]);
+  }, [trackedMeasurements, currentTimepoint, currentTask, taskInfo]);
 
   // subscribe to measurementService changes
   // TODO: Better way to consolidated, debounce, check on change?

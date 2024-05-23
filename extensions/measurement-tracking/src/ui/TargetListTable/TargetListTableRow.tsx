@@ -73,10 +73,10 @@ const TargetListTableRow = props => {
                   onClick={() => setIsExpanded(!isExpanded)}
                 >
                   {row.map((cell, index) => {
-                    const { content, title, gridCol, warningInfo } = cell;
+                    const { key, content, title, gridCol, warningInfo } = cell;
                     return (
                       <td
-                        key={index}
+                        key={'groupTable' + key + index}
                         className={classnames(
                           'truncate px-4 py-2 text-lg',
                           { 'border-secondary-light border-b': !isExpanded },
