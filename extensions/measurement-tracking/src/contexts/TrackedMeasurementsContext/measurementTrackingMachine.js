@@ -35,6 +35,9 @@ const machineConfiguration = {
     username: undefined,
     userRoles: undefined,
     currentTask: undefined,
+    taskStartTime: undefined,
+    reportStartTime: undefined,
+    taskEndTime: undefined,
     successSaveReport: false,
     currentTimepoint: undefined,
     baselineTimepoint: undefined,
@@ -125,6 +128,21 @@ const machineConfiguration = {
         UPDATE_CURRENT_TASK: {
           actions: assign({
             currentTask: (_, event) => event.currentTask,
+          }),
+        },
+        UPDATE_TASK_START_TIME: {
+          actions: assign({
+            taskStartTime: (_, event) => event.taskStartTime,
+          }),
+        },
+        UPDATE_REPORT_START_TIME: {
+          actions: assign({
+            reportStartTime: (_, event) => event.reportStartTime,
+          }),
+        },
+        UPDATE_TASK_END_TIME: {
+          actions: assign({
+            taskEndTime: (_, event) => event.taskEndTime,
           }),
         },
         UPDATE_TASK_INFO: {
@@ -592,6 +610,8 @@ const defaultOptions = {
 
       return {
         successSaveReport: true,
+        reportStartTime: evt.data.reportStartTime,
+        taskEndTime: evt.data.taskEndTime,
       };
     }),
     // evibased, compared timepoint

@@ -108,7 +108,7 @@ function PanelStudyBrowserTracking({
   useEffect(() => {
     // Fetch all studies for the patient in each primary study
     // evibased, 这里去search所有相关的study信息。当前的study和series信息在列表页获取并传进来了。
-    async function fetchTaskAndStudiesForPatient(StudyInstanceUID) {
+    async function fetchTaskAndStudiesForPatient() {
       // get user task
       const authHeader = userAuthenticationService.getAuthorizationHeader();
       const username = getUserName(userAuthenticationService);
@@ -138,6 +138,12 @@ function PanelStudyBrowserTracking({
       commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
       sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
         currentTask: currentTask,
+      });
+      // task start time, for task duration, 计算task耗时起点
+      const taskStartTime = new Date();
+      console.log('task start time: ', taskStartTime);
+      sendTrackedMeasurementsEvent('UPDATE_TASK_START_TIME', {
+        taskStartTime: taskStartTime,
       });
 
       // evibased, deprecated, no need to fetch current subject id from PACS
@@ -334,7 +340,7 @@ function PanelStudyBrowserTracking({
 
     // evibase, only fetch data for current study
     // StudyInstanceUIDs.forEach(sid => fetchTaskAndStudiesForPatient(sid));
-    fetchTaskAndStudiesForPatient(currentStudyInstanceUID);
+    fetchTaskAndStudiesForPatient();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStudyInstanceUID]);
 

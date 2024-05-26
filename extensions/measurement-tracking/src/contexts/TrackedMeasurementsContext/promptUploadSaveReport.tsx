@@ -18,12 +18,13 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const SeriesInstanceUID = evt?.data?.SeriesInstanceUID;
   const imageQuality = evt.imageQuality === undefined ? evt.data.imageQuality : evt.imageQuality;
 
-  const { trackedStudy, trackedSeries, currentTask } = ctx;
+  const { trackedStudy, trackedSeries, currentTask, taskStartTime } = ctx;
   let displaySetInstanceUIDs;
 
   //evibased, call createReportDialogPrompt and store report to evibased api, was store report as dicomSR to PACS 
   return new Promise(async function (resolve, reject) {
-    // TODO: Fallback if (uiDialogService) {
+    const reportStartTime = new Date();
+    console.log('report start time:', reportStartTime);
     const reportSummaryResult = await createReportDialogPrompt(
       ctx,
       imageQuality,
@@ -35,6 +36,8 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
     );
 
     let successSaveReport = false;
+    const taskEndTime = new Date();
+    console.log('task end time:', taskEndTime);
     if (reportSummaryResult.action === RESPONSE.CREATE_REPORT) {
       // post to backend api
       successSaveReport = await _uploadReportAsync(
@@ -44,7 +47,10 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
         trackedSeries,
         currentTask,
         imageQuality,
-        reportSummaryResult.value.reportInfo
+        reportSummaryResult.value.reportInfo,
+        taskStartTime,
+        reportStartTime,
+        taskEndTime
       );
 
       // deprecated, SR report has limited fields, use report api instead
@@ -98,6 +104,8 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
       viewportId,
       isBackupSave,
       successSaveReport,
+      reportStartTime,
+      taskEndTime,
     });
   });
 }
@@ -110,7 +118,10 @@ async function _uploadReportAsync(
   trackedSeries,
   currentTask,
   imageQuality,
-  reportInfo
+  reportInfo,
+  taskStartTime,
+  reportStartTime,
+  taskEndTime
 ) {
   const { measurementService, userAuthenticationService, uiNotificationService, uiDialogService } =
     servicesManager.services;
@@ -171,6 +182,9 @@ async function _uploadReportAsync(
       // reportComments: '', // deprecated but required by api
       imageQuality: imageQuality, // imageQuality from image view page
       measurements: trackedMeasurements, // measurements from measurement table
+      taskStartTime: taskStartTime.toISOString(), // taskStartTime from task start
+      reportStartTime: reportStartTime.toISOString(), // reportStartTime from report start
+      taskEndTime: taskEndTime.toISOString(), // taskEndTime from task end
       ...reportInfo, // reportInfo from report page, structure see above
     };
     const createReportUrl = new URL(_appConfig['evibased']['apiv2_reports_url']);
