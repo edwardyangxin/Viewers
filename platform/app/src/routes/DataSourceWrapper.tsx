@@ -188,6 +188,7 @@ function DataSourceWrapper(props) {
 
       // get filter queryFilterValues.studyInstanceUid list
       // TODO: extract to a function?
+      let backEndErrorFlag = false;
       if (ifDoctor || ifQC) {
         try {
           // doctor/QC role, get task list by username
@@ -256,6 +257,7 @@ function DataSourceWrapper(props) {
           // }
         } catch (e) {
           console.error(e);
+          backEndErrorFlag = true;
         }
       } else if (ifManager) {
         // default timepoint status filter
@@ -334,13 +336,15 @@ function DataSourceWrapper(props) {
           queryFilterValues.studyInstanceUid = Object.keys(studyUIDInfoMap);
         } catch (e) {
           console.error(e);
+          backEndErrorFlag = true;
         }
       }
 
       let studies = [];
       if (
-        !queryFilterValues.studyInstanceUid || // if no studyInstanceUid filter key, fetch all studies
-        (queryFilterValues.studyInstanceUid && queryFilterValues.studyInstanceUid.length > 0) // Fetch studies by studyInstanceUid list
+        !backEndErrorFlag &&
+        (!queryFilterValues.studyInstanceUid || // if no studyInstanceUid filter key, fetch all studies
+          (queryFilterValues.studyInstanceUid && queryFilterValues.studyInstanceUid.length > 0)) // Fetch studies by studyInstanceUid list
       ) {
         // fetch studies
         studies = await dataSource.query.studies.search(queryFilterValues);
