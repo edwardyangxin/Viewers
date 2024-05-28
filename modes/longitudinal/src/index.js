@@ -1,11 +1,9 @@
-import { hotkeys, utils } from '@ohif/core';
+import { hotkeys } from '@ohif/core';
 import i18n from 'i18next';
 import { id } from './id';
 import initToolGroups from './initToolGroups';
 import toolbarButtons from './toolbarButtons';
 import moreTools from './moreTools';
-
-const { performAuditLog } = utils;
 
 // Allow this mode by excluding non-imaging modalities such as SR, SEG
 // Also, SM is not a simple imaging modalities, so exclude it.
@@ -74,8 +72,13 @@ function modeFactory({ modeConfiguration }) {
      * Lifecycle hooks
      */
     onModeEnter: async function ({ servicesManager, extensionManager, commandsManager }) {
-      const { measurementService, toolbarService, toolGroupService, customizationService } =
-        servicesManager.services;
+      const {
+        measurementService,
+        toolbarService,
+        toolGroupService,
+        customizationService,
+        logSinkService, // evibased, audit log
+      } = servicesManager.services;
 
       measurementService.clearMeasurements();
 
@@ -165,18 +168,19 @@ function modeFactory({ modeConfiguration }) {
 
       // evibased, audit log
       const { userAuthenticationService } = servicesManager.services;
-      const { _appConfig } = extensionManager;
       // get StudyInstanceUIDs from URL, assume only one study uids
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
-
-      const auditMsg = 'entering viewer mode';
-      const auditLogBodyMeta = {
-        StudyInstanceUID: StudyInstanceUIDs,
-        action: auditMsg,
-        action_result: 'success',
-      };
-      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+      logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+        msg: 'entering viewer mode',
+        action: 'ENTER_VIEWER',
+        username: userAuthenticationService.getUser()?.profile?.preferred_username,
+        authHeader: userAuthenticationService.getAuthorizationHeader(),
+        data: {
+          action_result: 'success',
+          StudyInstanceUID: StudyInstanceUIDs,
+        },
+      });
     },
     onModeExit: async ({ servicesManager, extensionManager }) => {
       const {
@@ -186,6 +190,7 @@ function modeFactory({ modeConfiguration }) {
         cornerstoneViewportService,
         uiDialogService,
         uiModalService,
+        logSinkService,
       } = servicesManager.services;
 
       _activatePanelTriggersSubscriptions.forEach(sub => sub.unsubscribe());
@@ -200,17 +205,19 @@ function modeFactory({ modeConfiguration }) {
 
       // evibased, audit log, no studyUID available
       const { userAuthenticationService } = servicesManager.services;
-      const { _appConfig } = extensionManager;
       // get StudyInstanceUIDs from URL, assume only one study uids
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
-      const auditMsg = 'leave viewer mode';
-      const auditLogBodyMeta = {
-        StudyInstanceUID: StudyInstanceUIDs,
-        action: auditMsg,
-        action_result: 'success',
-      };
-      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+      logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+        msg: 'leave viewer mode',
+        action: 'LEAVE_VIEWER',
+        username: userAuthenticationService.getUser()?.profile?.preferred_username,
+        authHeader: userAuthenticationService.getAuthorizationHeader(),
+        data: {
+          action_result: 'success',
+          StudyInstanceUID: StudyInstanceUIDs,
+        },
+      });
     },
     validationTags: {
       study: [],

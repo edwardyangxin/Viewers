@@ -1,15 +1,11 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Enums, ExtensionManager, MODULE_TYPES, log, Types } from '@ohif/core';
+import { Enums, ExtensionManager, MODULE_TYPES, log } from '@ohif/core';
 import { useParams, useLocation } from 'react-router';
 import { useNavigate } from 'react-router-dom';
 import useSearchParams from '../hooks/useSearchParams.ts';
-import { utils } from '@ohif/core';
 import { defaultFilterValues } from './WorkList/WorkList.tsx';
-
-const { TimingEnum } = Types;
-const { performAuditLog } = utils;
 
 /**
  * Determines if two React Router location objects are the same.
@@ -33,7 +29,7 @@ const areLocationsTheSame = (location0, location1) => {
 function DataSourceWrapper(props) {
   const navigate = useNavigate();
   const { children: LayoutTemplate, servicesManager, extensionManager, ...rest } = props;
-  const { userAuthenticationService } = servicesManager.services;
+  const { userAuthenticationService, logSinkService } = servicesManager.services;
   const { _appConfig } = extensionManager;
   const params = useParams();
   const location = useLocation();
@@ -129,13 +125,16 @@ function DataSourceWrapper(props) {
 
   // evibased, enter/leave task list page one time job, audit log
   useEffect(() => {
-    // evibased, audit log, enter task list page
-    const auditMsg = 'enter task list page';
-    const auditLogBodyMeta = {
-      action: auditMsg,
-      action_result: 'success',
-    };
-    performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+    // evibased, audit log to sink
+    logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+      msg: 'enter task list page',
+      action: 'ENTER_TASK_LIST_PAGE',
+      username: userAuthenticationService.getUser()?.profile?.preferred_username,
+      authHeader: userAuthenticationService.getAuthorizationHeader(),
+      data: {
+        action_result: 'success',
+      },
+    });
 
     const dataSourceChangedCallback = () => {
       setIsLoading(false);
@@ -152,12 +151,15 @@ function DataSourceWrapper(props) {
     );
     return () => {
       // audit log leave task list page
-      const auditMsg = 'leave task list page';
-      const auditLogBodyMeta = {
-        action: auditMsg,
-        action_result: 'success',
-      };
-      performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+      logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+        msg: 'leave task list page',
+        action: 'LEAVE_TASK_LIST_PAGE',
+        username: userAuthenticationService.getUser()?.profile?.preferred_username,
+        authHeader: userAuthenticationService.getAuthorizationHeader(),
+        data: {
+          action_result: 'success',
+        },
+      });
       sub.unsubscribe();
     };
   }, []);

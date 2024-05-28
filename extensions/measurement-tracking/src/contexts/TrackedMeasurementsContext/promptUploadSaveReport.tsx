@@ -2,12 +2,10 @@
 import createReportDialogPrompt from './createReportDialogPrompt';
 // import getNextSRSeriesNumber from '../../_shared/getNextSRSeriesNumber';
 import RESPONSE from '../../_shared/PROMPT_RESPONSES';
-import { DicomMetadataStore, utils } from '@ohif/core';
+import { DicomMetadataStore } from '@ohif/core';
 import React from 'react';
 import i18n from '@ohif/i18n';
 import { getUserName } from '../../utils/utils';
-
-const { performAuditLog } = utils;
 
 // evibased, based on ../promptSaveReport.js
 function promptSaveReport({ servicesManager, commandsManager, extensionManager }, ctx, evt) {
@@ -123,8 +121,13 @@ async function _uploadReportAsync(
   reportStartTime,
   taskEndTime
 ) {
-  const { measurementService, userAuthenticationService, uiNotificationService, uiDialogService } =
-    servicesManager.services;
+  const {
+    measurementService,
+    userAuthenticationService,
+    uiNotificationService,
+    uiDialogService,
+    logSinkService,
+  } = servicesManager.services;
   const _appConfig = extensionManager._appConfig;
   const reportTypeStr = i18n.t(`MeasurementTable:measurement`);
 
@@ -202,44 +205,20 @@ async function _uploadReportAsync(
     }
     const newReport = await reportResponse.json();
     console.log('newReport:', newReport);
-
-    // deprecated, put task api
-    // const putTaskUrl = _appConfig['evibased']['task_update_url'];
-    // const putTaskBody = {
-    //   StudyInstanceUID: StudyInstanceUID,
-    //   username: username,
-    //   type: taskType,
-    //   status: 'done',
-    // };
-    // const putTaskResponse = await fetch(putTaskUrl, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     Authorization: authHeader?.Authorization,
-    //   },
-    //   body: JSON.stringify(putTaskBody),
-    // });
-    // if (!putTaskResponse.ok) {
-    //   const body = await putTaskResponse.text();
-    //   throw new Error(`HTTP error! status: ${putTaskResponse.status} body: ${body}`);
-    // }
-    // const putTaskResult = await putTaskResponse.json();
-    // console.log('putTaskResult:', putTaskResult);
-
     // audit log after upload report success
-    const auditMsg = 'upload report success';
-    const auditLogBodyMeta = {
-      info: {
-        username: username,
+    logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+      msg: 'create_report',
+      action: 'VIEWER_CREATE_REPORT',
+      username: userAuthenticationService.getUser()?.profile?.preferred_username,
+      authHeader: userAuthenticationService.getAuthorizationHeader(),
+      data: {
+        action_result: 'success',
         taskType: taskType,
         StudyInstanceUID: StudyInstanceUID,
         taskId: taskId,
         reportId: newReport.id,
       },
-      action: 'create_report',
-      action_result: 'success',
-    };
-    performAuditLog(_appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+    });
 
     uiNotificationService.show({
       title: i18n.t('MeasurementTable:Create Report'),

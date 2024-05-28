@@ -19,6 +19,7 @@ import PanelService from './PanelService';
 import WorkflowStepsService from './WorkflowStepsService';
 
 import type Services from '../types/Services';
+import LogSinkService from './LogSinkService'; // evibased
 
 export {
   Services,
@@ -42,4 +43,5 @@ export {
   UserAuthenticationService,
   PanelService,
   WorkflowStepsService,
+  LogSinkService, // evibased
 };

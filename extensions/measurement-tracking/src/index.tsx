@@ -5,13 +5,14 @@ import getHangingProtocolModule from './getHangingProtocolModule';
 import getPanelModule from './getPanelModule';
 import getViewportModule from './getViewportModule';
 import { id } from './id.js';
+import preRegistration from './init';
 
 const measurementTrackingExtension = {
   /**
    * Only required property. Should be a unique value across all extensions.
    */
   id,
-
+  preRegistration, // evibased, init for extension
   getContextModule,
   getPanelModule,
   getViewportModule,

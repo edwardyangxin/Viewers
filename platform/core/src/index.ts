@@ -34,6 +34,7 @@ import {
   StateSyncService,
   PanelService,
   WorkflowStepsService,
+  LogSinkService, // evibased
 } from './services';
 
 import { DisplaySetMessage, DisplaySetMessageList } from './services/DisplaySetService';
@@ -86,6 +87,7 @@ const OHIF = {
   PanelService,
   useToolbar,
   WorkflowStepsService,
+  LogSinkService, // evibased
 };
 
 export {
@@ -132,6 +134,7 @@ export {
   PanelService,
   WorkflowStepsService,
   useToolbar,
+  LogSinkService, // evibased
 };
 
 export { OHIF };

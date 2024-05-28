@@ -20,6 +20,7 @@ import {
   CustomizationService,
   PanelService,
   WorkflowStepsService,
+  LogSinkService,
   // utils,
 } from '@ohif/core';
 
@@ -71,6 +72,7 @@ async function appInit(appConfigOrFunc, defaultExtensions, defaultModes) {
     PanelService.REGISTRATION,
     WorkflowStepsService.REGISTRATION,
     StateSyncService.REGISTRATION,
+    [LogSinkService.REGISTRATION, appConfig.logSinkService], //evibased
   ]);
 
   errorHandler.getHTTPErrorHandler = () => {

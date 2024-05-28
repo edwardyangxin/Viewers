@@ -98,4 +98,8 @@ window.config = {
     graphqlDR: 'http://localhost:3000/api-v2/graphql-dr/graphql',
     keycloak_admin_url: 'http://localhost:3000/auth/admin',
   },
+  logSinkService: {
+    backend_log: true,
+    audit_log_url: 'http://localhost:3000/api/log',
+  },
 };

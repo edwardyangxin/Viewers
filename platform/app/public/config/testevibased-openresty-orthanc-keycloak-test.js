@@ -84,4 +84,8 @@ window.config = {
     graphqlDR: 'https://test.evi-based.com/api-v2/graphql-dr/graphql',
     keycloak_admin_url: 'https://test.evi-based.com/auth/admin',
   },
+  logSinkService: {
+    backend_log: true,
+    audit_log_url: 'https://test.evi-based.com/api/log',
+  },
 };

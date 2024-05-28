@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppConfig } from '@state';
 import PropTypes from 'prop-types';
@@ -11,7 +10,7 @@ import i18n from '@ohif/i18n';
 import { getUserName, getUserRoles, getViewportId } from '../../utils/utils';
 import { getTaskByUserAndUID } from '../../utils/apiCall';
 
-const { formatDate, performAuditLog } = utils;
+const { formatDate } = utils;
 
 /**
  *
@@ -34,8 +33,8 @@ function PanelStudyBrowserTracking({
     uiNotificationService,
     measurementService,
     userAuthenticationService, // evibased, get username and userRoles
+    logSinkService, // evibased, logSinkService for audit log
   } = servicesManager.services;
-  const navigate = useNavigate();
 
   const { t } = useTranslation('Common');
 
@@ -145,16 +144,6 @@ function PanelStudyBrowserTracking({
       sendTrackedMeasurementsEvent('UPDATE_TASK_START_TIME', {
         taskStartTime: taskStartTime,
       });
-
-      // evibased, deprecated, no need to fetch current subject id from PACS
-      // current study qido, PACS featch all related studies
-      // const qidoForStudyUID = await dataSource.query.studies.search({
-      //   studyInstanceUid: StudyInstanceUID,
-      // });
-      // if (!qidoForStudyUID?.length) {
-      //   navigate('/notfoundstudy', '_self');
-      //   throw new Error('Invalid study URL');
-      // }
 
       // evibased, getStudiesForPatientByMRN only need patientID to fetch all related studies in PACS
       // qidoForStudyUID in format of [{mrn: 'patientId'}]
@@ -285,13 +274,6 @@ function PanelStudyBrowserTracking({
         }
       }
 
-      // deprecated, 这里跳转会导致页面显示图片错误
-      // if followups, auto go to compared mode if not
-      // if (!currentTimepoint.ifBaseline && !ifCompareMode) {
-      //   navigate(`/viewer?StudyInstanceUIDs=${currentTimepoint.studyInstanceUid}&StudyInstanceUIDs=${lastTimepoint.studyInstanceUid}&hangingprotocolId=@ohif/timepointCompare`, '_self');
-      //   return;
-      // }
-
       function ifTaskValid() {
         if (!currentTimepoint || !baselineTimepoint) {
           return false;
@@ -404,14 +386,17 @@ function PanelStudyBrowserTracking({
     // wait 1s for untrack all. TODO: find a better way to wait for untrack all
     setTimeout(() => {
       // audit log loading report data
-      const auditMsg = 'load report data';
-      const auditLogBodyMeta = {
-        reportInfo: reportInfo,
-        StudyInstanceUID: StudyInstanceUIDs,
-        action: auditMsg,
-        action_result: 'success',
-      };
-      performAuditLog(appConfig, userAuthenticationService, 'i', auditMsg, auditLogBodyMeta);
+      logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+        msg: 'load report data',
+        action: 'VIEWER_LOAD_REPORT',
+        username: userAuthenticationService.getUser()?.profile?.preferred_username,
+        authHeader: userAuthenticationService.getAuthorizationHeader(),
+        data: {
+          action_result: 'success',
+          reportInfo: reportInfo,
+          StudyInstanceUID: StudyInstanceUIDs,
+        },
+      });
 
       sendTrackedMeasurementsEvent('UPDATE_BACKEND_REPORT', {
         reportInfo: reportInfo,
