@@ -298,7 +298,7 @@ export default function CreateReportDialogPrompt(
                   <span className="ml-2 text-[14px] text-black">
                     {`评估标准:${reportProtocol}(点击查看:`}
                     <a
-                      href="https://evi-based.com/static/RECISTGuidelines.pdf"
+                      href="https://evi-based.com/static/imaging_protocol.pdf"
                       target="_blank"
                       rel="noreferrer"
                     >
