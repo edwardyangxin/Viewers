@@ -9,7 +9,8 @@ import { getUserName } from '../../utils/utils';
 
 // evibased, based on ../promptSaveReport.js
 function promptSaveReport({ servicesManager, commandsManager, extensionManager }, ctx, evt) {
-  const { uiDialogService, measurementService, displaySetService } = servicesManager.services;
+  const { uiDialogService, measurementService, userAuthenticationService, logSinkService } =
+    servicesManager.services;
   const viewportId = evt.viewportId === undefined ? evt.data.viewportId : evt.viewportId;
   const isBackupSave = evt.isBackupSave === undefined ? evt.data.isBackupSave : evt.isBackupSave;
   const StudyInstanceUID = evt?.data?.StudyInstanceUID;
@@ -91,7 +92,16 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
       // });
       // successSaveReport = true;
     } else if (reportSummaryResult.action === RESPONSE.CANCEL) {
-      // Do nothing
+      // audit log go back to viewer
+      logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+        msg: 'cancel report and go back to viewer',
+        action: 'VIEWER_CANCEL_REPORT',
+        username: userAuthenticationService.getUser()?.profile?.preferred_username,
+        authHeader: userAuthenticationService.getAuthorizationHeader(),
+        data: {
+          action_result: 'success',
+        },
+      });
     }
 
     resolve({

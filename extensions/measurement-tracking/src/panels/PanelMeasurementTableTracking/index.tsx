@@ -52,6 +52,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     displaySetService,
     customizationService,
     userAuthenticationService, // evibased, get username and roles
+    logSinkService, // evibased, audit log service to backend
   } = servicesManager.services;
   const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
@@ -160,8 +161,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               if (data.measurement.label === '' || data.measurement.label === 'no label') {
                 _editMeasurementLabel(
                   commandsManager,
+                  userAuthenticationService,
                   uiDialogService,
                   measurementService,
+                  logSinkService,
                   data.measurement.uid,
                   comparedReportInfo
                 );
@@ -176,8 +179,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const editSub = measurementService.subscribe(edit, data => {
       _editMeasurementLabel(
         commandsManager,
+        userAuthenticationService,
         uiDialogService,
         measurementService,
+        logSinkService,
         data.uid,
         comparedReportInfo
       );
@@ -190,15 +195,6 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       });
     };
   }, [measurementService, sendTrackedMeasurementsEvent, comparedReportInfo]);
-
-  async function exportReport() {
-    const measurements = measurementService.getMeasurements();
-    const trackedMeasurements = measurements.filter(
-      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
-    );
-
-    downloadCSVReport(trackedMeasurements, measurementService);
-  }
 
   // function handle measurement item click
   const jumpToImage = ({ uid, isActive }) => {
@@ -228,8 +224,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     // evibased, edit label
     _editMeasurementLabel(
       commandsManager,
+      userAuthenticationService,
       uiDialogService,
       measurementService,
+      logSinkService,
       uid,
       comparedReportInfo
     );
@@ -390,43 +388,41 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     return taskInfo;
   }
 
-  async function _navigateToNextTask(nextTask) {
-    if (!nextTask || !nextTask.timepoint) {
-      navigate('/');
-      return;
-    }
-    const timepoint = nextTask.timepoint;
-    const studyUID = timepoint.UID;
-    const trialId = timepoint.cycle;
-    const ifBaseline = trialId === 0 || trialId === '0' || trialId === '00'; // now '00' is baseline, other form are deprecated
-    if (ifBaseline) {
-      navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
-    } else {
-      // get compared timepoint UID
-      const timepoints = timepoint.subject.timepoints;
-      // UID in timepoints is in descending order, "00", "01", "02", ...
-      // get index of studyUID in timepoints
-      const index = timepoints.findIndex(tp => tp.UID === studyUID);
-      if (index === -1) {
-        // no studyUID in timepoints, data error, go back to task list
-        navigate('/');
-      } else if (index === 0) {
-        // first timepoint?? should not happen
-        navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
-      }
-      const comparedUID = timepoints[index - 1].UID;
-      navigate(
-        `/viewer?StudyInstanceUIDs=${studyUID},${comparedUID}&hangingprotocolId=@ohif/timepointCompare`
-      );
-    }
+  // evibased, deprecated, call downloadCSVReport function
+  async function exportReport() {
+    const measurements = measurementService.getMeasurements();
+    const trackedMeasurements = measurements.filter(
+      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
+    );
+
+    downloadCSVReport(trackedMeasurements, measurementService);
   }
 
-  async function getStudyInfoByTrialId(dataSource, mrn, trialId) {
-    const studies = await dataSource.query.studies.search({
-      patientId: mrn,
+  // evibased, edit report button
+  function createReport() {
+    // audit log, create report
+    logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+      msg: 'enter edit report page',
+      action: 'VIEWER_EDIT_REPORT',
+      username: userAuthenticationService.getUser().profile.preferred_username,
+      authHeader: userAuthenticationService.getAuthorizationHeader(),
+      data: {
+        action_result: 'success',
+        imageQuality: {
+          selection: imageQuality,
+          description: imageQualityDescription,
+        },
+      },
     });
-    const comparedStudy = studies.find(s => s.trialTimePointId === trialId);
-    return comparedStudy;
+
+    sendTrackedMeasurementsEvent('SAVE_REPORT', {
+      imageQuality: {
+        selection: imageQuality,
+        description: imageQualityDescription,
+      },
+      viewportId: viewportGrid.activeViewportId,
+      isBackupSave: true,
+    });
   }
 
   // evibased, get next tsak study
@@ -500,6 +496,38 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     } catch (error) {
       console.log(error);
       return [];
+    }
+  }
+
+  // evibased, after save report, go to next task
+  async function _navigateToNextTask(nextTask) {
+    if (!nextTask || !nextTask.timepoint) {
+      navigate('/');
+      return;
+    }
+    const timepoint = nextTask.timepoint;
+    const studyUID = timepoint.UID;
+    const trialId = timepoint.cycle;
+    const ifBaseline = trialId === 0 || trialId === '0' || trialId === '00'; // now '00' is baseline, other form are deprecated
+    if (ifBaseline) {
+      navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
+    } else {
+      // get compared timepoint UID
+      const timepoints = timepoint.subject.timepoints;
+      // UID in timepoints is in descending order, "00", "01", "02", ...
+      // get index of studyUID in timepoints
+      const index = timepoints.findIndex(tp => tp.UID === studyUID);
+      if (index === -1) {
+        // no studyUID in timepoints, data error, go back to task list
+        navigate('/');
+      } else if (index === 0) {
+        // first timepoint?? should not happen
+        navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
+      }
+      const comparedUID = timepoints[index - 1].UID;
+      navigate(
+        `/viewer?StudyInstanceUIDs=${studyUID},${comparedUID}&hangingprotocolId=@ohif/timepointCompare`
+      );
     }
   }
 
@@ -762,17 +790,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           <div className="flex justify-center p-4">
             <ActionButtons
               userRoles={userRoles}
-              onExportClick={exportReport}
-              onCreateReportClick={() => {
-                sendTrackedMeasurementsEvent('SAVE_REPORT', {
-                  imageQuality: {
-                    selection: imageQuality,
-                    description: imageQualityDescription,
-                  },
-                  viewportId: viewportGrid.activeViewportId,
-                  isBackupSave: true,
-                });
-              }}
+              // onExportClick={exportReport}
+              onCreateReportClick={createReport}
               // todo: 对于查看报告的情况分类disable button：
               // 1. 阅片任务，未选择影像质量，disable
               // 2. 其他任务，不做disable？
@@ -803,8 +822,10 @@ PanelMeasurementTableTracking.propTypes = {
 // evibased
 function _editMeasurementLabel(
   commandsManager,
+  userAuthenticationService,
   uiDialogService,
   measurementService,
+  logSinkService,
   uid,
   comparedReportInfo
 ) {
@@ -843,6 +864,18 @@ function _editMeasurementLabel(
 
       // measurementService in platform core service module
       measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
+
+      // audit log, full measurement info
+      logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+        msg: 'edit measurement label',
+        action: 'VIEWER_EDIT_MEASUREMENT',
+        username: userAuthenticationService.getUser().profile.preferred_username,
+        authHeader: userAuthenticationService.getAuthorizationHeader(),
+        data: {
+          action_result: 'success',
+          measurement: measurement,
+        },
+      });
     },
     isNonMeasurementTool // isArrowAnnotateInputDialog = false
   );
