@@ -1,6 +1,6 @@
-/* evibased, modified to bg-slate-300 */
+/* evibased, modified to bg-slate-300 text-blue-900 */
 .customSelect__wrapper .customSelect__control {
-  @apply border-secondary-light w-full rounded border bg-slate-300 text-lg leading-tight text-white shadow transition duration-300;
+  @apply border-secondary-light w-full rounded border bg-slate-300 text-lg leading-tight text-blue-900 shadow transition duration-300;
   min-height: 28px;
 }
 .customSelect__wrapper .customSelect__control:hover {

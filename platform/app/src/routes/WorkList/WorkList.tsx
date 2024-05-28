@@ -424,9 +424,14 @@ function WorkList({
       timepointStatusMapping[timepointsState[studyInstanceUid]?.timepointStatus] || '未知';
     // task info
     let taskInfoStr = '';
+    let taskExtendable = true;
     const tasks = timepointsState[studyInstanceUid]?.tasks || [];
     for (const task of tasks) {
       taskInfoStr += `${taskTypeMap[task.type]}(${task.username}): ${taskStatusMap[task.status]} <br>`;
+    }
+    if (ifDoctor) {
+      // for doctor, only 1 task per study. 'create' task is extendable
+      taskExtendable = tasks[0]?.status === 'create';
     }
     // task selections
     let usernameTask = timepointsState[studyInstanceUid]?.taskSelect?.username;
@@ -835,9 +840,13 @@ function WorkList({
           </div>
         </StudyListExpandedRow>
       ),
-      onClickRow: () =>
-        setExpandedRows(s => (isExpanded ? s.filter(n => rowKey !== n) : [...s, rowKey])),
+      onClickRow: () => {
+        if (taskExtendable) {
+          setExpandedRows(s => (isExpanded ? s.filter(n => rowKey !== n) : [...s, rowKey]))
+        }
+      },
       isExpanded,
+      rowExtendable: taskExtendable, // evibased, control row expandable
     };
   });
 
@@ -1105,6 +1114,7 @@ export const defaultFilterValues = {
   trialTimePointInfo: '',
   timepointStatus: ['QC-data', 'reviewing', 'QC-report', 'arbitration'].join('+'), // manager filter timepoint status
   projectCode: null, // manager filter project
+  taskInfo: ['create'], // task status filter
 };
 
 function _tryParseInt(str, defaultValue) {

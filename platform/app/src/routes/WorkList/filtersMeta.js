@@ -62,7 +62,13 @@ const filtersMeta = [
   {
     name: 'taskInfo',
     displayName: i18n.t('StudyList:TaskInfo'),
-    inputType: 'None',
+    inputType: 'MultiSelect',
+    inputProps: {
+      options: [
+        { value: 'create', label: '待处理' },
+        { value: 'done', label: '已完成' },
+      ],
+    },
     isSortable: false,
     gridCol: 4,
   },

@@ -194,7 +194,13 @@ function DataSourceWrapper(props) {
       if (ifDoctor || ifQC) {
         try {
           // doctor/QC role, get task list by username
-          const filterTaskStatus = 'create';
+          let filterTaskStatus = 'create';
+          if (queryFilterValues?.taskInfo && queryFilterValues.taskInfo.length > 0) {
+            filterTaskStatus = queryFilterValues.taskInfo;
+            if (Array.isArray(filterTaskStatus)) {
+              filterTaskStatus = filterTaskStatus.join('+');
+            }
+          }
           // build graphql query
           const url = new URL(_appConfig['evibased']['graphqlDR']);
           const headers = new Headers();
@@ -245,9 +251,9 @@ function DataSourceWrapper(props) {
 
           // map studyInstanceUid to task
           userTasks.forEach(task => {
-            studyUIDInfoMap[task.timepoint.UID] = {};
-            studyUIDInfoMap[task.timepoint.UID].timepoint = task.timepoint;
-            studyUIDInfoMap[task.timepoint.UID].tasks = [task];
+            studyUIDInfoMap[task?.timepoint?.UID] = {};
+            studyUIDInfoMap[task?.timepoint?.UID].timepoint = task?.timepoint;
+            studyUIDInfoMap[task?.timepoint?.UID].tasks = [task];
           });
           // filter studies by studyInstanceUid list
           queryFilterValues.studyInstanceUid = Object.keys(studyUIDInfoMap);
@@ -524,6 +530,7 @@ function _getQueryFilterValues(query, queryLimit) {
     trialTimePointId: query.get('trialTimePointId'),
     timepointStatus: query.get('timepointStatus'),
     projectCode: query.get('projectCode'),
+    taskInfo: query.getAll('taskInfo'),
   };
 
   // patientName: good

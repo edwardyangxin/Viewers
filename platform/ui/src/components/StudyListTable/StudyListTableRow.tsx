@@ -7,7 +7,14 @@ import Icon from '../Icon';
 
 const StudyListTableRow = props => {
   const { tableData } = props;
-  const { row, expandedContent, onClickRow, isExpanded, dataCY } = tableData;
+  const {
+    row,
+    expandedContent,
+    onClickRow,
+    isExpanded,
+    dataCY,
+    rowExtendable, // evibased, extend row control
+  } = tableData;
   return (
     <>
       <tr
@@ -39,7 +46,8 @@ const StudyListTableRow = props => {
                     {
                       'bg-primary-dark': !isExpanded,
                     },
-                    { 'bg-secondary-dark': isExpanded }
+                    { 'bg-secondary-dark': isExpanded },
+                    { 'bg-secondary-main': !rowExtendable } // evibased, non extendable row bg color
                   )}
                   onClick={onClickRow}
                 >
@@ -108,6 +116,7 @@ StudyListTableRow.propTypes = {
     onClickRow: PropTypes.func.isRequired,
     isExpanded: PropTypes.bool.isRequired,
     dataCY: PropTypes.string,
+    rowExtendable: PropTypes.bool, // evibased, extend row control
   }),
 };
 
