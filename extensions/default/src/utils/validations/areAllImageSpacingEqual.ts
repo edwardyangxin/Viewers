@@ -17,7 +17,8 @@ export default function areAllImageSpacingEqual(
   instances: Array<any>,
   messages: DisplaySetMessageList
 ): void {
-  if (!instances?.length) {
+  // evibased, fix bug when ImagePositionPatient is not available
+  if (!instances?.length || !instances.every(instance => instance.ImagePositionPatient)) {
     return;
   }
   const firstImagePositionPatient = toNumber(instances[0].ImagePositionPatient);

@@ -11,7 +11,8 @@ import { vec3 } from 'gl-matrix';
  */
 export default function sortInstances(instances: Array<any>) {
   // Return if only one instance e.g., multiframe
-  if (instances.length <= 1) {
+  // evibased, fix bug when ImagePositionPatient is not available
+  if (instances.length <= 1 || !instances.every(instance => instance.ImagePositionPatient)) {
     return instances;
   }
 

@@ -123,7 +123,6 @@ function PanelStudyBrowserTracking({
         // pop warning dialog
         console.error('no task found for user: ', username);
         popContactAdminDialog(uiDialogService);
-        return;
       }
       // only use the first task, assume only one task for each study
       const currentTask = userTasks[0];
@@ -173,13 +172,11 @@ function PanelStudyBrowserTracking({
       if (currentTimepointIndex === -1) {
         console.error('current timepoint not found in subject timepoints');
         popContactAdminDialog(uiDialogService);
-        return;
       }
       const baselineTimepoint = subjectTimepoints[0];
       if (baselineTimepoint.cycle !== '00') {
         console.error('baseline timepoint cycle not 00');
         popContactAdminDialog(uiDialogService);
-        return;
       }
 
       const ifCurrentTimepointBaseline =
@@ -197,7 +194,6 @@ function PanelStudyBrowserTracking({
         if (qidoStudyUIDIndex === -1) {
           console.error('qidoStudy not found in subject timepoints');
           popContactAdminDialog(uiDialogService);
-          return;
         }
         if (qidoStudy.TrialTimePointId !== subjectTimepoints[qidoStudyUIDIndex].cycle) {
           console.error(
@@ -207,7 +203,6 @@ function PanelStudyBrowserTracking({
           );
           // TODO: evibased, 后续要报错,当不匹配时，暂时comment掉
           // popContactAdminDialog(uiDialogService);
-          // return;
         }
         const selectedStudyAttributes = {
           studyInstanceUid: qidoStudy.StudyInstanceUID,

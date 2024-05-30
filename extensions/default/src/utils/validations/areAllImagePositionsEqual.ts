@@ -34,7 +34,8 @@ function _checkSeriesPositionShift(
  * @returns
  */
 export default function areAllImagePositionsEqual(instances: Array<any>): boolean {
-  if (!instances?.length) {
+  // evibased, fix bug when ImagePositionPatient is not available
+  if (!instances?.length || !instances.every(instance => instance.ImagePositionPatient)) {
     return false;
   }
   const firstImageOrientationPatient = toNumber(instances[0].ImageOrientationPatient);
