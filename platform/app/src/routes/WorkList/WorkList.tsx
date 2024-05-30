@@ -595,6 +595,12 @@ function WorkList({
                         // In case any event bubbles up for an invalid mode, prevent the navigation.
                         // For example, the event bubbles up when the icon embedded in the disabled button is clicked.
                         event.preventDefault();
+                        // check role, if manager, no mode allowed
+                        if (ifManager) {
+                          console.log('manager not allowed to enter mode!');
+                          return;
+                        }
+
                         // evibased, get the path for study
                         const query = new URLSearchParams();
                         if (filterValues.configUrl) {
@@ -659,7 +665,7 @@ function WorkList({
                 );
               })}
             </div>
-            {/* evibased: TODO: task manage here? */}
+            {/* evibased: task creation */}
             {ifManager && (
               <div className="flex flex-row gap-2">
                 <Select

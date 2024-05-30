@@ -111,6 +111,11 @@ function PanelStudyBrowserTracking({
       // get user task
       const authHeader = userAuthenticationService.getAuthorizationHeader();
       const username = getUserName(userAuthenticationService);
+      // user role
+      const realm_role = userAuthenticationService.getUser()?.profile?.realm_role;
+      const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
+      const ifQC = realm_role ? realm_role.includes('QC') : false;
+      const ifManager = !ifDoctor && !ifQC;
 
       // apiv2 graphql, get current user task/timpoint/subject info
       const userTasks = await getTaskByUserAndUID(
@@ -126,12 +131,12 @@ function PanelStudyBrowserTracking({
       }
       // only use the first task, assume only one task for each study
       const currentTask = userTasks[0];
-      const currentTimepoint = currentTask.timepoint;
-      const currentSubject = currentTimepoint.subject;
+      const currentTimepoint = currentTask?.timepoint;
+      const currentSubject = currentTimepoint?.subject;
       // set ifReadonlyMode to commandsManager CORNERSTONE context
       // TODO: readonly mode refactor
       const ifReadonlyMode = ['QC', 'QC-data', 'QC-report', 'arbitration'].includes(
-        currentTask.type
+        currentTask?.type
       );
       commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
       sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
@@ -777,7 +782,6 @@ async function _fetchBackendReports(
   const subjectId = mappedStudies[0].PatientID;
   try {
     // get username from userAuthenticationService
-    const authHeader = userAuthenticationService.getAuthorizationHeader();
     const username = getUserName(userAuthenticationService);
     const ifReviewTask = currentTask ? ['review', 'reading'].includes(currentTask.type) : false;
     // get all subject related tasks and reports
@@ -785,7 +789,6 @@ async function _fetchBackendReports(
     const url = new URL(appConfig.evibased['graphqlDR']);
     const headers = new Headers();
     headers.append('Content-Type', 'application/json');
-    // headers.append("Authorization", authHeader?.Authorization);  //disable for apiv2 for now
     // if filter by task username
     let queryStr;
     if (ifReviewTask) {
