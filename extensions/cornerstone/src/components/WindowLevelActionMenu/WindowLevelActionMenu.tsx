@@ -185,7 +185,7 @@ export function WindowLevelActionMenu({
         )}
 
         {volumeRenderingQualityRange && is3DVolume && (
-          <AllInOneMenu.SubMenu itemLabel="Rendering Options">
+          <AllInOneMenu.SubMenu itemLabel="重建属性设置">
             <VolumeRenderingOptions
               viewportId={viewportId}
               commandsManager={commandsManager}
