@@ -216,6 +216,7 @@ function PanelStudyBrowserTracking({
           modalities: qidoStudy.ModalitiesInStudy,
           numInstances: qidoStudy.NumInstances,
           trialTimePointId: qidoStudy.TrialTimePointId, //evibased, trial info
+          trialTimepointDescription: qidoStudy.TrialTimepointDescription, //evibased, trial info
           reports: qidoStudy.reports, //evibased, reports
           timepoint: subjectTimepoints[qidoStudyUIDIndex], //evibased, timepoint info
         };
@@ -405,7 +406,8 @@ function PanelStudyBrowserTracking({
   };
 
   // ~~ Initial Thumbnails
-  // get thumbnail for each displaySet，这里理解为每个series的thumbnail
+  // get thumbnail for each displaySet
+  // evibased, 每个series的thumbnail, 左边列表缩略图
   useEffect(() => {
     const currentDisplaySets = displaySetService.activeDisplaySets;
 
@@ -938,6 +940,8 @@ function _mapDisplaySets(
         },
         isTracked: trackedSeriesInstanceUIDs.includes(ds.SeriesInstanceUID),
         isHydratedForDerivedDisplaySet: ds.isHydrated,
+        studyDescription: ds.ClinicalTrialTimePointDescription, // evibased, study info
+        bodyPart: ds.BodyPartExamined, // evibased, study info
       };
 
       if (componentType === 'thumbnailNoImage') {

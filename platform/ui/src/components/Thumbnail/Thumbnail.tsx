@@ -23,6 +23,7 @@ const Thumbnail = ({
   isActive,
   onClick,
   onDoubleClick,
+  studyDescription, // evibased, study description
 }): React.ReactNode => {
   // TODO: We should wrap our thumbnail to create a "DraggableThumbnail", as
   // this will still allow for "drag", even if there is no drop target for the
@@ -100,6 +101,10 @@ const Thumbnail = ({
           />
         </div>
         <div className="break-all text-base text-white">{description}</div>
+        {/* evibased, study desc */}
+        {studyDescription && (
+          <div className="break-all text-base text-white">{studyDescription}</div>
+        )}
       </div>
     </div>
   );

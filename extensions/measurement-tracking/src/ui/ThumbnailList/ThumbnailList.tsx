@@ -35,6 +35,8 @@ const ThumbnailList = ({
           messages,
           imageAltText,
           isHydratedForDerivedDisplaySet,
+          bodyPart, // evibased, body part examined
+          studyDescription, // evibased, study description
         }) => {
           const isActive = activeDisplaySetInstanceUIDs.includes(displaySetInstanceUID);
           switch (componentType) {
@@ -54,6 +56,7 @@ const ThumbnailList = ({
                   isActive={isActive}
                   onClick={() => onThumbnailClick(displaySetInstanceUID)}
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
+                  studyDescription={studyDescription}
                 />
               );
             case 'thumbnailTracked':
@@ -74,6 +77,7 @@ const ThumbnailList = ({
                   onClick={() => onThumbnailClick(displaySetInstanceUID)}
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
                   onClickUntrack={() => onClickUntrack(displaySetInstanceUID)}
+                  studyDescription={studyDescription}
                 />
               );
             case 'thumbnailNoImage':
@@ -93,6 +97,7 @@ const ThumbnailList = ({
                   onClick={() => onThumbnailClick(displaySetInstanceUID)}
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
                   isHydratedForDerivedDisplaySet={isHydratedForDerivedDisplaySet}
+                  studyDescription={studyDescription}
                 />
               );
             default:

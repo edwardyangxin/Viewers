@@ -26,6 +26,7 @@ function ThumbnailTracked({
   // viewportIdentificator,
   isTracked,
   isActive,
+  studyDescription, // evibased
 }) {
   const { t } = useTranslation('ThumbnailTracked');
   const trackedIcon = isTracked ? 'circled-checkmark' : 'dotted-circle';
@@ -94,6 +95,7 @@ function ThumbnailTracked({
         isActive={isActive}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
+        studyDescription={studyDescription}
       />
     </div>
   );

@@ -22,6 +22,7 @@ const ThumbnailNoImage = ({
   dragData,
   isActive,
   isHydratedForDerivedDisplaySet,
+  studyDescription, // evibased
 }) => {
   const [collectedProps, drag, dragPreview] = useDrag({
     type: 'displayset',

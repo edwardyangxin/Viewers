@@ -78,6 +78,7 @@ const makeDisplaySet = instances => {
   // set appropriate attributes to image set...
   const messages = getDisplaySetMessages(instances, isReconstructable, isDynamicVolume);
 
+  // evibased, imageSet attributes
   imageSet.setAttributes({
     volumeLoaderSchema,
     displaySetInstanceUID: imageSet.uid, // create a local alias for the imageSet UID
@@ -99,6 +100,12 @@ const makeDisplaySet = instances => {
     averageSpacingBetweenFrames: averageSpacingBetweenFrames || null,
     isDynamicVolume,
     dynamicVolumeInfo,
+    Manufacturer: instance.Manufacturer,
+    BodyPartExamined: instance.BodyPartExamined, // evibased
+    CardiacNumberOfImages: instance.CardiacNumberOfImages, // evibased
+    ClinicalTrialTimePointID: instance.ClinicalTrialTimePointID, // evibased
+    ClinicalTrialTimePointDescription: instance.ClinicalTrialTimePointDescription, // evibased
+    PerformedProcedureStepDescription: instance.PerformedProcedureStepDescription, // evibased
   });
 
   // Sort the images in this series if needed
