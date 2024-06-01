@@ -921,12 +921,37 @@ function _mapDisplaySets(
 
       const { displaySetInstanceUID } = ds;
 
+      function formatDate2(date) {
+        return date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+      }
+
+      function formatTime(time) {
+        return time.replace(/(\d{2})(\d{2})(\d{2})/, '$1:$2:$3');
+      }
+
+      function formatTimestamp(date, time) {
+        if (!date && !time) {
+          return 0;
+        }
+        if (!time) {
+          return Date.parse(formatDate2(date));
+        }
+        return Date.parse(formatDate2(date) + 'T' + formatTime(time));
+      }
+
+      // evibased, study desc for thumbnail
+      const studyDesc =
+        ds.PerformedProcedureStepDescription && ds.PerformedProcedureStepDescription.length > 0
+          ? ds.PerformedProcedureStepDescription
+          : ds.ClinicalTrialTimePointDescription;
       const thumbnailProps = {
         displaySetInstanceUID,
         description: ds.SeriesDescription,
         seriesNumber: ds.SeriesNumber,
         modality: ds.Modality,
         seriesDate: formatDate(ds.SeriesDate),
+        seriesTime: ds.SeriesTime,
+        seriesTimestamp: formatTimestamp(ds.SeriesDate, ds.SeriesTime), //evibased, for sorting
         numInstances: ds.numImageFrames,
         countIcon: ds.countIcon,
         messages: ds.messages,
@@ -940,7 +965,7 @@ function _mapDisplaySets(
         },
         isTracked: trackedSeriesInstanceUIDs.includes(ds.SeriesInstanceUID),
         isHydratedForDerivedDisplaySet: ds.isHydrated,
-        studyDescription: ds.ClinicalTrialTimePointDescription, // evibased, study info
+        studyDescription: studyDesc, // evibased, study info
         bodyPart: ds.BodyPartExamined, // evibased, study info
       };
 
@@ -1090,21 +1115,21 @@ function _createStudyBrowserTabs(
     );
 
     // Sort them
-    const dsSortFn = hangingProtocolService.getDisplaySetSortFunction();
-    displaySetsForStudy.sort(dsSortFn);
+    // const dsSortFn = hangingProtocolService.getDisplaySetSortFunction();
+    // displaySetsForStudy.sort(dsSortFn);
 
-    /* Sort by series number, then by series date
-      displaySetsForStudy.sort((a, b) => {
-        if (a.seriesNumber !== b.seriesNumber) {
-          return a.seriesNumber - b.seriesNumber;
-        }
+    /* Sort by series number, then by series date */
+    // evibased, sort by series timestamp(date&time calculated), 不使用默认的series number排序
+    displaySetsForStudy.sort((a, b) => {
+      // if (a.seriesNumber !== b.seriesNumber) {
+      //   return a.seriesNumber - b.seriesNumber;
+      // }
 
-        const seriesDateA = Date.parse(a.seriesDate);
-        const seriesDateB = Date.parse(b.seriesDate);
+      const seriesTimestampA = a.seriesTimestamp;
+      const seriesTimestampB = b.seriesTimestamp;
 
-        return seriesDateA - seriesDateB;
-      });
-    */
+      return seriesTimestampA - seriesTimestampB;
+    });
 
     // Map the study to it's tab/view representation
     const tabStudy = Object.assign({}, study, {
