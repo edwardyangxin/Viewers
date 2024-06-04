@@ -103,9 +103,9 @@ function modeFactory({ modeConfiguration }) {
       toolbarService.createButtonSection('primary', [
         // evibased, top toolbar
         // group annotation tools
-        'MeasurementTools',
+        // 'MeasurementTools',
         // annotation tools
-        'Length',
+        // 'Length',
         'Bidirectional',
         'ArrowAnnotate',
         'Rectangle',

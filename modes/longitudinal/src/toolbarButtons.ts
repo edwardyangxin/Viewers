@@ -121,34 +121,35 @@ const toolbarButtons: Button[] = [
   //     ],
   //   },
   // },
-  {
-    id: 'Length',
-    uiType: 'ohif.radioGroup',
-    props: {
-      type: 'tool',
-      icon: 'tool-length',
-      label: '可测量病灶(长径)',
-      commands: [
-        {
-          commandName: 'setToolActive',
-          commandOptions: {
-            toolName: 'Length',
-          },
-          context: 'CORNERSTONE',
-        },
-        {
-          commandName: 'setToolActive',
-          commandOptions: {
-            toolName: 'SRLength',
-            toolGroupId: 'SRToolGroup',
-          },
-          // we can use the setToolActive command for this from Cornerstone commandsModule
-          context: 'CORNERSTONE',
-        },
-      ],
-      evaluate: 'evaluate.cornerstoneTool',
-    },
-  },
+  // evibased, 单径测量暂时不用
+  // {
+  //   id: 'Length',
+  //   uiType: 'ohif.radioGroup',
+  //   props: {
+  //     type: 'tool',
+  //     icon: 'tool-length',
+  //     label: '可测量病灶(长径)',
+  //     commands: [
+  //       {
+  //         commandName: 'setToolActive',
+  //         commandOptions: {
+  //           toolName: 'Length',
+  //         },
+  //         context: 'CORNERSTONE',
+  //       },
+  //       {
+  //         commandName: 'setToolActive',
+  //         commandOptions: {
+  //           toolName: 'SRLength',
+  //           toolGroupId: 'SRToolGroup',
+  //         },
+  //         // we can use the setToolActive command for this from Cornerstone commandsModule
+  //         context: 'CORNERSTONE',
+  //       },
+  //     ],
+  //     evaluate: 'evaluate.cornerstoneTool',
+  //   },
+  // },
   {
     id: 'Bidirectional',
     uiType: 'ohif.radioGroup',
