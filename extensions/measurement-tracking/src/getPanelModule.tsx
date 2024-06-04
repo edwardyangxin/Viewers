@@ -1,5 +1,10 @@
 import { Types } from '@ohif/core';
-import { PanelMeasurementTableTracking, PanelStudyBrowserTracking, PastReports } from './panels';
+import {
+  PanelMeasurementTableTracking,
+  PanelQCData,
+  PanelStudyBrowserTracking,
+  PastReports,
+} from './panels';
 import i18n from 'i18next';
 
 // TODO:
@@ -38,6 +43,18 @@ function getPanelModule({ commandsManager, extensionManager, servicesManager }):
       iconLabel: 'pastReports',
       label: '往期报告',
       component: PastReports.bind(null, {
+        commandsManager,
+        extensionManager,
+        servicesManager,
+      }),
+    },
+
+    {
+      name: 'QCData',
+      iconName: 'tab-patient-info',
+      iconLabel: 'QCData',
+      label: '质控数据',
+      component: PanelQCData.bind(null, {
         commandsManager,
         extensionManager,
         servicesManager,
