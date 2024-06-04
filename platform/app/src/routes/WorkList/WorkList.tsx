@@ -94,7 +94,7 @@ function WorkList({
   projects, // evibased, projects list for manager
 }) {
   // evibased, get username & role
-  const { userAuthenticationService } = servicesManager.services;
+  const { uiNotificationService, userAuthenticationService } = servicesManager.services;
   const user = userAuthenticationService.getUser();
   const username = user?.profile?.preferred_username;
   const realm_role = user?.profile?.realm_role;
@@ -237,7 +237,12 @@ function WorkList({
         };
         const response = await fetch(url, fetchOptions);
         if (!response.ok) {
-          console.log('failed to get group list');
+          console.error('failed to get group list');
+          uiNotificationService.show({
+            title: '数据获取',
+            message: '获取用户组列表失败',
+            type: 'error',
+          });
           return;
         }
         const groups = await response.json();
@@ -268,6 +273,11 @@ function WorkList({
         }
       } catch (ex) {
         console.warn(ex);
+        uiNotificationService.show({
+          title: '数据获取',
+          message: `获取用户列表失败: ${ex.message}`,
+          type: 'error',
+        });
       }
     };
     if (ifManager) {
@@ -330,8 +340,12 @@ function WorkList({
         seriesInStudiesMap.set(studyInstanceUid, sortBySeriesDate(series));
         setStudiesWithSeriesData([...studiesWithSeriesData, studyInstanceUid]);
       } catch (ex) {
-        // TODO: UI Notification Service
         console.warn(ex);
+        uiNotificationService.show({
+          title: '数据获取',
+          message: `获取序列数据失败: ${ex.message}`,
+          type: 'error',
+        });
       }
     };
 
@@ -692,6 +706,7 @@ function WorkList({
                     }
                     console.log('update timepoint status: ', timepoint, timepointStatusValue);
                     const newTimepoint = await _updateTimepointStatus(
+                      uiNotificationService,
                       timepoint.id,
                       timepointStatusValue,
                       appConfig.evibased['apiv2_timepoints_url']
@@ -766,6 +781,7 @@ function WorkList({
 
                     console.log('create new task: ', usernameTask, userTaskType);
                     const newTask = await _createTask(
+                      uiNotificationService,
                       usernameTask,
                       userTaskType,
                       studyInstanceUid,
@@ -820,6 +836,7 @@ function WorkList({
                     }
                     console.log('delete task: ', taskDeleteById);
                     const success = await _deleteTask(
+                      uiNotificationService,
                       taskDeleteById,
                       appConfig.evibased['apiv2_tasks_url']
                     );
@@ -1022,7 +1039,12 @@ function getTimepointName(timepointId) {
   return timepointName;
 }
 
-async function _updateTimepointStatus(timepointId, timepointStatus, timepointUrl) {
+async function _updateTimepointStatus(
+  uiNotificationService,
+  timepointId,
+  timepointStatus,
+  timepointUrl
+) {
   const url = new URL(`${timepointUrl}/${timepointId}`);
   const body = {
     id: timepointId,
@@ -1039,12 +1061,32 @@ async function _updateTimepointStatus(timepointId, timepointStatus, timepointUrl
   const response = await fetch(url, fetchOptions);
   if (!response.ok) {
     const data = await response.text();
+    if (uiNotificationService) {
+      uiNotificationService.show({
+        title: '数据更新',
+        message: `更新访视状态失败: ${data}`,
+        type: 'error',
+      });
+    }
     throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
+  }
+  if (uiNotificationService) {
+    uiNotificationService.show({
+      title: '数据更新',
+      message: `更新访视状态成功`,
+      type: 'success',
+    });
   }
   return await response.json();
 }
 
-async function _createTask(usernameTask, userTaskType, studyInstanceUid, postTaskUrl) {
+async function _createTask(
+  uiNotificationService,
+  usernameTask,
+  userTaskType,
+  studyInstanceUid,
+  postTaskUrl
+) {
   const url = new URL(postTaskUrl);
   const body = {
     type: userTaskType,
@@ -1066,13 +1108,27 @@ async function _createTask(usernameTask, userTaskType, studyInstanceUid, postTas
   const response = await fetch(url, fetchOptions);
   if (!response.ok) {
     const data = await response.text();
+    if (uiNotificationService) {
+      uiNotificationService.show({
+        title: '数据更新',
+        message: `创建任务失败: ${data}`,
+        type: 'error',
+      });
+    }
     throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
+  }
+  if (uiNotificationService) {
+    uiNotificationService.show({
+      title: '数据更新',
+      message: `创建任务成功`,
+      type: 'success',
+    });
   }
   const result = await response.json();
   return result;
 }
 
-async function _deleteTask(taskId, deleteTaskUrl) {
+async function _deleteTask(uiNotificationService, taskId, deleteTaskUrl) {
   const url = new URL(`${deleteTaskUrl}/${taskId}`);
   const fetchOptions = {
     method: 'DELETE',
@@ -1084,7 +1140,21 @@ async function _deleteTask(taskId, deleteTaskUrl) {
   const response = await fetch(url, fetchOptions);
   if (!response.ok) {
     const data = await response.text();
+    if (uiNotificationService) {
+      uiNotificationService.show({
+        title: '数据更新',
+        message: `删除任务失败: ${data}`,
+        type: 'error',
+      });
+    }
     throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
+  }
+  if (uiNotificationService) {
+    uiNotificationService.show({
+      title: '数据更新',
+      message: `删除任务成功`,
+      type: 'success',
+    });
   }
   return true;
 }

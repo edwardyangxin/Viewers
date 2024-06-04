@@ -29,7 +29,7 @@ const areLocationsTheSame = (location0, location1) => {
 function DataSourceWrapper(props) {
   const navigate = useNavigate();
   const { children: LayoutTemplate, servicesManager, extensionManager, ...rest } = props;
-  const { userAuthenticationService, logSinkService } = servicesManager.services;
+  const { uiNotificationService, userAuthenticationService, logSinkService } = servicesManager.services;
   const { _appConfig } = extensionManager;
   const params = useParams();
   const location = useLocation();
@@ -239,6 +239,11 @@ function DataSourceWrapper(props) {
           const response = await fetch(url, requestOptions);
           if (!response.ok) {
             const body = await response.text();
+            uiNotificationService.show({
+              title: '数据获取',
+              message: `获取任务列表失败! body: ${body}`,
+              type: 'error',
+            });
             throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
           }
           let userTasks = [];
@@ -324,6 +329,11 @@ function DataSourceWrapper(props) {
           const response = await fetch(url, requestOptions);
           if (!response.ok) {
             const body = await response.text();
+            uiNotificationService.show({
+              title: '数据获取',
+              message: `获取时间点列表失败! body: ${body}`,
+              type: 'error',
+            });
             throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
           }
           let timepoints = [];
@@ -395,6 +405,11 @@ function DataSourceWrapper(props) {
           if (!response.ok) {
             study.tasks = [];
             const data = await response.text();
+            uiNotificationService.show({
+              title: '数据获取',
+              message: `获取任务列表失败! data: ${data}`,
+              type: 'error',
+            });
             throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
           }
           let tasks = [];
