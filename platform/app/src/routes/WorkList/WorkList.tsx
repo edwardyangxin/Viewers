@@ -439,9 +439,11 @@ function WorkList({
     // task info
     let taskInfoStr = '';
     let taskExtendable = true;
+    const taskTypes = [];
     const tasks = timepointsState[studyInstanceUid]?.tasks || [];
     for (const task of tasks) {
       taskInfoStr += `${taskTypeMap[task.type]}(${task.username}): ${taskStatusMap[task.status]} <br>`;
+      taskTypes.push(task.type);
     }
     if (ifDoctor) {
       // for doctor, only 1 task per study. 'create' task is extendable
@@ -572,112 +574,124 @@ function WorkList({
                     const isValidA = a.isValidMode({
                       modalities: modalities.replaceAll('/', '\\'),
                       study,
+                      taskTypes: taskTypes,
                     }).valid;
                     const isValidB = b.isValidMode({
                       modalities: modalities.replaceAll('/', '\\'),
                       study,
+                      taskTypes: taskTypes,
                     }).valid;
 
                     return isValidB - isValidA;
                   })
                 : appConfig.loadedModes
-              ).map((mode, i) => {
-                const modalitiesToCheck = modalities.replaceAll('/', '\\');
+              )
+                .filter(
+                  mode =>
+                    mode.isValidMode({
+                      modalities: modalities.replaceAll('/', '\\'),
+                      study,
+                      taskTypes: taskTypes,
+                    }).valid
+                )
+                .map((mode, i) => {
+                  const modalitiesToCheck = modalities.replaceAll('/', '\\');
 
-                const { valid: isValidMode, description: invalidModeDescription } =
-                  mode.isValidMode({
-                    modalities: modalitiesToCheck,
-                    study,
-                  });
-                // TODO: Modes need a default/target route? We mostly support a single one for now.
-                // We should also be using the route path, but currently are not
-                // mode.routeName
-                // mode.routes[x].path
-                // Don't specify default data source, and it should just be picked up... (this may not currently be the case)
-                // How do we know which params to pass? Today, it's just StudyInstanceUIDs and configUrl if exists
-                return (
-                  mode.displayName && (
-                    // evibased, mode button and build url path for study
-                    <Link
-                      className={isValidMode ? '' : 'cursor-not-allowed'}
-                      key={i}
-                      // eviabsed, dynamically get the path for study
-                      // to={`${dataPath ? '../../' : ''}${mode.routeName}${
-                      //   dataPath || ''
-                      // }?${query.toString()}`}
-                      onClick={async event => {
-                        // In case any event bubbles up for an invalid mode, prevent the navigation.
-                        // For example, the event bubbles up when the icon embedded in the disabled button is clicked.
-                        event.preventDefault();
-                        // check role, if manager, no mode allowed
-                        if (ifManager) {
-                          console.log('manager not allowed to enter mode!');
-                          return;
-                        }
+                  const { valid: isValidMode, description: invalidModeDescription } =
+                    mode.isValidMode({
+                      modalities: modalitiesToCheck,
+                      study,
+                      taskTypes: taskTypes,
+                    });
+                  // TODO: Modes need a default/target route? We mostly support a single one for now.
+                  // We should also be using the route path, but currently are not
+                  // mode.routeName
+                  // mode.routes[x].path
+                  // Don't specify default data source, and it should just be picked up... (this may not currently be the case)
+                  // How do we know which params to pass? Today, it's just StudyInstanceUIDs and configUrl if exists
+                  return (
+                    mode.displayName && (
+                      // evibased, mode button and build url path for study
+                      <Link
+                        className={isValidMode ? '' : 'cursor-not-allowed'}
+                        key={i}
+                        // eviabsed, dynamically get the path for study
+                        // to={`${dataPath ? '../../' : ''}${mode.routeName}${
+                        //   dataPath || ''
+                        // }?${query.toString()}`}
+                        onClick={async event => {
+                          // In case any event bubbles up for an invalid mode, prevent the navigation.
+                          // For example, the event bubbles up when the icon embedded in the disabled button is clicked.
+                          event.preventDefault();
+                          // check role, if manager, no mode allowed
+                          if (ifManager) {
+                            console.log('manager not allowed to enter mode!');
+                            return;
+                          }
 
-                        // evibased, get the path for study
-                        const query = new URLSearchParams();
-                        if (filterValues.configUrl) {
-                          query.append('configUrl', filterValues.configUrl);
-                        }
-                        let path = `${dataPath ? '../../' : ''}${mode.routeName}${dataPath || ''}?`;
-                        if (ifBaseline) {
-                          query.append('StudyInstanceUIDs', studyInstanceUid);
-                        } else {
-                          // get the last study uid for comparison mode
-                          // const comparedStudy = await getStudyInfoByTrialId(dataSource, mrn, `T${trialId - 1}`);
-                          const timepoints = timepoint?.subject?.timepoints;
-                          if (!timepoints) {
+                          // evibased, get the path for study
+                          const query = new URLSearchParams();
+                          if (filterValues.configUrl) {
+                            query.append('configUrl', filterValues.configUrl);
+                          }
+                          let path = `${dataPath ? '../../' : ''}${mode.routeName}${dataPath || ''}?`;
+                          if (ifBaseline) {
                             query.append('StudyInstanceUIDs', studyInstanceUid);
                           } else {
-                            const currentStudyIndex = timepoints.findIndex(
-                              tp => tp.UID === studyInstanceUid
-                            );
-                            if (currentStudyIndex === -1) {
-                              query.append('StudyInstanceUIDs', studyInstanceUid);
-                            } else if (currentStudyIndex === 0) {
+                            // get the last study uid for comparison mode
+                            // const comparedStudy = await getStudyInfoByTrialId(dataSource, mrn, `T${trialId - 1}`);
+                            const timepoints = timepoint?.subject?.timepoints;
+                            if (!timepoints) {
                               query.append('StudyInstanceUIDs', studyInstanceUid);
                             } else {
-                              const comparedTimepointUID = timepoints[currentStudyIndex - 1].UID;
-                              query.append(
-                                'StudyInstanceUIDs',
-                                studyInstanceUid + `,${comparedTimepointUID}`
+                              const currentStudyIndex = timepoints.findIndex(
+                                tp => tp.UID === studyInstanceUid
                               );
-                              query.append('hangingprotocolId', '@ohif/timepointCompare');
+                              if (currentStudyIndex === -1) {
+                                query.append('StudyInstanceUIDs', studyInstanceUid);
+                              } else if (currentStudyIndex === 0) {
+                                query.append('StudyInstanceUIDs', studyInstanceUid);
+                              } else {
+                                const comparedTimepointUID = timepoints[currentStudyIndex - 1].UID;
+                                query.append(
+                                  'StudyInstanceUIDs',
+                                  studyInstanceUid + `,${comparedTimepointUID}`
+                                );
+                                query.append('hangingprotocolId', '@ohif/timepointCompare');
+                              }
                             }
                           }
-                        }
-                        path += query.toString();
-                        navigate(path);
-                      }}
-                    >
-                      <Button
-                        type={ButtonEnums.type.primary}
-                        size={ButtonEnums.size.medium}
-                        disabled={!isValidMode}
-                        startIconTooltip={
-                          !isValidMode ? (
-                            <div className="font-inter flex w-[206px] whitespace-normal text-left text-xs font-normal text-white	">
-                              {invalidModeDescription}
-                            </div>
-                          ) : null
-                        }
-                        startIcon={
-                          <Icon
-                            className="!h-[20px] !w-[20px] text-black"
-                            name={isValidMode ? 'launch-arrow' : 'launch-info'}
-                          />
-                        } // launch-arrow | launch-info
-                        onClick={() => {}}
-                        dataCY={`mode-${mode.routeName}-${studyInstanceUid}`}
-                        className={isValidMode ? 'text-[13px]' : 'bg-[#222d44] text-[13px]'}
+                          path += query.toString();
+                          navigate(path);
+                        }}
                       >
-                        {mode.displayName}
-                      </Button>
-                    </Link>
-                  )
-                );
-              })}
+                        <Button
+                          type={ButtonEnums.type.primary}
+                          size={ButtonEnums.size.medium}
+                          disabled={!isValidMode}
+                          startIconTooltip={
+                            !isValidMode ? (
+                              <div className="font-inter flex w-[206px] whitespace-normal text-left text-xs font-normal text-white	">
+                                {invalidModeDescription}
+                              </div>
+                            ) : null
+                          }
+                          startIcon={
+                            <Icon
+                              className="!h-[20px] !w-[20px] text-black"
+                              name={isValidMode ? 'launch-arrow' : 'launch-info'}
+                            />
+                          } // launch-arrow | launch-info
+                          onClick={() => {}}
+                          dataCY={`mode-${mode.routeName}-${studyInstanceUid}`}
+                          className={isValidMode ? 'text-[13px]' : 'bg-[#222d44] text-[13px]'}
+                        >
+                          {mode.displayName}
+                        </Button>
+                      </Link>
+                    )
+                  );
+                })}
             </div>
             {/* evibased: task creation */}
             {ifManager && (

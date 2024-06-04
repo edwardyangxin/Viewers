@@ -44,6 +44,12 @@ const config = {
         commonjs: '@ohif/mode-longitudinal',
         amd: '@ohif/mode-longitudinal',
         root: '@ohif/mode-longitudinal',
+      },
+      '@ohif/mode-qc-data': {
+        commonjs2: '@ohif/mode-qc-data',
+        commonjs: '@ohif/mode-qc-data',
+        amd: '@ohif/mode-qc-data',
+        root: '@ohif/mode-qc-data',
       }
     },
   ],

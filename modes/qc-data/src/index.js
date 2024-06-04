@@ -1,5 +1,4 @@
 import { hotkeys } from '@ohif/core';
-import i18n from 'i18next';
 import { id } from './id';
 import initToolGroups from './initToolGroups';
 import toolbarButtons from './toolbarButtons';
@@ -66,8 +65,8 @@ function modeFactory({ modeConfiguration }) {
     // TODO: We're using this as a route segment
     // We should not be.
     id,
-    routeName: 'viewer',
-    displayName: i18n.t('Modes:Basic Viewer'),
+    routeName: 'qc-data',
+    displayName: 'QC Data', 
     /**
      * Lifecycle hooks
      */
@@ -172,8 +171,8 @@ function modeFactory({ modeConfiguration }) {
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
       logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
-        msg: 'entering viewer mode',
-        action: 'ENTER_VIEWER',
+        msg: 'entering qc-data mode',
+        action: 'ENTER_QC_DATA',
         username: userAuthenticationService.getUser()?.profile?.preferred_username,
         authHeader: userAuthenticationService.getAuthorizationHeader(),
         data: {
@@ -209,8 +208,8 @@ function modeFactory({ modeConfiguration }) {
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
       logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
-        msg: 'leave viewer mode',
-        action: 'LEAVE_VIEWER',
+        msg: 'leave qc-data mode',
+        action: 'LEAVE_QC_DATA',
         username: userAuthenticationService.getUser()?.profile?.preferred_username,
         authHeader: userAuthenticationService.getAuthorizationHeader(),
         data: {
@@ -224,28 +223,21 @@ function modeFactory({ modeConfiguration }) {
       series: [],
     },
 
-    isValidMode: function ({ modalities, taskTypes }) {
-      // const modalities_list = modalities.split('\\');
-
+    isValidMode: function ({ taskTypes }) {
       let valid = false;
-      for (const taskType of taskTypes) {
-        if (taskType !== 'QC-data') {
-          valid = true;
-          break;
-        }
+      if (taskTypes && taskTypes.includes('QC-data')) {
+        valid = true;
       }
+
       // Exclude non-image modalities
       return {
-        // valid: !!modalities_list.filter(modality => NON_IMAGE_MODALITIES.indexOf(modality) === -1)
-        //   .length,
-        valid,
-        description:
-          'The mode does not support studies that ONLY include the following modalities: SM, ECG, SR, SEG, RTSTRUCT',
+        valid: valid,
+        description: 'only QC-data taskType is supported',
       };
     },
     routes: [
       {
-        path: 'longitudinal',
+        path: 'qc-data',
         /*init: ({ servicesManager, extensionManager }) => {
           //defaultViewerRouteInit
         },*/
@@ -254,8 +246,7 @@ function modeFactory({ modeConfiguration }) {
             id: ohif.layout,
             props: {
               leftPanels: [tracked.thumbnailList],
-              // rightPanels: [dicomSeg.panel, tracked.measurements], // evibased, disable dicomSeg panel
-              rightPanels: [tracked.measurements, tracked.pastReports],
+              rightPanels: [tracked.measurements],
               rightPanelClosed: false,
               viewports: [
                 {
