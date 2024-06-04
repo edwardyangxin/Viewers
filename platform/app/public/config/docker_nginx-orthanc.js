@@ -19,7 +19,7 @@ window.config = {
   },
   showStudyList: true,
   extensions: [],
-  modes: [],
+  modes: ['@ohif/mode-qc-data'],
   // below flag is for performance reasons, but it might not work for all servers
   showWarningMessageForCrossOrigin: true,
   showCPUFallbackMessage: true,
