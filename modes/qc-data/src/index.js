@@ -4,10 +4,6 @@ import initToolGroups from './initToolGroups';
 import toolbarButtons from './toolbarButtons';
 import moreTools from './moreTools';
 
-// Allow this mode by excluding non-imaging modalities such as SR, SEG
-// Also, SM is not a simple imaging modalities, so exclude it.
-const NON_IMAGE_MODALITIES = ['SM', 'ECG', 'SR', 'SEG', 'RTSTRUCT'];
-
 const ohif = {
   layout: '@ohif/extension-default.layoutTemplateModule.viewerLayout',
   sopClassHandler: '@ohif/extension-default.sopClassHandlerModule.stack',
@@ -60,13 +56,14 @@ const extensionDependencies = {
 };
 
 function modeFactory({ modeConfiguration }) {
+  // deprecate, no subs to unsubscribe
   let _activatePanelTriggersSubscriptions = [];
   return {
     // TODO: We're using this as a route segment
     // We should not be.
     id,
     routeName: 'qc-data',
-    displayName: 'QC Data', 
+    displayName: '数据审核',
     /**
      * Lifecycle hooks
      */
@@ -102,7 +99,7 @@ function modeFactory({ modeConfiguration }) {
       toolbarService.createButtonSection('primary', [
         // evibased, top toolbar
         // group annotation tools
-        'MeasurementTools',
+        // 'MeasurementTools',
         // annotation tools
         'Length',
         'Bidirectional',
@@ -111,28 +108,15 @@ function modeFactory({ modeConfiguration }) {
         // other tools
         'Zoom',
         'Pan',
-        'TrackballRotate',
+        // 'TrackballRotate',
         'WindowLevel',
         // 'Capture',
-        'Layout',
-        'StackImageSync',
+        // 'Layout',
+        // 'StackImageSync',
         // 'MPR', // evibased, use layout MPR instead
-        'Crosshairs',
+        // 'Crosshairs',
         'MoreTools',
       ]);
-
-      // evibased, comment 没有需要两套toolbar，这里是一个为了MRP mode下toolbar的例子
-      // toolbarService.createButtonSection(MPR_TOOL_GROUP_ID, [
-      //   'MeasurementTools',
-      //   'Zoom',
-      //   'WindowLevel',
-      //   'Pan',
-      //   // 'Capture',
-      //   // 'Layout',
-      //   'MPR',
-      //   'Crosshairs',
-      //   'MoreTools',
-      // ]);
 
       // evibased, init customizations, for custom context menu
       customizationService.addModeCustomizations([
@@ -142,28 +126,6 @@ function modeFactory({ modeConfiguration }) {
           disableEditing: true,
         },
       ]);
-
-      // // ActivatePanel event trigger for when a segmentation or measurement is added.
-      // // Do not force activation so as to respect the state the user may have left the UI in.
-      // _activatePanelTriggersSubscriptions = [
-      //   ...panelService.addActivatePanelTriggers(dicomSeg.panel, [
-      //     {
-      //       sourcePubSubService: segmentationService,
-      //       sourceEvents: [
-      //         segmentationService.EVENTS.SEGMENTATION_PIXEL_DATA_CREATED,
-      //       ],
-      //     },
-      //   ]),
-      //   ...panelService.addActivatePanelTriggers(tracked.measurements, [
-      //     {
-      //       sourcePubSubService: measurementService,
-      //       sourceEvents: [
-      //         measurementService.EVENTS.MEASUREMENT_ADDED,
-      //         measurementService.EVENTS.RAW_MEASUREMENT_ADDED,
-      //       ],
-      //     },
-      //   ]),
-      // ];
 
       // evibased, audit log
       const { userAuthenticationService } = servicesManager.services;
