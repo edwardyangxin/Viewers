@@ -26,7 +26,7 @@ const MeasurementItem = ({
   onDelete,
   tableID, // evibased
   canEdit=true,
-  warningInfo={}, // evibased, for warning info tooltip
+  warningInfo=[], // evibased, for warning info tooltip
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [isIndexHovering, setIsIndexHovering] = useState(false);

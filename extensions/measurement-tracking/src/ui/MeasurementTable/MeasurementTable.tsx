@@ -63,7 +63,9 @@ const MeasurementTable = ({
       >
         <div className="flex items-center justify-start">
           <div>
-            <span className="text-base font-bold uppercase tracking-widest text-white">{title}</span>
+            <span className="text-base font-bold uppercase tracking-widest text-white">
+              {title}
+            </span>
           </div>
           <WarningInfoTooltip
             id={'MT' + tableID}
@@ -79,7 +81,11 @@ const MeasurementTable = ({
               key={measurementItem.uid}
               uid={measurementItem.uid}
               index={parseInt(measurementItem.label.split('|')[0])}
-              label={measurementItem.label.split('|')[2] in organMapping ? organMapping[measurementItem.label.split('|')[2]] : t('Edit Measurement')} // 获取label的第二位organ信息
+              label={
+                measurementItem.label.split('|')[2] in organMapping
+                  ? organMapping[measurementItem.label.split('|')[2]]
+                  : t('Edit Measurement')
+              } // 获取label的第二位organ信息
               isActive={measurementItem.isActive}
               displayText={measurementItem.displayText}
               item={measurementItem}
