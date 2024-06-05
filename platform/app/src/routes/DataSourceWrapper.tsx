@@ -256,9 +256,12 @@ function DataSourceWrapper(props) {
 
           // map studyInstanceUid to task
           userTasks.forEach(task => {
-            studyUIDInfoMap[task?.timepoint?.UID] = {};
-            studyUIDInfoMap[task?.timepoint?.UID].timepoint = task?.timepoint;
-            studyUIDInfoMap[task?.timepoint?.UID].tasks = [task];
+            if (!studyUIDInfoMap[task?.timepoint?.UID]) {
+              studyUIDInfoMap[task?.timepoint?.UID] = { timepoint: task?.timepoint };
+              studyUIDInfoMap[task?.timepoint?.UID].tasks = [task];
+            } else {
+              studyUIDInfoMap[task?.timepoint?.UID].tasks.push(task);
+            }
           });
           // filter studies by studyInstanceUid list
           queryFilterValues.studyInstanceUid = Object.keys(studyUIDInfoMap);

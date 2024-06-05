@@ -446,8 +446,8 @@ function WorkList({
       taskTypes.push(task.type);
     }
     if (ifDoctor) {
-      // for doctor, only 1 task per study. 'create' task is extendable
-      taskExtendable = tasks[0]?.status === 'create';
+      // 'create' status in tasks
+      taskExtendable = tasks.filter(task => task.status === 'create').length > 0;
     }
     // task selections
     let usernameTask = timepointsState[studyInstanceUid]?.taskSelect?.username;
