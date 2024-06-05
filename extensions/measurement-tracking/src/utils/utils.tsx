@@ -19,6 +19,7 @@ import {
   nonTargetResponseOptions,
   responseOptions,
   LesionMeasurementOptions,
+  dataProblemTypeMapping,
 } from './mappings';
 import { utils } from '@ohif/core';
 import TargetListTable, { TargetListExpandedRow } from '../ui/TargetListTable';
@@ -257,6 +258,40 @@ function parseMeasurementLabelInfo(measurement) {
         ? {
             value: organValue,
             label: organMapping[organValue],
+          }
+        : {
+            value: null,
+            label: null,
+          };
+  }
+
+  return {
+    noMeasurement: noMeasurement,
+    measurementLabelInfo: measurementLabelInfo,
+    label: label,
+  };
+}
+
+function parseQCDataInfo(measurement) {
+  const noMeasurement = measurement ? false : true;
+  // label for 保存尽量多的label信息，因为cornerstonejs只支持保存label到DicomSR中
+  let label = measurement ? measurement.label : 'problem_info|comment_info';
+  label = label.split('|');
+
+  // get measurementLabelInfo, noMeasurement means create Cornerstone3D annotation first just return label to callback!
+  // if no measurementLabelInfo, get from label
+  const measurementLabelInfo =
+    measurement && measurement['measurementLabelInfo'] ? measurement['measurementLabelInfo'] : {};
+
+  // init dataProblemType, lesionValue, organValue
+  if (!('dataProblemType' in measurementLabelInfo)) {
+    // no dataProblemType in measurementLabelInfo, get from label
+    const dataProblemTypeValue = label[0];
+    measurementLabelInfo['dataProblemType'] =
+    dataProblemTypeValue in dataProblemTypeMapping
+        ? {
+            value: dataProblemTypeValue,
+            label: dataProblemTypeMapping[dataProblemTypeValue],
           }
         : {
             value: null,
@@ -1050,4 +1085,6 @@ export {
   reportToReportFindings,
   getPastReportDialog,
   getEditMeasurementLabelDialog,
+  // QC
+  parseQCDataInfo,
 };

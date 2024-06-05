@@ -2,28 +2,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useImageViewer, Select, useViewportGrid, Input } from '@ohif/ui';
 import TimePointSummary from '../../ui/TimePointSummary';
-import MeasurementTable from '../../ui/MeasurementTable';
-import ActionButtons from './ActionButtons';
-import { DicomMetadataStore, utils } from '@ohif/core';
+import QCDataProblemTable from '../../ui/QCDataProblemTable';
+import ActionButtons from '../PanelMeasurementTableTracking/ActionButtons';
 import { useDebounce } from '@hooks';
 import { useAppConfig } from '@state';
 import { useTrackedMeasurements } from '../../getContextModule';
 import debounce from 'lodash.debounce';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import {
-  LesionMapping,
-  targetKeyGroup,
-  nonTargetKeyGroup,
-  imageQualityOptions,
-  imageQualityMapping,
-  NonMeasurementTools,
-  newLesionKeyGroup,
-} from '../../utils/mappings';
-import PastReportItem from '../../ui/PastReportItem';
-import { getPastReportDialog, getTimepointName, getViewportId } from '../../utils/utils';
-import callInputDialog from '../../utils/callInputDialog';
-import { RecistV11Validator } from '../../utils/RecistV11Validator';
+import { imageQualityOptions, imageQualityMapping } from '../../utils/mappings';
+import QCDataInputDialog from '../../utils/QCDataInputDialog';
 
 // evibased, 右边栏上部显示的信息
 const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
@@ -37,7 +24,6 @@ const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
 
 function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { StudyInstanceUIDs } = useImageViewer();
   const [viewportGrid] = useViewportGrid();
   const [measurementChangeTimestamp, setMeasurementsUpdated] = useState(Date.now().toString());
@@ -59,7 +45,6 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
     currentReportInfo,
     currentTimepoint,
     lastTimepoint,
-    comparedTimepoint,
     comparedReportInfo,
     username,
     userRoles,
@@ -71,7 +56,6 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
   const measurementsPanelRef = useRef(null);
   const [appConfig] = useAppConfig();
-  const [extendedComparedReport, setExtentedComparedReport] = useState(true);
   // evibased, value for imageQuality, default is image_qualified
   const [imageQuality, setImageQuality] = useState({
     value: 'image_qualified',
@@ -154,14 +138,12 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
               )
             ) {
               if (data.measurement.label === '' || data.measurement.label === 'no label') {
-                _editMeasurementLabel(
-                  commandsManager,
+                _editQCDataInfo(
                   userAuthenticationService,
                   uiDialogService,
                   measurementService,
                   logSinkService,
-                  data.measurement.uid,
-                  comparedReportInfo
+                  data.measurement.uid
                 );
               }
             }
@@ -172,14 +154,12 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
 
     const edit = measurementService.EVENTS.TRACKED_MEASUREMENT_EDIT;
     const editSub = measurementService.subscribe(edit, data => {
-      _editMeasurementLabel(
-        commandsManager,
+      _editQCDataInfo(
         userAuthenticationService,
         uiDialogService,
         measurementService,
         logSinkService,
-        data.uid,
-        comparedReportInfo
+        data.uid
       );
     });
     subscriptions.push(editSub.unsubscribe);
@@ -200,31 +180,16 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
     onMeasurementItemClickHandler({ uid, isActive });
   };
 
-  // evibased, jump to compared measurement
-  const jumpToComparedMeasurement = ({ uid }) => {
-    // jump to measurement by readonlyMeasurement uid
-    // get viewport with comparedDisplaySetId
-    const { viewports } = viewportGrid;
-    const comparedViewportId = getViewportId(viewports, 'comparedDisplaySetId');
-    if (comparedViewportId) {
-      measurementService.jumpToReadonlyMeasurement(comparedViewportId, uid);
-    } else {
-      console.error("can't find compared viewport id!");
-    }
-  };
-
   // TODO: evibased, 重构，和extension cornerstone callInputDialog统一代码
   const onMeasurementItemEditHandler = ({ uid, isActive }) => {
     jumpToImage({ uid, isActive });
     // evibased, edit label
-    _editMeasurementLabel(
-      commandsManager,
+    _editQCDataInfo(
       userAuthenticationService,
       uiDialogService,
       measurementService,
       logSinkService,
-      uid,
-      comparedReportInfo
+      uid
     );
 
     // 参考auto label completion
@@ -263,75 +228,6 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
     console.log('successSaveReport:', successSaveReport);
     _refreshTaskInfo(successSaveReport);
   }, [successSaveReport, currentTask]);
-
-  // update compared report info based on comparedTimepoint
-  useEffect(() => {
-    if (!comparedTimepoint) {
-      return;
-    }
-    const {
-      studyInstanceUid,
-      date,
-      description,
-      numInstances,
-      modalities,
-      displaySets,
-      trialTimePointId,
-      reports,
-    } = comparedTimepoint;
-    // const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId) : '';
-    // 现在只取第一个report，作为阅片任务的对比报告
-    const report = reports?.[0];
-
-    const targetFindings = [];
-    const newLesionFindings = [];
-    const nonTargetFindings = [];
-    const otherFindings = [];
-    if (report) {
-      const displayMeasurements = report.measurements.map((m, index) =>
-        _mapComparedMeasurementToDisplay(m, index, displaySetService)
-      );
-      for (const dm of displayMeasurements) {
-        // get target info
-        const lesionValue = dm.label.split('|')[1];
-        if (!(lesionValue in LesionMapping)) {
-          // not in LesionMapping, just show and allow edit in other group
-          otherFindings.push(dm);
-        } else if (targetKeyGroup.includes(lesionValue)) {
-          targetFindings.push(dm);
-        } else if (newLesionKeyGroup.includes(lesionValue)) {
-          // new lesion group check before non target group, non target group includes new lesion keys
-          newLesionFindings.push(dm);
-        } else if (nonTargetKeyGroup.includes(lesionValue)) {
-          nonTargetFindings.push(dm);
-        } else {
-          otherFindings.push(dm);
-        }
-      }
-    }
-    // sort by index, get index from label, TODO: get index from measurementlabelInfo
-    targetFindings.sort(
-      (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
-    );
-    newLesionFindings.sort(
-      (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
-    );
-    nonTargetFindings.sort(
-      (a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0])
-    );
-    otherFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
-
-    // update compared report
-    sendTrackedMeasurementsEvent('UPDATE_COMPARED_REPORT', {
-      comparedReportInfo: {
-        report: report,
-        targetFindings: targetFindings,
-        newLesionFindings: newLesionFindings,
-        nonTargetFindings: nonTargetFindings,
-        otherFindings: otherFindings,
-      },
-    });
-  }, [comparedTimepoint]);
 
   // report loaded, update data on this page
   useEffect(() => {
@@ -400,7 +296,7 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
       },
     });
 
-    sendTrackedMeasurementsEvent('SAVE_REPORT', {
+    sendTrackedMeasurementsEvent('SAVE_QC_DATA_REPORT', {
       imageQuality: {
         selection: imageQuality,
         description: imageQualityDescription,
@@ -495,7 +391,7 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
     const trialId = timepoint.cycle;
     const ifBaseline = trialId === 0 || trialId === '0' || trialId === '00'; // now '00' is baseline, other form are deprecated
     if (ifBaseline) {
-      navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
+      navigate(`/qc-data?StudyInstanceUIDs=${studyUID}`);
     } else {
       // get compared timepoint UID
       const timepoints = timepoint.subject.timepoints;
@@ -507,12 +403,13 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
         navigate('/');
       } else if (index === 0) {
         // first timepoint?? should not happen
-        navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
+        navigate(`/qc-data?StudyInstanceUIDs=${studyUID}`);
       }
-      const comparedUID = timepoints[index - 1].UID;
-      navigate(
-        `/viewer?StudyInstanceUIDs=${studyUID},${comparedUID}&hangingprotocolId=@ohif/timepointCompare`
-      );
+      navigate(`/qc-data?StudyInstanceUIDs=${studyUID}`);
+      // const comparedUID = timepoints[index - 1].UID;
+      // navigate(
+      //   `/qc-data?StudyInstanceUIDs=${studyUID},${comparedUID}&hangingprotocolId=@ohif/timepointCompare`
+      // );
     }
   }
 
@@ -524,111 +421,13 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
   //   dm => dm.measurementType === measurementService.VALUE_TYPES.POINT
   // );
 
-  // evibased TODO:暂时不分组？
-  const allFindings = [];
-  for (const dm of displayMeasurements) {
-    // get target info
-    const lesionValue = dm.label.split('|')[1];
-    allFindings.push(dm);
-  }
+  // evibased TODO: 暂时不分组？
+  const allFindings = [...displayMeasurements];
   // sort by index, get index from label, TODO: get index from measurementLabelInfo
   allFindings.sort((a, b) => parseInt(a.label.split('|')[0]) - parseInt(b.label.split('|')[0]));
 
   // TODO: validate?
   let validationInfo = undefined;
-
-  // evibased, get compared timepoint report
-  // TODO: put these in a useEffect to avoid re-rendering?
-  const getComparedTimepointReport = () => {
-    const {
-      studyInstanceUid,
-      date,
-      description,
-      numInstances,
-      modalities,
-      displaySets,
-      trialTimePointId,
-      reports,
-    } = comparedTimepoint;
-    const { report, targetFindings, newLesionFindings, nonTargetFindings, otherFindings } =
-      comparedReportInfo;
-    const trialTimePointName = trialTimePointId ? getTimepointName(trialTimePointId) : '';
-    let SOD = undefined;
-    let response = undefined;
-    let username = null;
-    let userAlias = null;
-    if (report) {
-      username = report.username;
-      userAlias = report.task?.userAlias;
-      SOD = report.SOD;
-      response = report.response;
-    }
-
-    return (
-      <React.Fragment key={studyInstanceUid + '-pastReport'}>
-        <PastReportItem
-          studyInstanceUid={studyInstanceUid}
-          trialTimePointInfo={trialTimePointName}
-          // username={userAlias ? userAlias : username}
-          username={username} // only for review task now, show username instead of userAlias
-          SOD={SOD}
-          response={response}
-          isActive={extendedComparedReport}
-          onClick={() => {
-            setExtentedComparedReport(!extendedComparedReport);
-          }}
-          onReportClick={() => {
-            getPastReportDialog(uiDialogService, trialTimePointName, report);
-          }}
-          data-cy="compared-report-list"
-        />
-        {extendedComparedReport && username && (
-          <>
-            <MeasurementTable
-              title={`${t('MeasurementTable:Target Findings')}`}
-              ifTarget={true}
-              data={targetFindings}
-              tableID="comp-target-findings"
-              servicesManager={servicesManager}
-              onClick={jumpToComparedMeasurement}
-              canEdit={false}
-            />
-            {newLesionFindings.length > 0 && (
-              <MeasurementTable
-                title={t('MeasurementTable:Non-Target Findings')}
-                data={newLesionFindings}
-                ifNewLesion={true}
-                tableID="comp-new-lesion-findings"
-                servicesManager={servicesManager}
-                onClick={jumpToComparedMeasurement}
-                canEdit={false}
-              />
-            )}
-            {nonTargetFindings.length > 0 && (
-              <MeasurementTable
-                title={t('MeasurementTable:Non-Target Findings')}
-                data={nonTargetFindings}
-                tableID="comp-non-target-findings"
-                servicesManager={servicesManager}
-                onClick={jumpToComparedMeasurement}
-                canEdit={false}
-              />
-            )}
-            {otherFindings.length > 0 && (
-              <MeasurementTable
-                title={t('MeasurementTable:Other Findings')}
-                data={otherFindings}
-                tableID="comp-other-findings"
-                servicesManager={servicesManager}
-                onClick={jumpToComparedMeasurement}
-                canEdit={false}
-              />
-            )}
-          </>
-        )}
-      </React.Fragment>
-    );
-  };
 
   return (
     <>
@@ -685,35 +484,22 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
             />
           </div>
           {/* target lesions */}
-          <MeasurementTable
-            title={`标注列表`}
-            ifTarget={false}
+          <QCDataProblemTable
+            title={`问题列表`}
             data={allFindings}
             servicesManager={servicesManager}
             onClick={jumpToImage}
             onEdit={onMeasurementItemEditHandler}
             tableID="all-findings" //evibased, add tableID when ID is needed
-            tableWarningInfo={validationInfo?.targetGroupWarningMessages}
           />
         </div>
         {/* report button */}
-        {!appConfig?.disableEditing && (
-          <div className="flex justify-center p-4">
-            <ActionButtons
-              userRoles={userRoles}
-              // onExportClick={exportReport}
-              onCreateReportClick={createReport}
-              // todo: 对于查看报告的情况分类disable button：
-              // 1. 阅片任务，未选择影像质量，disable
-              // 2. 其他任务，不做disable？
-              // disabled={!imageQuality?.value}
-            />
-          </div>
-        )}
-        {['review', 'reading'].includes(currentTask?.type) &&
-          comparedTimepoint &&
-          comparedReportInfo &&
-          getComparedTimepointReport()}
+        <div className="flex justify-center p-4">
+          <ActionButtons
+            userRoles={userRoles}
+            onCreateReportClick={createReport}
+          />
+        </div>
       </div>
     </>
   );
@@ -731,107 +517,46 @@ PanelQCData.propTypes = {
 };
 
 // evibased
-function _editMeasurementLabel(
-  commandsManager,
+function _editQCDataInfo(
   userAuthenticationService,
   uiDialogService,
   measurementService,
   logSinkService,
-  uid,
-  comparedReportInfo
+  uid
 ) {
   const measurement = measurementService.getMeasurement(uid);
-  const isNonMeasurementTool = measurement && NonMeasurementTools.includes(measurement.toolName);
 
-  // if readonly mode, no editing
-  if (commandsManager.getContext('CORNERSTONE').ifReadonlyMode) {
-    measurement.readonly = true;
-    return;
-  }
+  QCDataInputDialog(uiDialogService, measurement, (label, actionId) => {
+    if (actionId === 'cancel') {
+      return;
+    }
 
-  callInputDialog(
-    uiDialogService,
-    measurement,
-    comparedReportInfo,
-    (label, actionId) => {
-      if (actionId === 'cancel') {
-        return;
-      }
+    // copy measurement, get measurement again in case it has been updated。
+    // 在创建annotation时，会不断更新长度。会导致update measurement为旧的长度错误。
+    const currentMeasurement = measurementService.getMeasurement(uid);
+    const updatedMeasurement = { ...currentMeasurement };
+    // update label data
+    updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
+    updatedMeasurement['label'] = label['label'];
+    // update displayText
+    const commentText = label['measurementLabelInfo']?.dataProblemComment || '无注视';
+    updatedMeasurement['displayText'] = [commentText];
 
-      // copy measurement, get measurement again in case it has been updated。
-      // 在创建annotation时，会不断更新长度。会导致update measurement为旧的长度错误。
-      const currentMeasurement = measurementService.getMeasurement(uid);
-      const updatedMeasurement = { ...currentMeasurement };
-      // update label data
-      updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];
-      updatedMeasurement['label'] = label['label'];
-      // update displayText for non target lesions (ArrowAnnotate and Square tool)
-      if (label['measurementLabelInfo'].lesion?.value?.startsWith('Non_Target')) {
-        if (['ArrowAnnotate', 'RectangleROI'].includes(currentMeasurement.toolName)) {
-          // default displayText is ['(太小:5mm,消失:0mm)'], 不适合非靶病灶
-          updatedMeasurement['displayText'] = ['不可测量-非靶'];
-        }
-      }
+    // measurementService in platform core service module
+    measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
 
-      // measurementService in platform core service module
-      measurementService.update(updatedMeasurement.uid, updatedMeasurement, true); // notYetUpdatedAtSource = true
-
-      // audit log, full measurement info
-      logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
-        msg: 'edit measurement label',
-        action: 'VIEWER_EDIT_MEASUREMENT',
-        username: userAuthenticationService.getUser().profile.preferred_username,
-        authHeader: userAuthenticationService.getAuthorizationHeader(),
-        data: {
-          action_result: 'success',
-          measurement: measurement,
-        },
-      });
-    },
-    isNonMeasurementTool // isArrowAnnotateInputDialog = false
-  );
-}
-
-// evibased
-function _mapComparedMeasurementToDisplay(measurement, index, displaySetService) {
-  const {
-    readonlyMeasurementUID,
-    Width,
-    Length,
-    Unit,
-    StudyInstanceUID: studyInstanceUid,
-    SeriesInstanceUID: seriesInstanceUid,
-    Label: baseLabel,
-    AnnotationType: type,
-    label_info,
-  } = measurement;
-
-  const displaySets = displaySetService.getDisplaySetsForSeries(seriesInstanceUid);
-
-  const measurementType = type.split(':')[1];
-  const label = baseLabel || '(empty)';
-  // only bidirectional shows displayText for now
-  let displayText = ['无测量信息'];
-  if (measurementType === 'Length' && Length) {
-    displayText = [`${Length.toFixed(1)} mm`];
-  } else if (measurementType === 'Bidirectional' && Width && Length) {
-    displayText = [`${Length.toFixed(1)} x ${Width.toFixed(1)} mm`];
-  }
-  // const displayText = Width && Length ? [`${Length.toFixed(1)} x ${Width.toFixed(1)} mm`] : ['无测量信息'];
-
-  return {
-    uid: readonlyMeasurementUID,
-    modality: displaySets[0]?.Modality,
-    measurementLabelInfo: label_info,
-    label,
-    baseLabel,
-    measurementType: measurementType,
-    displayText,
-    baseDisplayText: displayText,
-    isActive: false,
-    finding: undefined,
-    findingSites: undefined,
-  };
+    // audit log, full measurement info
+    logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
+      msg: 'edit QC data info',
+      action: 'QC_DATA_EDIT_INFO',
+      username: userAuthenticationService.getUser().profile.preferred_username,
+      authHeader: userAuthenticationService.getAuthorizationHeader(),
+      data: {
+        action_result: 'success',
+        measurement: measurement,
+      },
+    });
+  });
 }
 
 // TODO: This could be a measurementService mapper

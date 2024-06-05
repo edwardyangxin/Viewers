@@ -160,6 +160,28 @@ const organLocationMapping = {
   },
 };
 
+// QC mappings
+export const DataProblemType = {
+  DELETE_SERIES: 'delete_series',
+  TAG_MODIFY: 'tag_modify',
+  IMAGE_MASK: 'image_mask',
+  IMAGE_QUALITY_UNSATISFIED: 'image_quality_unsatisfied',
+  OTHER: 'other',
+} as const;
+
+const dataProblemTypeMapping = {
+  [DataProblemType.DELETE_SERIES]: '删除序列',
+  [DataProblemType.TAG_MODIFY]: '标签修改',
+  [DataProblemType.IMAGE_MASK]: '图像遮挡(隐私信息)',
+  [DataProblemType.IMAGE_QUALITY_UNSATISFIED]: '影像质量问题',
+  [DataProblemType.OTHER]: '其他(填写注释信息)',
+};
+
+const dicomTagMapping = {
+  SeriesDescription: '序列描述(SeriesDescription)',
+  PerformedProcedureStepDescription: '操作描述(PerformedProcedureStepDescription)',
+}
+
 // options
 function constructOptions(mapping) {
   const options = [];
@@ -169,6 +191,7 @@ function constructOptions(mapping) {
   return options;
 }
 
+// review
 const imageQualityOptions = constructOptions(imageQualityMapping);
 const targetIndexOptions = constructOptions(targetIndexMapping);
 const nonTargetIndexOptions = constructOptions(nonTargetIndexMapping);
@@ -176,6 +199,9 @@ const lesionOptions = constructOptions(LesionMapping);
 const LesionMeasurementOptions = constructOptions(LesionMeasurementMapping);
 const organOptions = constructOptions(organMapping);
 const organLateralOptions = constructOptions(organLateralMapping);
+// QC
+const dataProblemTypeOptions = constructOptions(dataProblemTypeMapping);
+const dicomTagOptions = constructOptions(dicomTagMapping);
 
 // organLocationOptions 和上面的options结构不同
 const organLocationOptions = {};
@@ -287,4 +313,9 @@ export {
   nonTargetResponseOptions,
   responseOptions,
   responseMapping,
+  // QC
+  dataProblemTypeMapping,
+  dataProblemTypeOptions,
+  dicomTagMapping,
+  dicomTagOptions,
 };
