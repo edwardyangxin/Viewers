@@ -1,13 +1,8 @@
 import { hotkeys } from '@ohif/core';
-import i18n from 'i18next';
 import { id } from './id';
 import initToolGroups from './initToolGroups';
 import toolbarButtons from './toolbarButtons';
 import moreTools from './moreTools';
-
-// Allow this mode by excluding non-imaging modalities such as SR, SEG
-// Also, SM is not a simple imaging modalities, so exclude it.
-const NON_IMAGE_MODALITIES = ['SM', 'ECG', 'SR', 'SEG', 'RTSTRUCT'];
 
 const ohif = {
   layout: '@ohif/extension-default.layoutTemplateModule.viewerLayout',
@@ -18,6 +13,7 @@ const ohif = {
 const tracked = {
   measurements: '@ohif/extension-measurement-tracking.panelModule.trackedMeasurements',
   pastReports: '@ohif/extension-measurement-tracking.panelModule.pastReports',
+  QCData: '@ohif/extension-measurement-tracking.panelModule.QCData',
   thumbnailList: '@ohif/extension-measurement-tracking.panelModule.seriesList',
   viewport: '@ohif/extension-measurement-tracking.viewportModule.cornerstone-tracked',
 };
@@ -61,13 +57,14 @@ const extensionDependencies = {
 };
 
 function modeFactory({ modeConfiguration }) {
+  // deprecate, no subs to unsubscribe
   let _activatePanelTriggersSubscriptions = [];
   return {
     // TODO: We're using this as a route segment
     // We should not be.
     id,
-    routeName: 'viewer',
-    displayName: i18n.t('Modes:Basic Viewer'),
+    routeName: 'qc-report',
+    displayName: '报告审核',
     /**
      * Lifecycle hooks
      */
@@ -106,34 +103,21 @@ function modeFactory({ modeConfiguration }) {
         // 'MeasurementTools',
         // annotation tools
         // 'Length',
-        'Bidirectional',
+        // 'Bidirectional',
         'ArrowAnnotate',
         'Rectangle',
         // other tools
         'Zoom',
         'Pan',
-        'TrackballRotate',
+        // 'TrackballRotate',
         'WindowLevel',
         // 'Capture',
-        'Layout',
-        'StackImageSync',
+        // 'Layout',
+        // 'StackImageSync',
         // 'MPR', // evibased, use layout MPR instead
-        'Crosshairs',
+        // 'Crosshairs',
         'MoreTools',
       ]);
-
-      // evibased, comment 没有需要两套toolbar，这里是一个为了MRP mode下toolbar的例子
-      // toolbarService.createButtonSection(MPR_TOOL_GROUP_ID, [
-      //   'MeasurementTools',
-      //   'Zoom',
-      //   'WindowLevel',
-      //   'Pan',
-      //   // 'Capture',
-      //   // 'Layout',
-      //   'MPR',
-      //   'Crosshairs',
-      //   'MoreTools',
-      // ]);
 
       // evibased, init customizations, for custom context menu
       customizationService.addModeCustomizations([
@@ -144,36 +128,14 @@ function modeFactory({ modeConfiguration }) {
         },
       ]);
 
-      // // ActivatePanel event trigger for when a segmentation or measurement is added.
-      // // Do not force activation so as to respect the state the user may have left the UI in.
-      // _activatePanelTriggersSubscriptions = [
-      //   ...panelService.addActivatePanelTriggers(dicomSeg.panel, [
-      //     {
-      //       sourcePubSubService: segmentationService,
-      //       sourceEvents: [
-      //         segmentationService.EVENTS.SEGMENTATION_PIXEL_DATA_CREATED,
-      //       ],
-      //     },
-      //   ]),
-      //   ...panelService.addActivatePanelTriggers(tracked.measurements, [
-      //     {
-      //       sourcePubSubService: measurementService,
-      //       sourceEvents: [
-      //         measurementService.EVENTS.MEASUREMENT_ADDED,
-      //         measurementService.EVENTS.RAW_MEASUREMENT_ADDED,
-      //       ],
-      //     },
-      //   ]),
-      // ];
-
       // evibased, audit log
       const { userAuthenticationService } = servicesManager.services;
       // get StudyInstanceUIDs from URL, assume only one study uids
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
       logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
-        msg: 'entering viewer mode',
-        action: 'ENTER_VIEWER',
+        msg: 'entering qc-report mode',
+        action: 'ENTER_QC_REPORT',
         username: userAuthenticationService.getUser()?.profile?.preferred_username,
         authHeader: userAuthenticationService.getAuthorizationHeader(),
         data: {
@@ -209,8 +171,8 @@ function modeFactory({ modeConfiguration }) {
       const urlParams = new URLSearchParams(window.location.search);
       const StudyInstanceUIDs = urlParams.get('StudyInstanceUIDs');
       logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
-        msg: 'leave viewer mode',
-        action: 'LEAVE_VIEWER',
+        msg: 'leave qc-report mode',
+        action: 'LEAVE_QC_REPORT',
         username: userAuthenticationService.getUser()?.profile?.preferred_username,
         authHeader: userAuthenticationService.getAuthorizationHeader(),
         data: {
@@ -224,28 +186,21 @@ function modeFactory({ modeConfiguration }) {
       series: [],
     },
 
-    isValidMode: function ({ modalities, taskTypes }) {
-      // const modalities_list = modalities.split('\\');
-
+    isValidMode: function ({ taskTypes }) {
       let valid = false;
-      for (const taskType of taskTypes) {
-        if (!['QC-data', 'QC-report'].includes(taskType)) {
-          valid = true;
-          break;
-        }
+      if (taskTypes && taskTypes.includes('QC-report')) {
+        valid = true;
       }
+
       // Exclude non-image modalities
       return {
-        // valid: !!modalities_list.filter(modality => NON_IMAGE_MODALITIES.indexOf(modality) === -1)
-        //   .length,
-        valid,
-        description:
-          'The mode does not support studies that ONLY include the following modalities: SM, ECG, SR, SEG, RTSTRUCT',
+        valid: valid,
+        description: 'only QC-report taskType is supported',
       };
     },
     routes: [
       {
-        path: 'longitudinal',
+        path: 'qc-report',
         /*init: ({ servicesManager, extensionManager }) => {
           //defaultViewerRouteInit
         },*/
@@ -254,7 +209,6 @@ function modeFactory({ modeConfiguration }) {
             id: ohif.layout,
             props: {
               leftPanels: [tracked.thumbnailList],
-              // rightPanels: [dicomSeg.panel, tracked.measurements], // evibased, disable dicomSeg panel
               rightPanels: [tracked.measurements, tracked.pastReports],
               rightPanelClosed: false,
               viewports: [

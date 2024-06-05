@@ -86,6 +86,9 @@
     },
     {
       "packageName": "@ohif/mode-qc-data"
+    },
+    {
+      "packageName": "@ohif/mode-qc-report"
     }
   ],
   "public": [
