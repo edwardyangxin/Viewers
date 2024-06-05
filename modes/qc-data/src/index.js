@@ -102,8 +102,8 @@ function modeFactory({ modeConfiguration }) {
         // group annotation tools
         // 'MeasurementTools',
         // annotation tools
-        'Length',
-        'Bidirectional',
+        // 'Length',
+        // 'Bidirectional',
         'ArrowAnnotate',
         'Rectangle',
         // other tools
