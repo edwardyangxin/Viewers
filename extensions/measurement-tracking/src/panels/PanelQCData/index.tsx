@@ -78,21 +78,7 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
   }, [measurementService, trackedStudy, trackedSeries, debouncedMeasurementChangeTimestamp]);
 
   const updateDisplayStudySummary = () => {
-    // old study summary info, tracked study and series info
-    // const StudyInstanceUID = trackedStudy;
-    // const studyMeta = DicomMetadataStore.getStudy(StudyInstanceUID);
-    // const instanceMeta = studyMeta.series[0].instances[0];
-    // const { StudyDate, StudyDescription, ClinicalTrialTimePointID } = instanceMeta;
-
-    // const modalities = new Set();
-    // studyMeta.series.forEach(series => {
-    //   if (trackedSeries.includes(series.SeriesInstanceUID)) {
-    //     modalities.add(series.instances[0].Modality);
-    //   }
-    // });
-    // const modality = Array.from(modalities).join('/');
-
-    // evibased, study summary info at top right corner
+    // evibased, TODO: study summary info at top right corner
     setDisplayStudySummary({
       key: null,
       timepoint: currentTimepoint?.trialTimePointId,
@@ -180,7 +166,7 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
     onMeasurementItemClickHandler({ uid, isActive });
   };
 
-  // TODO: evibased, 重构，和extension cornerstone callInputDialog统一代码
+  // evibased, edit label
   const onMeasurementItemEditHandler = ({ uid, isActive }) => {
     jumpToImage({ uid, isActive });
     // evibased, edit label
@@ -191,25 +177,6 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
       logSinkService,
       uid
     );
-
-    // 参考auto label completion
-    // const labelConfig = customizationService.get('measurementLabels');
-    // const measurement = measurementService.getMeasurement(uid);
-    // const utilityModule = extensionManager.getModuleEntry(
-    //   '@ohif/extension-cornerstone.utilityModule.common'
-    // );
-    // const { showLabelAnnotationPopup } = utilityModule.exports;
-    // showLabelAnnotationPopup(measurement, uiDialogService, labelConfig).then(
-    //   (val: Map<any, any>) => {
-    //     measurementService.update(
-    //       uid,
-    //       {
-    //         ...val,
-    //       },
-    //       true
-    //     );
-    //   }
-    // );
   };
 
   const onMeasurementItemClickHandler = ({ uid, isActive }) => {
@@ -223,7 +190,7 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
     }
   };
 
-  // evibased, initial flag, get taskInfo
+  // evibased, refresh taskInfo
   useEffect(() => {
     console.log('successSaveReport:', successSaveReport);
     _refreshTaskInfo(successSaveReport);
@@ -406,20 +373,13 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
         navigate(`/qc-data?StudyInstanceUIDs=${studyUID}`);
       }
       navigate(`/qc-data?StudyInstanceUIDs=${studyUID}`);
+      // no compare mode for now?
       // const comparedUID = timepoints[index - 1].UID;
       // navigate(
       //   `/qc-data?StudyInstanceUIDs=${studyUID},${comparedUID}&hangingprotocolId=@ohif/timepointCompare`
       // );
     }
   }
-
-  // evibased, default 分组显示, deprecated
-  // const displayMeasurementsWithoutFindings = displayMeasurements.filter(
-  //   dm => dm.measurementType !== measurementService.VALUE_TYPES.POINT
-  // );
-  // const additionalFindings = displayMeasurements.filter(
-  //   dm => dm.measurementType === measurementService.VALUE_TYPES.POINT
-  // );
 
   // evibased TODO: 暂时不分组？
   const allFindings = [...displayMeasurements];
@@ -559,19 +519,8 @@ function _editQCDataInfo(
   });
 }
 
-// TODO: This could be a measurementService mapper
 function _mapMeasurementToDisplay(measurement, types, displaySetService) {
   const { referenceStudyUID, referenceSeriesUID, SOPInstanceUID } = measurement;
-
-  // TODO: We don't deal with multiframe well yet, would need to update
-  // This in OHIF-312 when we add FrameIndex to measurements.
-
-  // deprecated
-  // const instance = DicomMetadataStore.getInstance(
-  //   referenceStudyUID,
-  //   referenceSeriesUID,
-  //   SOPInstanceUID
-  // );
 
   const displaySets = displaySetService.getDisplaySetsForSeries(referenceSeriesUID);
 
