@@ -42,6 +42,15 @@ function PanelStudyBrowserTracking({
   // doesn't have to have such an intense shape. This works well enough for now.
   // Tabs --> Studies --> DisplaySets --> Thumbnails
   const { StudyInstanceUIDs } = useImageViewer();
+  // get task type based on URL
+  const pathname = window.location.pathname;
+  let urlTaskType;
+  if (pathname.includes('qc-data')) {
+    urlTaskType = ['QC-data'];
+  } else {
+    urlTaskType = ['review', 'arbitration', 'QC-report'];
+  }
+
   // evibased, assume the 1st study for current timepoint study, and the 2nd study for compared study
   const [{ activeViewportId, viewports, isHangingProtocolLayout }, viewportGridService] =
     useViewportGrid();
@@ -129,16 +138,19 @@ function PanelStudyBrowserTracking({
         console.error('no task found for user: ', username);
         popContactAdminDialog(uiDialogService);
       }
-      // only use the first task, assume only one task for each study
-      const currentTask = userTasks[0];
+      // get current task based on url task type, find the first task, to ensure the task is align with mode
+      const currentTask = userTasks.find(task => urlTaskType.includes(task.type));
+      if (!currentTask) {
+        // TODO: no task found for user, should be manager
+        console.error('no task found for user: ', username);
+      }
       const currentTimepoint = currentTask?.timepoint;
       const currentSubject = currentTimepoint?.subject;
       // set ifReadonlyMode to commandsManager CORNERSTONE context
-      // TODO: readonly mode refactor
-      const ifReadonlyMode = ['QC', 'QC-data', 'QC-report', 'arbitration'].includes(
-        currentTask?.type
-      );
+      // TODO: readonly mode refactor,
+      const ifReadonlyMode = ['QC', 'QC-report', 'arbitration', undefined, null].includes(currentTask?.type);
       commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
+
       sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
         currentTask: currentTask,
       });
