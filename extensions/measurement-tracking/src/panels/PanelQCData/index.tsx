@@ -263,7 +263,8 @@ function PanelQCData({ servicesManager, extensionManager, commandsManager }) {
       },
     });
 
-    sendTrackedMeasurementsEvent('SAVE_QC_DATA_REPORT', {
+    sendTrackedMeasurementsEvent('SAVE_REPORT', {
+      taskType: 'QC-data',
       imageQuality: {
         selection: imageQuality,
         description: imageQualityDescription,

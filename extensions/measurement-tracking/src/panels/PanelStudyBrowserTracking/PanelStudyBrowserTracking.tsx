@@ -786,6 +786,7 @@ async function _fetchBackendReports(
     // get username from userAuthenticationService
     const username = getUserName(userAuthenticationService);
     const ifReviewTask = currentTask ? ['review', 'reading'].includes(currentTask.type) : false;
+    const ifQCDataTask = currentTask ? 'QC-data' === currentTask.type : false;
     // get all subject related tasks and reports
     // get url headers and body
     const url = new URL(appConfig.evibased['graphqlDR']);
@@ -795,6 +796,10 @@ async function _fetchBackendReports(
     let queryStr;
     if (ifReviewTask) {
       // review task only see own reports
+      queryStr = `query GetAllReports {
+        subjectBySubjectId(subjectId: "${subjectId}", usernameTask: "${username}") `;
+    } else if (ifQCDataTask) {
+      // QC-data task only see own reports
       queryStr = `query GetAllReports {
         subjectBySubjectId(subjectId: "${subjectId}", usernameTask: "${username}") `;
     } else {
@@ -834,6 +839,7 @@ async function _fetchBackendReports(
                 imageQuality
                 arbitrationComment
                 reviewComment
+                QCDataComment
               }
             }
           }

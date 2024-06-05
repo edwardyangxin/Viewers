@@ -2,6 +2,7 @@ import { createReportAsync, createReportDialogPrompt } from '@ohif/extension-def
 import getNextSRSeriesNumber from '../../_shared/getNextSRSeriesNumber';
 import RESPONSE from '../../_shared/PROMPT_RESPONSES';
 
+// evibased, deprecated, use promptUploadSaveReport instead
 function promptSaveReport({ servicesManager, commandsManager, extensionManager }, ctx, evt) {
   const { uiDialogService, measurementService, displaySetService } = servicesManager.services;
   const viewportId = evt.viewportId === undefined ? evt.data.viewportId : evt.viewportId;

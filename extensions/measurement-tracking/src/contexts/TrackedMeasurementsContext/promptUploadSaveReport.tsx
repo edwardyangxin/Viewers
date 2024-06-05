@@ -1,11 +1,13 @@
 // import { createReportAsync } from '@ohif/extension-default';
-import createReportDialogPrompt from './createReportDialogPrompt';
+import createReportDialogPrompt, { CREATE_REPORT_DIALOG_RESPONSE } from './createReportDialogPrompt';
 // import getNextSRSeriesNumber from '../../_shared/getNextSRSeriesNumber';
 import RESPONSE from '../../_shared/PROMPT_RESPONSES';
 import { DicomMetadataStore } from '@ohif/core';
 import React from 'react';
 import i18n from '@ohif/i18n';
 import { getUserName } from '../../utils/utils';
+import { ButtonEnums, Input } from '@ohif/ui';
+import ReportDialog from '../../ui/ReportDialog';
 
 // evibased, based on ../promptSaveReport.js
 function promptSaveReport({ servicesManager, commandsManager, extensionManager }, ctx, evt) {
@@ -18,25 +20,41 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const imageQuality = evt.imageQuality === undefined ? evt.data.imageQuality : evt.imageQuality;
 
   const { trackedStudy, trackedSeries, currentTask, taskStartTime } = ctx;
-  let displaySetInstanceUIDs;
+  let taskType = evt.taskType === undefined ? evt.data.taskType : evt.taskType;
+  taskType = taskType || currentTask.type;
 
+  let displaySetInstanceUIDs;
   //evibased, call createReportDialogPrompt and store report to evibased api, was store report as dicomSR to PACS 
   return new Promise(async function (resolve, reject) {
     const reportStartTime = new Date();
     console.log('report start time:', reportStartTime);
-    const reportSummaryResult = await createReportDialogPrompt(
-      ctx,
-      imageQuality,
-      uiDialogService,
-      measurementService,
-      {
-        extensionManager,
-      }
-    );
+    // create report dialog based on taskType
+    let reportSummaryResult;
+    if (taskType === 'QC-data') {
+      reportSummaryResult = await createQCDataReportDialogPrompt(
+        ctx,
+        imageQuality,
+        uiDialogService,
+        measurementService,
+        {
+          extensionManager,
+        }
+      );
+    } else {
+      reportSummaryResult = await createReportDialogPrompt(
+        ctx,
+        imageQuality,
+        uiDialogService,
+        measurementService,
+        {
+          extensionManager,
+        }
+      );
+    }
 
-    let successSaveReport = false;
     const taskEndTime = new Date();
     console.log('task end time:', taskEndTime);
+    let successSaveReport = false;
     if (reportSummaryResult.action === RESPONSE.CREATE_REPORT) {
       // post to backend api
       successSaveReport = await _uploadReportAsync(
@@ -49,53 +67,14 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
         reportSummaryResult.value.reportInfo,
         taskStartTime,
         reportStartTime,
-        taskEndTime
+        taskEndTime,
+        taskType
       );
-
-      // deprecated, SR report has limited fields, use report api instead
-      // reportInfo not saved to PACS dicomSR
-      // throw new Error(`deprecated, SR report has limited fields, use report api instead`);
-      // post to PACS dicomSR
-      // const dataSources = extensionManager.getDataSources();
-      // const dataSource = dataSources[0];
-      // const measurements = measurementService.getMeasurements();
-      // const trackedMeasurements = measurements.filter(
-      //   m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
-      // );
-
-      // const SeriesDescription =
-      //   // isUndefinedOrEmpty
-      //   reportSummaryResult.value === undefined || reportSummaryResult.value === ''
-      //     ? 'Research Derived Series' // default
-      //     : reportSummaryResult.value; // provided value
-
-      // const SeriesNumber = getNextSRSeriesNumber(displaySetService);
-
-      // const getReport = async () => {
-      //   return commandsManager.runCommand(
-      //     'storeMeasurements',
-      //     {
-      //       measurementData: trackedMeasurements,
-      //       dataSource,
-      //       additionalFindingTypes: ['ArrowAnnotate'],
-      //       options: {
-      //         SeriesDescription,
-      //         SeriesNumber,
-      //       },
-      //     },
-      //     'CORNERSTONE_STRUCTURED_REPORT'
-      //   );
-      // };
-      // displaySetInstanceUIDs = await createReportAsync({
-      //   servicesManager,
-      //   getReport,
-      // });
-      // successSaveReport = true;
     } else if (reportSummaryResult.action === RESPONSE.CANCEL) {
       // audit log go back to viewer
       logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
-        msg: 'cancel report and go back to viewer',
-        action: 'VIEWER_CANCEL_REPORT',
+        msg: 'cancel create report and go back to viewer/previous page',
+        action: 'CANCEL_REPORT',
         username: userAuthenticationService.getUser()?.profile?.preferred_username,
         authHeader: userAuthenticationService.getAuthorizationHeader(),
         data: {
@@ -118,6 +97,139 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   });
 }
 
+// evibased, create QC data report dialog
+function createQCDataReportDialogPrompt(
+  ctx,
+  imageQuality,
+  uiDialogService,
+  measurementService,
+  { extensionManager }
+) {
+  const { trackedStudy, trackedSeries, currentReportInfo } = ctx;
+  const measurements = measurementService.getMeasurements();
+  const filteredMeasurements = measurements.filter(
+    m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
+  );
+
+  return new Promise(function (resolve, reject) {
+    let dialogId = undefined;
+
+    const _handleClose = () => {
+      // Dismiss dialog
+      uiDialogService.dismiss({ id: dialogId });
+      // Notify of cancel action
+      resolve({
+        action: CREATE_REPORT_DIALOG_RESPONSE.CANCEL,
+        value: undefined,
+        dataSourceName: undefined,
+      });
+    };
+
+    const _handleFormSubmit = ({ action, value }) => {
+      uiDialogService.dismiss({ id: dialogId });
+      switch (action.id) {
+        case 'save': {
+          const returnVal = {
+            ...value,
+            reportInfo: {
+              QCDataComment: value.QCDataComment,
+            },
+          };
+          resolve({
+            action: CREATE_REPORT_DIALOG_RESPONSE.CREATE_REPORT,
+            value: returnVal,
+            dataSourceName: undefined, // deprecated
+          });
+          break;
+        }
+        case 'cancel':
+          resolve({
+            action: CREATE_REPORT_DIALOG_RESPONSE.CANCEL,
+            value: undefined,
+            dataSourceName: undefined, // deprecated
+          });
+          break;
+      }
+    };
+
+    // buttons
+    const dialogActions = [
+      {
+        id: 'cancel',
+        text: '返回',
+        type: ButtonEnums.type.secondary,
+      },
+      {
+        id: 'save',
+        text: '确认提交',
+        type: ButtonEnums.type.primary,
+      },
+    ];
+    dialogId = uiDialogService.create({
+      centralize: true,
+      isDraggable: false,
+      content: ReportDialog,
+      useLastPosition: false,
+      showOverlay: true,
+      dialogWidth: '1200px',
+      contentProps: {
+        title: `提交数据审核报告`,
+        value: {
+          imageQuality: imageQuality,
+          QCDataComment: currentReportInfo ? currentReportInfo.QCDataComment : '',
+        },
+        noCloseButton: false,
+        onClose: _handleClose,
+        actions: dialogActions,
+        onSubmit: _handleFormSubmit,
+        body: ({ value, setValue }) => {
+          const imageQualified = value.imageQuality?.selection?.value === 'image_qualified';
+          return (
+            <>
+              <div className="flex h-full flex-col bg-slate-300 ">
+                {/* subtitle: 1. 图像质量*/}
+                <div className="flex flex-row justify-between pl-2 pb-2">
+                  <span
+                    className={`${!imageQualified && 'bg-red-500'} text-[14px] leading-[1.2] text-black`}
+                  >
+                    {`图像质量: ${value.imageQuality?.selection?.label}${value.imageQuality?.description ? ' (' + value.imageQuality?.description + ')' : ''}`}
+                  </span>
+                </div>
+                <div className="flex grow flex-col overflow-visible">
+                  <div className="flex grow flex-row justify-evenly">
+                    <div className="w-1/2">
+                      <Input
+                        type="text"
+                        id="comment"
+                        label="备注信息"
+                        labelClassName="text-black text-[14px] leading-[1.2] mt-2"
+                        className="border-primary-main bg-slate-300 text-black"
+                        transparent={true}
+                        placeholder="备注信息"
+                        value={value.QCDataComment}
+                        onChange={event => {
+                          event.persist();
+                          setValue(value => ({ ...value, QCDataComment: event.target.value }));
+                        }}
+                        onKeyUp={event => {
+                          event.persist();
+                          if (event.key === 'Enter') {
+                            setValue(value => ({ ...value, QCDataComment: event.target.value }));
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          );
+        },
+      },
+    });
+  });
+}
+
 // evibased, upload report to backend api
 async function _uploadReportAsync(
   servicesManager,
@@ -129,7 +241,8 @@ async function _uploadReportAsync(
   reportInfo,
   taskStartTime,
   reportStartTime,
-  taskEndTime
+  taskEndTime,
+  taskType
 ) {
   const {
     measurementService,
@@ -149,12 +262,6 @@ async function _uploadReportAsync(
   });
 
   try {
-    // check currentTask exist
-    if (!currentTask) {
-      console.log('no tasks found', StudyInstanceUID, username);
-      throw new Error(`no tasks found, can't upload report`);
-    }
-
     const measurements = measurementService.getMeasurements();
     let trackedMeasurements = measurements.filter(
       m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
@@ -171,35 +278,62 @@ async function _uploadReportAsync(
     const authHeader = userAuthenticationService.getAuthorizationHeader();
     const StudyInstanceUID = trackedMeasurements[0]['StudyInstanceUID'];
 
+    // check currentTask exist
+    if (!currentTask) {
+      console.error('no tasks found', StudyInstanceUID, username);
+      throw new Error(`no tasks found, can't upload report`);
+    }
+    // check taskType
+    if (taskType === 'QC-data' && taskType !== currentTask.type) {
+      console.error('task type not match', StudyInstanceUID, username);
+      throw new Error(`task type not match, can't upload report`);
+    }
+
     // post report api
     const taskId = currentTask.id;
-    const taskType = currentTask.type;
-    // const uploadReportUrl = _appConfig['evibased']['report_upload_url'];
-    // evibased, reportInfo fields from report page
-    // reportInfo: {
-    //   SOD
-    //   autoCalculatedSOD
-    //   targetResponse
-    //   nonTargetResponse
-    //   response
-    //   reviewComment
-    //   arbitrationComment
-    //   reportRef
-    // }
-    const createReportBody = {
-      StudyInstanceUID: StudyInstanceUID, // deprecated, no need to link to timepoint
-      username: username,
-      task: { id: taskId }, // link to task
-      reportTemplate: 'RECIST1.1', // report criteria
-      reportTemplateVersion: 'v1', // criteria version
-      // reportComments: '', // deprecated but required by api
-      imageQuality: imageQuality, // imageQuality from image view page
-      measurements: trackedMeasurements, // measurements from measurement table
-      taskStartTime: taskStartTime.toISOString(), // taskStartTime from task start
-      reportStartTime: reportStartTime.toISOString(), // reportStartTime from report start
-      taskEndTime: taskEndTime.toISOString(), // taskEndTime from task end
-      ...reportInfo, // reportInfo from report page, structure see above
-    };
+    let createReportBody;
+    if (taskType === 'QC-data') {
+      createReportBody = {
+        StudyInstanceUID: StudyInstanceUID, // deprecated, no need to link to timepoint
+        username: username,
+        task: { id: taskId }, // link to task
+        reportTemplate: 'QC-data', // report criteria
+        reportTemplateVersion: 'v1', // criteria version
+        imageQuality: imageQuality, // imageQuality from image view page
+        measurements: trackedMeasurements, // measurements from measurement table
+        taskStartTime: taskStartTime.toISOString(), // taskStartTime from task start
+        reportStartTime: reportStartTime.toISOString(), // reportStartTime from report start
+        taskEndTime: taskEndTime.toISOString(), // taskEndTime from task end
+        ...reportInfo, // reportInfo from report page, structure see above
+      };
+    } else {
+      // for other taskType, like review
+      // review reportInfo fields from report dialog
+      // reportInfo: {
+      //   SOD
+      //   autoCalculatedSOD
+      //   targetResponse
+      //   nonTargetResponse
+      //   response
+      //   reviewComment
+      //   arbitrationComment
+      //   reportRef
+      // }
+      createReportBody = {
+        StudyInstanceUID: StudyInstanceUID, // deprecated, no need to link to timepoint
+        username: username,
+        task: { id: taskId }, // link to task
+        reportTemplate: 'RECIST1.1', // report criteria
+        reportTemplateVersion: 'v1', // criteria version
+        // reportComments: '', // deprecated but required by api
+        imageQuality: imageQuality, // imageQuality from image view page
+        measurements: trackedMeasurements, // measurements from measurement table
+        taskStartTime: taskStartTime.toISOString(), // taskStartTime from task start
+        reportStartTime: reportStartTime.toISOString(), // reportStartTime from report start
+        taskEndTime: taskEndTime.toISOString(), // taskEndTime from task end
+        ...reportInfo, // reportInfo from report page, structure see above
+      };
+    }
     const createReportUrl = new URL(_appConfig['evibased']['apiv2_reports_url']);
     const reportResponse = await fetch(createReportUrl, {
       method: 'POST',
@@ -217,8 +351,8 @@ async function _uploadReportAsync(
     console.log('newReport:', newReport);
     // audit log after upload report success
     logSinkService._broadcastEvent(logSinkService.EVENTS.LOG_ACTION, {
-      msg: 'create_report',
-      action: 'VIEWER_CREATE_REPORT',
+      msg: 'create report and upload success',
+      action: 'CREATE_REPORT',
       username: userAuthenticationService.getUser()?.profile?.preferred_username,
       authHeader: userAuthenticationService.getAuthorizationHeader(),
       data: {
