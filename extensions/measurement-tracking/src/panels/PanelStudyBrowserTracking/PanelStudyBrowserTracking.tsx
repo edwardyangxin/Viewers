@@ -47,8 +47,10 @@ function PanelStudyBrowserTracking({
   let urlTaskType;
   if (pathname.includes('qc-data')) {
     urlTaskType = ['QC-data'];
+  } else if (pathname.includes('qc-report')) {
+    urlTaskType = ['QC-report'];
   } else {
-    urlTaskType = ['review', 'arbitration', 'QC-report'];
+    urlTaskType = ['review', 'arbitration'];
   }
 
   // evibased, assume the 1st study for current timepoint study, and the 2nd study for compared study
@@ -799,6 +801,7 @@ async function _fetchBackendReports(
     const username = getUserName(userAuthenticationService);
     const ifReviewTask = currentTask ? ['review', 'reading'].includes(currentTask.type) : false;
     const ifQCDataTask = currentTask ? 'QC-data' === currentTask.type : false;
+    const ifQCReportTask = currentTask ? 'QC-report' === currentTask.type : false;
     // get all subject related tasks and reports
     // get url headers and body
     const url = new URL(appConfig.evibased['graphqlDR']);
@@ -898,11 +901,16 @@ async function _fetchBackendReports(
       study['reports'] = [];
       if (study['tasks'] && study['tasks'].length) {
         study['reports'] = study['tasks'].reduce((reports, task) => {
-          if (task.report && task.report.id) {
-            // copy task.report to report
-            const report = { ...task.report };
-            report.task = task;
-            reports.push(report);
+          // 如果是QC-data task, 只显示QC-data report
+          // 如果不是QC-data task, 显示其他 report
+          if (
+            (ifQCDataTask && task.type === 'QC-data') ||
+            (!ifQCDataTask && task.type !== 'QC-data')
+          ) {
+            if (task.report && task.report.id) {
+              const report = { ...task.report, task };
+              reports.push(report);
+            }
           }
           return reports;
         }, []);
