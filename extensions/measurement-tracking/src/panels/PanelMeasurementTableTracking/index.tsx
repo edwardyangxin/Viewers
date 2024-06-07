@@ -416,6 +416,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     });
 
     sendTrackedMeasurementsEvent('SAVE_REPORT', {
+      taskType: currentTask?.type,
       imageQuality: {
         selection: imageQuality,
         description: imageQualityDescription,

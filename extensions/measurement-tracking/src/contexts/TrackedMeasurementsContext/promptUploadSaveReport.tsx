@@ -13,15 +13,12 @@ import ReportDialog from '../../ui/ReportDialog';
 function promptSaveReport({ servicesManager, commandsManager, extensionManager }, ctx, evt) {
   const { uiDialogService, measurementService, userAuthenticationService, logSinkService } =
     servicesManager.services;
-  const viewportId = evt.viewportId === undefined ? evt.data.viewportId : evt.viewportId;
-  const isBackupSave = evt.isBackupSave === undefined ? evt.data.isBackupSave : evt.isBackupSave;
-  const StudyInstanceUID = evt?.data?.StudyInstanceUID;
-  const SeriesInstanceUID = evt?.data?.SeriesInstanceUID;
-  const imageQuality = evt.imageQuality === undefined ? evt.data.imageQuality : evt.imageQuality;
-
+  const viewportId = evt.viewportId;
+  const isBackupSave = evt.isBackupSave;
+  const imageQuality = evt.imageQuality;
   const { trackedStudy, trackedSeries, currentTask, taskStartTime } = ctx;
-  let taskType = evt.taskType === undefined ? evt.data.taskType : evt.taskType;
-  taskType = taskType || currentTask.type;
+  const taskType = evt.taskType || currentTask.type;
+  const StudyInstanceUID = trackedStudy;
 
   let displaySetInstanceUIDs;
   //evibased, call createReportDialogPrompt and store report to evibased api, was store report as dicomSR to PACS 
@@ -87,7 +84,6 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
       userResponse: reportSummaryResult.action,
       createdDisplaySetInstanceUIDs: displaySetInstanceUIDs,
       StudyInstanceUID,
-      SeriesInstanceUID,
       viewportId,
       isBackupSave,
       successSaveReport,
