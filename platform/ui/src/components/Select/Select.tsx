@@ -140,7 +140,7 @@ Select.propTypes = {
   isSearchable: PropTypes.bool,
   noIcons: PropTypes.bool,
   menuPlacement: PropTypes.oneOf(['auto', 'bottom', 'top']),
-  onChange: PropTypes.func.isRequired,
+  onChange: PropTypes.func,
   options: PropTypes.arrayOf(
     PropTypes.shape({
       value: PropTypes.string,

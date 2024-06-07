@@ -12,6 +12,7 @@ const TargetListTable = ({ tableDataSource }) => {
             {tableDataSource.map((tableData, i) => {
               return (
                 <TargetListTableRow
+                  key={i}
                   tableData={tableData}
                   tableId={i}
                 />
