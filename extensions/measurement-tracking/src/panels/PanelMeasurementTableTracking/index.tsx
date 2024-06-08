@@ -633,7 +633,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           onClick={() => {
             setExtentedComparedReport(!extendedComparedReport);
           }}
-          onReportClick={() => {
+          onReportClick={event => {
+            event.stopPropagation();
             getPastReportDialog(uiDialogService, trialTimePointName, report);
           }}
           data-cy="compared-report-list"
