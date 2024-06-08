@@ -46,6 +46,7 @@ const machineConfiguration = {
     comparedTimepoint: undefined,
     comparedReportInfo: undefined,
     pastTimepoints: undefined,
+    allTimepoints: undefined,
     currentReportInfo: undefined,
     taskInfo: {
       nextTaskStudyUID: undefined,
@@ -181,6 +182,11 @@ const machineConfiguration = {
         UPDATE_PAST_TIMEPOINTS: {
           actions: assign({
             pastTimepoints: (_, event) => event.pastTimepoints,
+          }),
+        },
+        UPDATE_ALL_TIMEPOINTS: {
+          actions: assign({
+            allTimepoints: (_, event) => event.allTimepoints,
           }),
         },
         UPDATE_CURRENT_VIEWPORT_ID: {

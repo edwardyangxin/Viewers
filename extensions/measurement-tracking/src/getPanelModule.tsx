@@ -41,7 +41,7 @@ function getPanelModule({ commandsManager, extensionManager, servicesManager }):
       name: 'pastReports',
       iconName: 'tab-studies',
       iconLabel: 'pastReports',
-      label: '往期报告',
+      label: '报告列表',
       component: PastReports.bind(null, {
         commandsManager,
         extensionManager,

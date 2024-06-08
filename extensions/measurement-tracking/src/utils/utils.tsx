@@ -659,14 +659,14 @@ function getPastReportDialog(uiDialogService, trialTimePointInfo, report) {
       body: ({ value, setValue }) => {
         return (
           <>
-            <div className="bg-slate-300 flex h-full flex-col ">
+            <div className="flex h-full flex-col bg-slate-300 ">
               {/* image quality */}
               <div className="flex flex-row justify-between pl-2 pb-2">
                 <div className="flex flex-row">
                   <span className="text-black text-[14px] leading-[1.2]">
-                    { value.imageQuality ? 
-                      `图像质量: ${value.imageQuality?.selection?.label} (${value.imageQuality?.description})` : 
-                      '图像质量: 未知'}
+                    {value.imageQuality
+                      ? `图像质量: ${value.imageQuality?.selection?.label} ${value.imageQuality?.description ? '(' + value.imageQuality?.description + ')' : ''}`
+                      : '图像质量: 未知'}
                   </span>
                 </div>
               </div>

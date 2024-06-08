@@ -76,7 +76,7 @@ function PanelStudyBrowserTracking({
   const activeViewportDisplaySetInstanceUIDs =
     viewports.get(activeViewportId)?.displaySetInstanceUIDs;
 
-  const { trackedSeries, pastTimepoints, comparedTimepoint, currentTask } =
+  const { trackedSeries, pastTimepoints, allTimepoints, comparedTimepoint, currentTask } =
     trackedMeasurements.context;
 
   // one time useEffect
@@ -365,6 +365,13 @@ function PanelStudyBrowserTracking({
         pastTimepoints: tabs[1].studies, // use tabs[1] as past timepoints
       });
     }
+    if (tabs[2]?.studies?.length !== allTimepoints?.length) {
+      sendTrackedMeasurementsEvent('UPDATE_ALL_TIMEPOINTS', {
+        allTimepoints: tabs[2].studies, // use tabs[2] as all timepoints
+      });
+    }
+    // remove all-timepoints tab from left panel, keep only primary and past timepoints
+    delete tabs[2];
 
     setTabs(tabs);
   }, [studyDisplayList, displaySets, comparedStudyInstanceUID]);
@@ -1175,7 +1182,7 @@ function _createStudyBrowserTabs(
     allStudies.push(tabStudy);
   });
 
-  // Newest first
+  // Newest first, deprecated
   const _byDate = (a, b) => {
     const dateA = Date.parse(a);
     const dateB = Date.parse(b);
@@ -1183,22 +1190,30 @@ function _createStudyBrowserTabs(
     return dateB - dateA;
   };
 
+  // sort by timepoint cycle desc, trialTimePointId, in form '00', '01', '011', '02', ...
+  const _byCycle = (a, b) => {
+    const cycleA = a.padEnd(3, '0');
+    const cycleB = b.padEnd(3, '0');
+
+    return cycleB.localeCompare(cycleA);
+  };
+
   const tabs = [
     {
       name: 'primary',
       label: i18n.t('SidePanel:Primary'),
-      studies: primaryStudies.sort((studyA, studyB) => _byDate(studyA.date, studyB.date)),
+      studies: primaryStudies.sort((studyA, studyB) => _byCycle(studyA.trialTimePointId, studyB.trialTimePointId)),
     },
     {
       name: 'past',
-      label: i18n.t('SidePanel:PastTimepoint'),
-      studies: pastStudies.sort((studyA, studyB) => _byDate(studyA.date, studyB.date)),
+      label: '往期列表',
+      studies: pastStudies.sort((studyA, studyB) => _byCycle(studyA.trialTimePointId, studyB.trialTimePointId)),
     },
-    // {
-    //   name: 'all',
-    //   label: i18n.t('SidePanel:All'),
-    //   studies: allStudies.sort((studyA, studyB) => _byDate(studyA.date, studyB.date)),
-    // },
+    {
+      name: 'all',
+      label: '所有访视',
+      studies: allStudies.sort((studyA, studyB) => _byCycle(studyA.trialTimePointId, studyB.trialTimePointId)),
+    },
   ];
 
   return tabs;

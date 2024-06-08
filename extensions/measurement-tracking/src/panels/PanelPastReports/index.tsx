@@ -15,6 +15,7 @@ import {
 } from '../../utils/utils';
 import requestDisplaySetCreationForStudy from '../PanelStudyBrowserTracking/requestDisplaySetCreationForStudy';
 
+// evibased, 报告列表，使用全部报告，而非往期报告
 function PastReports({ servicesManager, extensionManager }) {
   const { t } = useTranslation();
   const [appConfig] = useAppConfig();
@@ -22,7 +23,7 @@ function PastReports({ servicesManager, extensionManager }) {
   const { measurementService, displaySetService, uiDialogService } = servicesManager.services;
   const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
-  const { pastTimepoints } = trackedMeasurements.context;
+  const { allTimepoints } = trackedMeasurements.context;
   const [extendedReportItems, setExtentedReportItems] = useState([]);
 
   async function _handlePastReportClick(StudyInstanceUID, report, reportIndex) {
@@ -105,10 +106,10 @@ function PastReports({ servicesManager, extensionManager }) {
 
   // past report ui
   function getTabContent() {
-    if (!Array.isArray(pastTimepoints) || pastTimepoints.length === 0) {
+    if (!Array.isArray(allTimepoints) || allTimepoints.length === 0) {
       return null;
     }
-    return pastTimepoints.map(({ studyInstanceUid, trialTimePointId, reports }, timepointIndex) => {
+    return allTimepoints.map(({ studyInstanceUid, trialTimePointId, reports }, timepointIndex) => {
       const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId) : '';
       // show all reports
       if (!Array.isArray(reports) || reports.length === 0) {
@@ -206,18 +207,18 @@ function PastReports({ servicesManager, extensionManager }) {
         );
       });
     });
-  };
+  }
 
   return (
     <>
       <div className="ohif-scrollbar invisible-scrollbar flex flex-1 flex-col overflow-auto">
-        { 
-          pastTimepoints && pastTimepoints.length > 0 ? getTabContent() : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-lg text-gray-500">"无往期报告"</div>
-            </div>
-          )
-        }
+        {allTimepoints && allTimepoints.length > 0 ? (
+          getTabContent()
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <div className="text-lg text-gray-500">无报告</div>
+          </div>
+        )}
       </div>
     </>
   );

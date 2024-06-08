@@ -78,7 +78,7 @@ const MeasurementTable = ({
         {data.length !== 0 &&
           data.map((measurementItem, index) => (
             <CustomMeasurementItem
-              key={measurementItem.uid}
+              key={measurementItem.uid || index}
               uid={measurementItem.uid}
               index={parseInt(measurementItem.label.split('|')[0])}
               label={
