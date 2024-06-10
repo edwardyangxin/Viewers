@@ -138,6 +138,7 @@ function PanelStudyBrowserTracking({
       );
       if (!userTasks || !userTasks.length) {
         if (ifQC || ifManager) {
+          // QC and manager can view readonly mode
           ifReadonlyMode = true;
         } else {
           // pop warning dialog
@@ -175,8 +176,8 @@ function PanelStudyBrowserTracking({
         currentTimepoint = currentTask?.timepoint;
       }
 
-      // set ifReadonlyMode to commandsManager CORNERSTONE context
       // deprecated
+      // set ifReadonlyMode to commandsManager CORNERSTONE context
       // commandsManager.getContext('CORNERSTONE').measurementReadonly = ['QC', 'QC-report', 'arbitration', undefined, null].includes(currentTask?.type);
 
       // task start time, for task duration, 计算task耗时起点
@@ -314,16 +315,21 @@ function PanelStudyBrowserTracking({
       }
 
       function ifTaskValid() {
+        // current timepoint info is required, baseline timepoint is required
         if (!currentTimepoint || !baselineTimepoint) {
           return false;
         }
 
+        // if not baseline timepoint, 
+        // 1. lowestSODTimepoint is required, 2. lastTimepoint is required, 3. comparedTimepoint is required when not in readonly mode
         if (!ifCurrentTimepointBaseline) {
-          if (!lowestSODTimepoint || !lastTimepoint || !comparedTimepoint) {
+          if (!lowestSODTimepoint || !lastTimepoint) {
+            return false;
+          }
+          if (!ifReadonlyMode && !comparedTimepoint) {
             return false;
           }
         }
-        // TODO: evibased, task check point, 如果不通过就暂停所有任务, if no baselineTimepoint or lowestSODTimepoint ...., show error and 联系管理员
         return true;
       }
 
@@ -339,6 +345,7 @@ function PanelStudyBrowserTracking({
         lowestSODTimepoint: lowestSODTimepoint,
       });
 
+      // update comparedTimepoint to load compared timepoint reports
       sendTrackedMeasurementsEvent('UPDATE_COMPARED_TIMEPOINT', {
         extensionManager: extensionManager,
         measurementService: measurementService,
@@ -347,7 +354,8 @@ function PanelStudyBrowserTracking({
         appConfig: appConfig,
       });
 
-      // update actuallyMappedStudies to studyDisplayList
+      // update actuallyMappedStudies for studyDisplayList
+      // 左边的study列表，包括当前study和相关study
       setStudyDisplayList(prevArray => {
         const ret = [...actuallyMappedStudies];
         for (const study of prevArray) {
