@@ -63,41 +63,137 @@ async function getTaskByUserAndUID(
   return userTasks;
 }
 
-// deprecated
-// async function getTaskByUserAndUID_v1(
-//   getTaskUrl,
-//   Authorization,
-//   username: string,
-//   studyUID: string,
-//   status = 'create'
-// ) {
-//   const url = new URL(getTaskUrl);
-//   const fetchSearchParams = {
-//     username: username,
-//     StudyInstanceUID: studyUID,
-//     status: status,
-//   };
-//   url.search = new URLSearchParams(fetchSearchParams).toString();
-//   const fetchOptions = {
-//     method: 'GET',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       Authorization: Authorization,
-//     },
-//   };
-//   const response = await fetch(url, fetchOptions);
-//   if (!response.ok) {
-//     const data = await response.text();
-//     throw new Error(`HTTP error! status: ${response.status} data: ${data}`);
-//   }
-//   let tasks = [];
-//   if (response.status === 204) {
-//     // no content
-//   } else {
-//     const data = await response.json();
-//     tasks = Array.isArray(data) ? data : [data];
-//   }
-//   return tasks;
-// }
+async function getTimepointByUID(graphqlURL, Authorization, studyUID) {
+  const url = new URL(graphqlURL);
+  const headers = new Headers();
+  headers.append('Content-Type', 'application/json');
+  const graphql = JSON.stringify({
+    query: `query GetTimepointByUID {
+      timepointByUID(
+        UID: "${studyUID}"
+      ) {
+        UID
+        cycle
+        comment
+        id
+        status
+        subject {
+          subjectId
+          disease
+          history
+          comment
+          timepoints {
+            UID
+            cycle
+            status
+          }
+        }
+      }
+    }`,
+    variables: {},
+  });
+  const requestOptions = {
+    method: 'POST',
+    headers: headers,
+    body: graphql,
+  };
+  const response = await fetch(url, requestOptions);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
+  }
+  let timepoint;
+  const body = await response.json();
+  if (response.status >= 200 && response.status < 300) {
+    timepoint = body.data.timepointByUID;
+  } else {
+    console.error(`HTTP error! status: ${response.status} body: ${body}`);
+  }
+  return timepoint;
+}
 
-export { getTaskByUserAndUID };
+async function getUserSubjectData(graphqlURL, Authorization, username, subjectId, currentTask) {
+  const ifReviewTask = currentTask ? ['review', 'reading'].includes(currentTask.type) : false;
+  const ifQCDataTask = currentTask ? 'QC-data' === currentTask.type : false;
+  // get all subject related tasks and reports
+  // get url headers and body
+  const url = new URL(graphqlURL);
+  const headers = new Headers();
+  headers.append('Content-Type', 'application/json');
+  // if filter by task username
+  let queryStr;
+  if (ifReviewTask) {
+    // review task only see own reports
+    queryStr = `query GetAllReports {
+      subjectBySubjectId(subjectId: "${subjectId}", usernameTask: "${username}") `;
+  } else if (ifQCDataTask) {
+    // QC-data task only see own reports
+    queryStr = `query GetAllReports {
+      subjectBySubjectId(subjectId: "${subjectId}", usernameTask: "${username}") `;
+  } else {
+    // other see all reports
+    queryStr = `query GetAllReports {
+      subjectBySubjectId(subjectId: "${subjectId}") `;
+  }
+  const graphqlBody = JSON.stringify({
+    query:
+      queryStr +
+      `{
+        subjectId
+        history
+        disease
+        timepoints {
+          UID
+          cycle
+          status
+          tasks {
+            id
+            type
+            username
+            status
+            userAlias
+            report {
+              SOD
+              createTime
+              id
+              measurements
+              nonTargetResponse
+              reportTemplate
+              reportTemplateVersion
+              reportVersion
+              response
+              targetResponse
+              username
+              imageQuality
+              arbitrationComment
+              reviewComment
+              QCDataComment
+            }
+          }
+        }
+      }
+    }`,
+    variables: {},
+  });
+  const requestOptions = {
+    method: 'POST',
+    headers: headers,
+    body: graphqlBody,
+    // redirect: "follow"
+  };
+  const response = await fetch(url, requestOptions);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
+  }
+  let subjectData;
+  const body = await response.json();
+  if (response.status >= 200 && response.status < 300) {
+    subjectData = body.data.subjectBySubjectId;
+  } else {
+    throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
+  }
+  return subjectData;
+}
+
+export { getTaskByUserAndUID, getTimepointByUID, getUserSubjectData };

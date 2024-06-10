@@ -17,7 +17,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
   const isBackupSave = evt.isBackupSave;
   const imageQuality = evt.imageQuality;
   const { trackedStudy, trackedSeries, currentTask, taskStartTime } = ctx;
-  const taskType = evt.taskType || currentTask.type;
+  const taskType = evt.taskType || currentTask?.type || 'readonlyMode';
   const StudyInstanceUID = trackedStudy;
 
   let displaySetInstanceUIDs;

@@ -66,6 +66,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     lastTimepoint,
     comparedTimepoint,
     comparedReportInfo,
+    readonlyMode,
     username,
     userRoles,
     currentTask,
@@ -160,6 +161,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
               if (data.measurement.label === '' || data.measurement.label === 'no label') {
                 _editMeasurementLabel(
                   commandsManager,
+                  readonlyMode,
                   userAuthenticationService,
                   uiDialogService,
                   measurementService,
@@ -178,6 +180,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const editSub = measurementService.subscribe(edit, data => {
       _editMeasurementLabel(
         commandsManager,
+        readonlyMode,
         userAuthenticationService,
         uiDialogService,
         measurementService,
@@ -193,7 +196,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         unsub();
       });
     };
-  }, [measurementService, sendTrackedMeasurementsEvent, comparedReportInfo]);
+  }, [measurementService, sendTrackedMeasurementsEvent, comparedReportInfo, readonlyMode]);
 
   // function handle measurement item click
   const jumpToImage = ({ uid, isActive }) => {
@@ -223,6 +226,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     // evibased, edit label
     _editMeasurementLabel(
       commandsManager,
+      readonlyMode,
       userAuthenticationService,
       uiDialogService,
       measurementService,
@@ -791,6 +795,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           <div className="flex justify-center p-4">
             <ActionButtons
               userRoles={userRoles}
+              readonlyMode={readonlyMode}
               // onExportClick={exportReport}
               onCreateReportClick={createReport}
               // todo: 对于查看报告的情况分类disable button：
@@ -800,6 +805,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             />
           </div>
         )}
+        {/* evibased, only review has compared report section? */}
         {['review', 'reading'].includes(currentTask?.type) &&
           comparedTimepoint &&
           comparedReportInfo &&
@@ -823,6 +829,7 @@ PanelMeasurementTableTracking.propTypes = {
 // evibased, edit measurement info dialog
 function _editMeasurementLabel(
   commandsManager,
+  readonlyMode,
   userAuthenticationService,
   uiDialogService,
   measurementService,
@@ -834,10 +841,14 @@ function _editMeasurementLabel(
   const isNonMeasurementTool = measurement && NonMeasurementTools.includes(measurement.toolName);
 
   // if readonly mode, no editing
-  if (commandsManager.getContext('CORNERSTONE').ifReadonlyMode) {
-    measurement.readonly = true;
+  if (readonlyMode) {
     return;
   }
+  // deprecated, readonly mode
+  // if (commandsManager.getContext('CORNERSTONE').measurementReadonly) {
+  //   measurement.readonly = true;
+  //   return;
+  // }
 
   callInputDialog(
     uiDialogService,

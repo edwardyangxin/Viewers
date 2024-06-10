@@ -32,6 +32,7 @@ const machineConfiguration = {
     ignoredSRSeriesForHydration: [],
     isDirty: false,
     // evibased
+    readonlyMode: false,
     username: undefined,
     userRoles: undefined,
     currentTask: undefined,
@@ -115,6 +116,11 @@ const machineConfiguration = {
         // load report to measurements
         UPDATE_BACKEND_REPORT: {
           target: 'updateBackendReport',
+        },
+        UPDATE_READONLY_MODE: {
+          actions: assign({
+            readonlyMode: (_, event) => event.readonlyMode,
+          }),
         },
         UPDATE_USERNAME: {
           actions: assign({

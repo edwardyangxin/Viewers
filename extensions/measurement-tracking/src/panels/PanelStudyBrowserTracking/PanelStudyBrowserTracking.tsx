@@ -8,7 +8,7 @@ import StudyBrowser from '../../ui/StudyBrowser';
 import { useTrackedMeasurements } from '../../getContextModule';
 import i18n from '@ohif/i18n';
 import { getUserName, getUserRoles, getViewportId } from '../../utils/utils';
-import { getTaskByUserAndUID } from '../../utils/apiCall';
+import { getTaskByUserAndUID, getTimepointByUID, getUserSubjectData } from '../../utils/apiCall';
 
 const { formatDate } = utils;
 
@@ -126,7 +126,8 @@ function PanelStudyBrowserTracking({
       const realm_role = userAuthenticationService.getUser()?.profile?.realm_role;
       const ifDoctor = realm_role ? realm_role.includes('doctor') : false;
       const ifQC = realm_role ? realm_role.includes('QC') : false;
-      const ifManager = !ifDoctor && !ifQC;
+      const ifManager = !ifDoctor && !ifQC; // TODO: manager role?
+      let ifReadonlyMode = false;
 
       // apiv2 graphql, get current user task/timpoint/subject info
       const userTasks = await getTaskByUserAndUID(
@@ -136,26 +137,48 @@ function PanelStudyBrowserTracking({
         currentStudyInstanceUID
       );
       if (!userTasks || !userTasks.length) {
-        // pop warning dialog
-        console.error('no task found for user: ', username);
-        popContactAdminDialog(uiDialogService);
+        if (ifQC || ifManager) {
+          ifReadonlyMode = true;
+        } else {
+          // pop warning dialog
+          console.error('no task found for user: ', username);
+          popContactAdminDialog(uiDialogService);
+        }
       }
       // get current task based on url task type, find the first task, to ensure the task is align with mode
       const currentTask = userTasks.find(task => urlTaskType.includes(task.type));
       if (!currentTask) {
         // TODO: no task found for user, should be manager
         console.error('no task found for user: ', username);
+        if (ifQC || ifManager) {
+          ifReadonlyMode = true;
+        }
+      } else {
+        sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
+          currentTask: currentTask,
+        });
       }
-      const currentTimepoint = currentTask?.timepoint;
-      const currentSubject = currentTimepoint?.subject;
-      // set ifReadonlyMode to commandsManager CORNERSTONE context
-      // TODO: readonly mode refactor,
-      const ifReadonlyMode = ['QC', 'QC-report', 'arbitration', undefined, null].includes(currentTask?.type);
-      commandsManager.getContext('CORNERSTONE').ifReadonlyMode = ifReadonlyMode;
 
-      sendTrackedMeasurementsEvent('UPDATE_CURRENT_TASK', {
-        currentTask: currentTask,
-      });
+      let currentTimepoint;
+      if (ifReadonlyMode) {
+        // get current timepoint for readonly mode
+        currentTimepoint = await getTimepointByUID(
+          appConfig['evibased']['graphqlDR'],
+          authHeader?.Authorization,
+          currentStudyInstanceUID
+        );
+        // commandsManager.getContext('CORNERSTONE').measurementReadonly = true;
+        sendTrackedMeasurementsEvent('UPDATE_READONLY_MODE', {
+          readonlyMode: ifReadonlyMode,
+        });
+      } else {
+        currentTimepoint = currentTask?.timepoint;
+      }
+
+      // set ifReadonlyMode to commandsManager CORNERSTONE context
+      // deprecated
+      // commandsManager.getContext('CORNERSTONE').measurementReadonly = ['QC', 'QC-report', 'arbitration', undefined, null].includes(currentTask?.type);
+
       // task start time, for task duration, 计算task耗时起点
       const taskStartTime = new Date();
       console.log('task start time: ', taskStartTime);
@@ -165,6 +188,7 @@ function PanelStudyBrowserTracking({
 
       // evibased, getStudiesForPatientByMRN only need patientID to fetch all related studies in PACS
       // qidoForStudyUID in format of [{mrn: 'patientId'}]
+      const currentSubject = currentTimepoint?.subject;
       let qidoStudiesForPatient = [];
       try {
         qidoStudiesForPatient = await getStudiesForPatientByMRN([
@@ -806,88 +830,15 @@ async function _fetchBackendReports(
   try {
     // get username from userAuthenticationService
     const username = getUserName(userAuthenticationService);
-    const ifReviewTask = currentTask ? ['review', 'reading'].includes(currentTask.type) : false;
     const ifQCDataTask = currentTask ? 'QC-data' === currentTask.type : false;
-    const ifQCReportTask = currentTask ? 'QC-report' === currentTask.type : false;
-    // get all subject related tasks and reports
-    // get url headers and body
-    const url = new URL(appConfig.evibased['graphqlDR']);
-    const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    // if filter by task username
-    let queryStr;
-    if (ifReviewTask) {
-      // review task only see own reports
-      queryStr = `query GetAllReports {
-        subjectBySubjectId(subjectId: "${subjectId}", usernameTask: "${username}") `;
-    } else if (ifQCDataTask) {
-      // QC-data task only see own reports
-      queryStr = `query GetAllReports {
-        subjectBySubjectId(subjectId: "${subjectId}", usernameTask: "${username}") `;
-    } else {
-      // other see all reports
-      queryStr = `query GetAllReports {
-        subjectBySubjectId(subjectId: "${subjectId}") `;
-    }
-    const graphqlBody = JSON.stringify({
-      query:
-        queryStr +
-        `{
-          subjectId
-          history
-          disease
-          timepoints {
-            UID
-            cycle
-            status
-            tasks {
-              id
-              type
-              username
-              status
-              userAlias
-              report {
-                SOD
-                createTime
-                id
-                measurements
-                nonTargetResponse
-                reportTemplate
-                reportTemplateVersion
-                reportVersion
-                response
-                targetResponse
-                username
-                imageQuality
-                arbitrationComment
-                reviewComment
-                QCDataComment
-              }
-            }
-          }
-        }
-      }`,
-      variables: {},
-    });
-    const requestOptions = {
-      method: 'POST',
-      headers: headers,
-      body: graphqlBody,
-      // redirect: "follow"
-    };
-    const response = await fetch(url, requestOptions);
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
-    }
-    let subjectData;
-    const body = await response.json();
-    if (response.status >= 200 && response.status < 300) {
-      subjectData = body.data.subjectBySubjectId;
-    } else {
-      throw new Error(`HTTP error! status: ${response.status} body: ${body}`);
-    }
-
+    // fetch reports for each studies for current username
+    const subjectData = await getUserSubjectData(
+      appConfig['evibased']['graphqlDR'],
+      userAuthenticationService.getAuthorizationHeader()?.Authorization,
+      username,
+      subjectId,
+      currentTask
+    );
     const timepoints = subjectData?.timepoints;
     if (!timepoints || !timepoints.length) {
       console.log('no timepoints for subject: ', subjectId);
