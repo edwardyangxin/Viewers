@@ -21,7 +21,7 @@ import {
   newLesionKeyGroup,
 } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
-import { getPastReportDialog, getTimepointName, getViewportId } from '../../utils/utils';
+import { getPastReportDialog, getTimepointName, getViewportId, mapMeasurementToDisplay } from '../../utils/utils';
 import callInputDialog from '../../utils/callInputDialog';
 import { RecistV11Validator } from '../../utils/RecistV11Validator';
 
@@ -90,9 +90,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     const filteredMeasurements = measurements.filter(
       m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
     );
-
     const mappedMeasurements = filteredMeasurements.map(m =>
-      _mapMeasurementToDisplay(m, measurementService.VALUE_TYPES, displaySetService)
+      mapMeasurementToDisplay(m, displaySetService)
     );
     setDisplayMeasurements(mappedMeasurements);
     // eslint-ignore-next-line
@@ -389,14 +388,14 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   }
 
   // evibased, deprecated, call downloadCSVReport function
-  async function exportReport() {
-    const measurements = measurementService.getMeasurements();
-    const trackedMeasurements = measurements.filter(
-      m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
-    );
+  // async function exportReport() {
+  //   const measurements = measurementService.getMeasurements();
+  //   const trackedMeasurements = measurements.filter(
+  //     m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
+  //   );
 
-    downloadCSVReport(trackedMeasurements, measurementService);
-  }
+  //   downloadCSVReport(trackedMeasurements, measurementService);
+  // }
 
   // evibased, edit report button
   function createReport() {
@@ -821,7 +820,7 @@ PanelMeasurementTableTracking.propTypes = {
   }).isRequired,
 };
 
-// evibased
+// evibased, edit measurement info dialog
 function _editMeasurementLabel(
   commandsManager,
   userAuthenticationService,
@@ -923,159 +922,6 @@ function _mapComparedMeasurementToDisplay(measurement, index, displaySetService)
     finding: undefined,
     findingSites: undefined,
   };
-}
-
-// TODO: This could be a measurementService mapper
-function _mapMeasurementToDisplay(measurement, types, displaySetService) {
-  const { referenceStudyUID, referenceSeriesUID, SOPInstanceUID } = measurement;
-
-  // TODO: We don't deal with multiframe well yet, would need to update
-  // This in OHIF-312 when we add FrameIndex to measurements.
-
-  // deprecated
-  // const instance = DicomMetadataStore.getInstance(
-  //   referenceStudyUID,
-  //   referenceSeriesUID,
-  //   SOPInstanceUID
-  // );
-
-  const displaySets = displaySetService.getDisplaySetsForSeries(referenceSeriesUID);
-
-  if (!displaySets[0] || !displaySets[0].images) {
-    throw new Error('The tracked measurements panel should only be tracking "stack" displaySets.');
-  }
-
-  const {
-    displayText: baseDisplayText,
-    uid,
-    label: baseLabel,
-    type,
-    selected,
-    findingSites,
-    finding,
-    measurementLabelInfo, // evibased, add measurementLabelInfo
-    toolName, // evibased
-    data, // evibased
-  } = measurement;
-
-  const firstSite = findingSites?.[0];
-  const label = baseLabel || finding?.text || firstSite?.text || '(empty)';
-  let displayText = baseDisplayText || [];
-  if (findingSites) {
-    const siteText = [];
-    findingSites.forEach(site => {
-      if (site?.text !== label) {
-        siteText.push(site.text);
-      }
-    });
-    displayText = [...siteText, ...displayText];
-  }
-  if (finding && finding?.text !== label) {
-    displayText = [finding.text, ...displayText];
-  }
-
-  return {
-    uid,
-    label,
-    baseLabel,
-    measurementType: type,
-    displayText,
-    baseDisplayText,
-    isActive: selected,
-    finding,
-    findingSites,
-    measurementLabelInfo, // evibased
-    toolName, // evibased
-    data, // evibased
-    modality: displaySets[0]?.Modality, // evibased
-  };
-}
-
-// evibased, deprecated? convert measurements, based on core>utils>dowanloadCSVReport.js
-function _convertToReportMeasurements(measurementData) {
-  const columns = [
-    'Patient ID',
-    'Patient Name',
-    'StudyInstanceUID',
-    'SeriesInstanceUID',
-    'SOPInstanceUID',
-    'Label',
-  ];
-
-  const reportMap = {};
-  measurementData.forEach(measurement => {
-    const { referenceStudyUID, referenceSeriesUID, getReport, uid } = measurement;
-
-    if (!getReport) {
-      console.warn('Measurement does not have a getReport function');
-      return;
-    }
-
-    const seriesMetadata = DicomMetadataStore.getSeries(referenceStudyUID, referenceSeriesUID);
-
-    const commonRowItems = _getCommonRowItems(measurement, seriesMetadata);
-    const report = getReport(measurement);
-
-    reportMap[uid] = {
-      report,
-      commonRowItems,
-    };
-  });
-
-  // get columns names inside the report from each measurement and
-  // add them to the rows array (this way we can add columns for any custom
-  // measurements that may be added in the future)
-  Object.keys(reportMap).forEach(id => {
-    const { report } = reportMap[id];
-    report.columns.forEach(column => {
-      if (!columns.includes(column)) {
-        columns.push(column);
-      }
-    });
-  });
-
-  const results = _mapReportsToMeasurements(reportMap, columns);
-  return results;
-}
-
-function _getCommonRowItems(measurement, seriesMetadata) {
-  const firstInstance = seriesMetadata.instances[0];
-
-  return {
-    'Patient ID': firstInstance.PatientID, // Patient ID
-    'Patient Name': firstInstance.PatientName?.Alphabetic || '', // Patient Name
-    StudyInstanceUID: measurement.referenceStudyUID, // StudyInstanceUID
-    SeriesInstanceUID: measurement.referenceSeriesUID, // SeriesInstanceUID
-    SOPInstanceUID: measurement.SOPInstanceUID, // SOPInstanceUID
-    Label: measurement.label || '', // Label
-  };
-}
-
-function _mapReportsToMeasurements(reportMap, columns) {
-  const results = [];
-  Object.keys(reportMap).forEach(id => {
-    const { report, commonRowItems } = reportMap[id];
-    const item = {};
-    // For commonRowItems, find the correct index and add the value to the
-    // correct row in the results array
-    Object.keys(commonRowItems).forEach(key => {
-      // const index = columns.indexOf(key);
-      const value = commonRowItems[key];
-      item[key] = value;
-    });
-
-    // For each annotation data, find the correct index and add the value to the
-    // correct row in the results array
-    report.columns.forEach((column, index) => {
-      // const colIndex = columns.indexOf(column);
-      const value = report.values[index];
-      item[column] = value;
-    });
-
-    results.push(item);
-  });
-
-  return results;
 }
 
 export default PanelMeasurementTableTracking;

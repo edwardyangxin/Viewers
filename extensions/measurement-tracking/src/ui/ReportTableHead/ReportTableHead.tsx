@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
+// evibased, deprecated
 const ReportTableHead = ({ children, className, style }) => {
   return (
     <div

@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { TableBody, TableRow, TableCell } from '@ohif/ui';
-import ReportTableHead from '../ReportTableHead';
+import { TableBody, TableRow, TableCell, Tooltip, Typography } from '@ohif/ui';
 import ReportTable from '../ReportTable';
 import WarningInfoTooltip from '../WarningInfoTooltip';
 
@@ -13,44 +12,50 @@ const TargetListExpandedRow = ({
   tableDataSource,
   tabelBgColor = 'bg-slate-300',
 }) => {
-  const cellsNum = Object.keys(tableColumns).length;
   return (
     <div className={`w-full py-4 pl-12 pr-2 ${tabelBgColor}`}>
       {tableTitle && <div className="text-lg font-bold text-black">{tableTitle}</div>}
       <div>
         <ReportTable>
-          <ReportTableHead>
-            <TableRow>
+          <div className="flex border-b pr-2 font-bold">
+            <TableRow isTableHead={true}>
               {Object.keys(tableColumns).map((columnKey, i) => {
                 return (
-                  <TableCell
-                    cellsNum={cellsNum}
-                    key={tableId + columnKey + i}
-                  >
-                    {tableColumns[columnKey]}
-                  </TableCell>
+                  <TableCell key={tableId + columnKey + i}>{tableColumns[columnKey]}</TableCell>
                 );
               })}
             </TableRow>
-          </ReportTableHead>
+          </div>
 
           <TableBody>
             {tableDataSource.map((row, i) => {
               const warningInfo = row.warningInfo;
+              const showToolTipColumnIndex = row.showToolTipColumnIndex || [];
+              // TableRow 会计算 children 的数量来设置TableCell cellsNum的长度，所以这里需要删除 warningInfo 和 showToolTipColumnIndex
               delete row.warningInfo;
+              delete row.showToolTipColumnIndex;
               return (
                 <TableRow key={tableId + 'Row' + i}>
                   {Object.keys(row).map((cellKey, j) => {
                     const content = row[cellKey];
                     const ifIndexCell = cellKey === 'index';
                     const lesionIndex = row.index;
+                    const showToolTip = showToolTipColumnIndex.includes(j);
                     return (
-                      <TableCell
-                        cellsNum={cellsNum}
-                        key={tableId + 'Cell' + lesionIndex + j}
-                      >
+                      <TableCell key={tableId + 'Cell' + lesionIndex + j}>
                         <div className="flex">
-                          <span className="truncate">{content}</span>
+                          {showToolTip ? (
+                            <span className="truncate">
+                              <Tooltip
+                                position="top"
+                                content={<Typography>{content}</Typography>}
+                              >
+                                <div>{content}</div>
+                              </Tooltip>
+                            </span>
+                          ) : (
+                            <span className="truncate">{content}</span>
+                          )}
                           {ifIndexCell && warningInfo && warningInfo.length > 0 && (
                             <WarningInfoTooltip
                               id={`${tableId}Meas${lesionIndex}${i}`}

@@ -12,7 +12,7 @@ import {
   targetResponseOptions,
 } from '../../utils/mappings';
 import TargetListTable, { TargetListExpandedRow } from '../../ui/TargetListTable';
-import { locationStrBuilder } from '../../utils/utils';
+import { locationStrBuilder, mapMeasurementToDisplay } from '../../utils/utils';
 import ReportDialog from '../../ui/ReportDialog';
 import { RecistV11Validator } from '../../utils/RecistV11Validator';
 import WarningInfoTooltip from '../../ui/WarningInfoTooltip';
@@ -29,8 +29,9 @@ export default function CreateReportDialogPrompt(
   imageQuality,
   uiDialogService,
   measurementService,
-  { extensionManager }
+  { servicesManager }
 ) {
+  const { displaySetService } = servicesManager.services;
   const {
     trackedStudy,
     trackedSeries,
@@ -55,6 +56,9 @@ export default function CreateReportDialogPrompt(
   const filteredMeasurements = measurements.filter(
     m => trackedStudy === m.referenceStudyUID && trackedSeries.includes(m.referenceSeriesUID)
   );
+  const mappedMeasurements = filteredMeasurements.map(m =>
+    mapMeasurementToDisplay(m, displaySetService)
+  );
 
   // if baseline or followup
   const ifBaseline = currentTimepoint.ifBaseline;
@@ -71,7 +75,7 @@ export default function CreateReportDialogPrompt(
   const nonTargetFindings = [];
   const newLesionFindings = [];
   const otherFindings = [];
-  for (const dm of filteredMeasurements) {
+  for (const dm of mappedMeasurements) {
     // get target info
     const lesionValue = dm.label.split('|')[1];
     if (!(lesionValue in LesionMapping)) {
@@ -148,7 +152,7 @@ export default function CreateReportDialogPrompt(
       uiDialogService.dismiss({ id: dialogId });
       switch (action.id) {
         case 'save':
-          let returnVal = {
+          const returnVal = {
             ...value,
             reportInfo: {
               SOD: parseFloat(value.SOD),
@@ -157,7 +161,7 @@ export default function CreateReportDialogPrompt(
               nonTargetResponse: value.nonTargetResponse,
               response: value.response,
               reviewComment: value.reviewComment,
-            }
+            },
           };
           if (taskType === 'arbitration') {
             // 仲裁
@@ -226,7 +230,9 @@ export default function CreateReportDialogPrompt(
           nonTargetResponse: currentReportInfo ? currentReportInfo.nonTargetResponse : 'Baseline',
           response: currentReportInfo ? currentReportInfo.response : 'Baseline',
           reviewComment: currentReportInfo ? currentReportInfo.reviewComment : '',
-          arbitrationComment: currentReportInfo?.arbitrationComment ? currentReportInfo.arbitrationComment : null,
+          arbitrationComment: currentReportInfo?.arbitrationComment
+            ? currentReportInfo.arbitrationComment
+            : null,
         },
         noCloseButton: false,
         onClose: _handleClose,
@@ -274,14 +280,14 @@ export default function CreateReportDialogPrompt(
           if (!ifBaseline) {
             SODChangeInfo = [
               `与基线SOD(${baselineSOD}mm)对比:${
-                (parseFloat(value.SOD) - baselineSOD) >= 0 ? '+' : ''}${(
-                ((parseFloat(value.SOD) - baselineSOD) / baselineSOD) *
-                100).toFixed(1)}%;`,
-              `与最低SOD(${lowestSOD}mm)对比:${(
-                parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
-                parseFloat(value.SOD) - lowestSOD).toFixed(1)}mm & ${(
-                parseFloat(value.SOD) - lowestSOD) >= 0 ? '+' : ''}${(
-                ((parseFloat(value.SOD) - lowestSOD) / lowestSOD) * 100).toFixed(1)}%;`,
+                parseFloat(value.SOD) - baselineSOD >= 0 ? '+' : ''
+              }${(((parseFloat(value.SOD) - baselineSOD) / baselineSOD) * 100).toFixed(1)}%;`,
+              `与最低SOD(${lowestSOD}mm)对比:${parseFloat(value.SOD) - lowestSOD >= 0 ? '+' : ''}${(
+                parseFloat(value.SOD) - lowestSOD
+              ).toFixed(1)}mm & ${parseFloat(value.SOD) - lowestSOD >= 0 ? '+' : ''}${(
+                ((parseFloat(value.SOD) - lowestSOD) / lowestSOD) *
+                100
+              ).toFixed(1)}%;`,
             ];
           }
 
@@ -363,7 +369,11 @@ export default function CreateReportDialogPrompt(
                           // console.info('newSelection:', newSelection, 'action:', action);
                           const validator = value.validator;
                           validator.setTargetResponse(newSelection?.value);
-                          setValue(value => ({ ...value, targetResponse: newSelection?.value, validator}));
+                          setValue(value => ({
+                            ...value,
+                            targetResponse: newSelection?.value,
+                            validator,
+                          }));
                         }}
                         options={targetResponseOptions}
                         isDisabled={!ifReviewTask || ifBaseline}
@@ -372,7 +382,9 @@ export default function CreateReportDialogPrompt(
                   </div>
                   <div className="flex grow flex-row justify-evenly">
                     <div className="w-1/3">
-                      <label className="text-[14px] leading-[1.2] text-black">{ifBaseline ? '非靶病灶评估(基线)' : '非靶病灶评估'}</label>
+                      <label className="text-[14px] leading-[1.2] text-black">
+                        {ifBaseline ? '非靶病灶评估(基线)' : '非靶病灶评估'}
+                      </label>
                       <Select
                         id="nonTargetResponse"
                         isClearable={false}
@@ -453,12 +465,18 @@ export default function CreateReportDialogPrompt(
                             value={value.arbitrationComment}
                             onChange={event => {
                               event.persist();
-                              setValue(value => ({ ...value, arbitrationComment: event.target.value }));
+                              setValue(value => ({
+                                ...value,
+                                arbitrationComment: event.target.value,
+                              }));
                             }}
                             onKeyUp={event => {
                               event.persist();
                               if (event.key === 'Enter') {
-                                setValue(value => ({ ...value, arbitrationComment: event.target.value }));
+                                setValue(value => ({
+                                  ...value,
+                                  arbitrationComment: event.target.value,
+                                }));
                               }
                             }}
                             disabled={!ifArbitrationTask}
@@ -531,6 +549,7 @@ function getTargetExpandedContent(targetFindings) {
             diameter: `${diameter.toFixed(1)} mm`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             warningInfo: dm.validationInfo?.messages,
+            showToolTipColumnIndex: [2, 4], // show tooltip for lesionLocation and comment
           };
         })}
       />
@@ -571,6 +590,7 @@ function getTargetExpandedContent(targetFindings) {
               diameter: `${diameter.toFixed(1)} mm`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
               warningInfo: dm.validationInfo?.messages,
+              showToolTipColumnIndex: [2, 4], // show tooltip for lesionLocation and comment
             };
           })}
         />
@@ -603,6 +623,7 @@ function getNonTargetExpandedContent(nonTargetFindings) {
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             warningInfo: dm.validationInfo?.messages,
+            showToolTipColumnIndex: [2, 4], // show tooltip for lesionLocation and comment
           };
         })}
       />
@@ -647,6 +668,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             warningInfo: dm.validationInfo?.messages,
+            showToolTipColumnIndex: [2, 4], // show tooltip for lesionLocation and comment
           };
         })}
       />
@@ -676,6 +698,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
               displayText: `${dm.displayText.join(' ')}`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
               warningInfo: dm.validationInfo?.messages,
+              showToolTipColumnIndex: [2, 3], // show tooltip for lesionLocation and comment
             };
           })}
         />

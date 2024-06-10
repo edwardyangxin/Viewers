@@ -137,7 +137,7 @@ const Tooltip = ({
 
   const tooltipContent = (
     <div
-      className={classnames(`tooltip tooltip-${position} block`, 'z-50')}
+      className={classnames(`tooltip tooltip-${position} block`, 'z-100')} //evibased, z-100 is to make sure the tooltip is on top of everything
       style={{
         position: 'fixed',
         top: coords.y,

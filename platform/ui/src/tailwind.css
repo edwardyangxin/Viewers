@@ -11,6 +11,13 @@
   }
 }
 
+/* evibased, added for components */
+@layer components {
+  .z-100 {
+    z-index: 100;
+  }
+}
+
 body {
   background-color: #000;
 }

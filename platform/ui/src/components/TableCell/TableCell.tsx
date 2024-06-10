@@ -8,7 +8,7 @@ const TableCell = ({
   colSpan,
   // ignored because we don't want to expose this prop
   // eslint-disable-next-line react/prop-types
-  cellsNum,
+  cellsNum, // evibased, cellsNum 会被TableRow计算传入，这里不需要传入
   isTableHead,
   align,
   style,

@@ -101,6 +101,72 @@ function locationStrBuilder(measurementLabelInfo) {
   return lesionLocationStr;
 }
 
+// TODO: This could be a measurementService mapper?
+function mapMeasurementToDisplay(measurement, displaySetService) {
+  const { referenceStudyUID, referenceSeriesUID, SOPInstanceUID } = measurement;
+
+  // TODO: We don't deal with multiframe well yet, would need to update
+  // This in OHIF-312 when we add FrameIndex to measurements.
+
+  // deprecated
+  // const instance = DicomMetadataStore.getInstance(
+  //   referenceStudyUID,
+  //   referenceSeriesUID,
+  //   SOPInstanceUID
+  // );
+
+  const displaySets = displaySetService.getDisplaySetsForSeries(referenceSeriesUID);
+
+  if (!displaySets[0] || !displaySets[0].images) {
+    throw new Error('The tracked measurements panel should only be tracking "stack" displaySets.');
+  }
+
+  const {
+    displayText: baseDisplayText,
+    uid,
+    label: baseLabel,
+    type,
+    selected,
+    findingSites,
+    finding,
+    measurementLabelInfo, // evibased, add measurementLabelInfo
+    toolName, // evibased
+    data, // evibased
+  } = measurement;
+
+  const firstSite = findingSites?.[0];
+  const label = baseLabel || finding?.text || firstSite?.text || '(empty)';
+  let displayText = baseDisplayText || [];
+  if (findingSites) {
+    const siteText = [];
+    findingSites.forEach(site => {
+      if (site?.text !== label) {
+        siteText.push(site.text);
+      }
+    });
+    displayText = [...siteText, ...displayText];
+  }
+  if (finding && finding?.text !== label) {
+    displayText = [finding.text, ...displayText];
+  }
+
+  return {
+    uid,
+    label,
+    baseLabel,
+    measurementType: type,
+    displayText,
+    baseDisplayText,
+    isActive: selected,
+    finding,
+    findingSites,
+    measurementLabelInfo, // evibased
+    toolName, // evibased
+    data, // evibased
+    modality: displaySets[0]?.Modality, // evibased
+  };
+}
+
 function reportMeasurementToReadonlyMeasurement(
   extensionManager,
   measurementService,
@@ -399,6 +465,7 @@ function getTargetExpandedContent(targetFindings) {
             lesionLocation: lesionLocationStr,
             diameter: `${diameter.toFixed(1)} mm`,
             comment: dm.label_info.comment ? dm.label_info.comment : '',
+            showToolTipColumnIndex: [2, 4],
           };
         })}
       />
@@ -440,6 +507,7 @@ function getTargetExpandedContent(targetFindings) {
               lesionLocation: lesionLocationStr,
               diameter: `${diameter.toFixed(1)} mm`,
               comment: dm.label_info.comment ? dm.label_info.comment : '',
+              showToolTipColumnIndex: [2, 4],
             };
           })}
         />
@@ -470,6 +538,7 @@ function getNonTargetExpandedContent(nonTargetFindings) {
             lesionLocation: lesionLocationStr,
             displayText: '',
             comment: dm.label_info.comment ? dm.label_info.comment : '',
+            showToolTipColumnIndex: [2, 4],
           };
         })}
       />
@@ -512,6 +581,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
             lesionLocation: lesionLocationStr,
             displayText: '',
             comment: dm.label_info.comment ? dm.label_info.comment : '',
+            showToolTipColumnIndex: [2, 4],
           };
         })}
       />
@@ -537,6 +607,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
               lesionLocation: organStr,
               displayText: '',
               comment: dm.label_info.comment ? dm.label_info.comment : '',
+              showToolTipColumnIndex: [2, 3],
             };
           })}
         />
@@ -545,6 +616,7 @@ function getNewLesionExpandedContent(newLesionFindings) {
   );
 }
 
+// TODO: createReportDialogPrompt 里面也有一个tableDataSource， 重构统一起来，全部放到这里
 function getTableDataSource(targetFindings, nonTargetFindings, newLesionFindings, SOD) {
   const tableDataSource = [];
   // target
@@ -1079,6 +1151,7 @@ export {
   buildWadorsImageId,
   getViewportId,
   locationStrBuilder,
+  mapMeasurementToDisplay,
   reportMeasurementToReadonlyMeasurement,
   parseMeasurementLabelInfo,
   getTableDataSource,

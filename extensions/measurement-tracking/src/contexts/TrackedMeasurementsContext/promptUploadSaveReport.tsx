@@ -44,7 +44,7 @@ function promptSaveReport({ servicesManager, commandsManager, extensionManager }
         uiDialogService,
         measurementService,
         {
-          extensionManager,
+          servicesManager,
         }
       );
     }
