@@ -801,7 +801,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         {['review', 'QC-report', 'arbitration'].includes(currentTask?.type) &&
           comparedTimepoint &&
           comparedReportInfo &&
-          getComparedTimepointReport(currentTask.type === 'review')}
+          getComparedTimepointReport(currentTask?.type === 'review')}
       </div>
     </>
   );

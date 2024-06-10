@@ -602,6 +602,7 @@ function WorkList({
                       modalities: modalitiesToCheck,
                       study,
                       taskTypes: taskTypes,
+                      ifManager,
                     });
                   // TODO: Modes need a default/target route? We mostly support a single one for now.
                   // We should also be using the route path, but currently are not
@@ -623,11 +624,6 @@ function WorkList({
                           // In case any event bubbles up for an invalid mode, prevent the navigation.
                           // For example, the event bubbles up when the icon embedded in the disabled button is clicked.
                           event.preventDefault();
-                          // check role, if manager, no mode allowed
-                          if (ifManager) {
-                            console.log('manager not allowed to enter mode!');
-                            return;
-                          }
 
                           // evibased, get the path for study
                           const query = new URLSearchParams();
@@ -635,11 +631,11 @@ function WorkList({
                             query.append('configUrl', filterValues.configUrl);
                           }
                           let path = `${dataPath ? '../../' : ''}${mode.routeName}${dataPath || ''}?`;
-                          if (ifBaseline) {
+                          if (ifBaseline || ifManager) {
+                            // magager not going to compare mode
                             query.append('StudyInstanceUIDs', studyInstanceUid);
                           } else {
-                            // get the last study uid for comparison mode
-                            // const comparedStudy = await getStudyInfoByTrialId(dataSource, mrn, `T${trialId - 1}`);
+                            // comparison mode, hp=timepointCompare
                             const timepoints = timepoint?.subject?.timepoints;
                             if (!timepoints) {
                               query.append('StudyInstanceUIDs', studyInstanceUid);

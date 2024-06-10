@@ -224,14 +224,16 @@ function modeFactory({ modeConfiguration }) {
       series: [],
     },
 
-    isValidMode: function ({ modalities, taskTypes }) {
+    isValidMode: function ({ modalities, taskTypes, ifManager }) {
       // const modalities_list = modalities.split('\\');
 
       let valid = false;
-      for (const taskType of taskTypes) {
-        if (!['QC-data', 'QC-report'].includes(taskType)) {
-          valid = true;
-          break;
+      if (!ifManager) {
+        for (const taskType of taskTypes) {
+          if (!['QC-data', 'QC-report'].includes(taskType)) {
+            valid = true;
+            break;
+          }
         }
       }
       // Exclude non-image modalities

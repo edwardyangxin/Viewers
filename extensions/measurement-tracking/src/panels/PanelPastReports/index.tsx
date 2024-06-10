@@ -213,7 +213,7 @@ function PastReports({ servicesManager, extensionManager }) {
     <>
       <div className="ohif-scrollbar invisible-scrollbar flex flex-1 flex-col overflow-auto">
         {allTimepoints && allTimepoints.length > 0 ? (
-          getTabContent(currentTask.type === 'review')
+          getTabContent(currentTask?.type === 'review')
         ) : (
           <div className="flex h-full items-center justify-center">
             <div className="text-lg text-gray-500">无报告</div>
