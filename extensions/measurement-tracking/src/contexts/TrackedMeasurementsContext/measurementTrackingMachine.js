@@ -1,6 +1,4 @@
-import { hydrateStructuredReport } from '@ohif/extension-cornerstone-dicom-sr';
 import { assign } from 'xstate';
-import { annotation as CsAnnotation } from '@cornerstonejs/tools';
 import { reportMeasurementToReadonlyMeasurement } from '../../utils/utils';
 import { imageQualityMapping } from '../../utils/mappings';
 
@@ -179,6 +177,9 @@ const machineConfiguration = {
         },
         UPDATE_COMPARED_TIMEPOINT: {
           actions: ['updateComparedTimepointInfo'],
+        },
+        SWITCH_COMPARED_REPORT: {
+          actions: ['switchComparedReport'],
         },
         UPDATE_COMPARED_REPORT: {
           actions: assign({
@@ -638,48 +639,66 @@ const defaultOptions = {
       const comparedViewportId = evt.comparedViewportId ? evt.comparedViewportId : 'default';
       const appConfig = evt.appConfig;
       // check comparedTimepoint studyInstanceUid
+      const comparedTimepoint = evt.comparedTimepoint;
       if (
-        !evt.comparedTimepoint ||
-        ctx.comparedTimepoint?.studyInstanceUid === evt.comparedTimepoint.studyInstanceUid
+        !comparedTimepoint ||
+        ctx.comparedTimepoint?.studyInstanceUid === comparedTimepoint.studyInstanceUid
       ) {
         // no comparedTimepoint or same studyInstanceUid
         return {};
-      } else {
-        // deprecated, different studyInstanceUid, clear all readonly measurements
-        // measurementService.clearReadonlyMeasurements();
       }
 
-      // create readonly measurements and annotations
-      // default load first report
-      let reportData = evt.comparedTimepoint.reports ? evt.comparedTimepoint.reports[0] : undefined;
-      if (!reportData) {
+      const reportsList = comparedTimepoint.reports;
+      if (!reportsList) {
         // timepoint without report
         return {
-          comparedTimepoint: evt.comparedTimepoint,
+          comparedTimepoint: comparedTimepoint,
         };
       }
 
-      // const reportInfo = reportData.report_info;
-      let measurements = reportData.measurements;
-
-      // loop through all measurements, and create readonly measurements and annotations
-      for (let i = 0; i < measurements.length; i++) {
-        let measurement = measurements[i];
-        const newReadonlyMeasurementUID = reportMeasurementToReadonlyMeasurement(
-          extensionManager,
-          measurementService,
-          appConfig,
-          measurement
-        );
-        measurement.readonlyMeasurementUID = newReadonlyMeasurementUID;
+      // default load first report
+      const selectedReportIndex = 0;
+      let reportData = reportsList[selectedReportIndex];
+      _loadComparedTimepointReport(reportData, comparedViewportId, {
+        extensionManager,
+        measurementService,
+        appConfig,
+      });
+      comparedTimepoint.selectedReportIndex = selectedReportIndex;
+      return {
+        comparedTimepoint: comparedTimepoint,
+      };
+    }),
+    // evibased, switch compared report
+    switchComparedReport: assign((ctx, evt) => {
+      console.log('measurementTrackingMachine action(switchComparedReport): ', evt.type, evt);
+      const extensionManager = evt.extensionManager;
+      const measurementService = evt.measurementService;
+      const comparedViewportId = evt.comparedViewportId ? evt.comparedViewportId : 'default';
+      const appConfig = evt.appConfig;
+      let reportIndex = evt.reportIndex;
+      // check comparedTimepoint studyInstanceUid
+      const comparedTimepoint = ctx.comparedTimepoint;
+      const reportsList = comparedTimepoint?.reports;
+      if (!comparedTimepoint || !reportsList) {
+        // timepoint without report
+        return {};
       }
 
-      // auto jump to first measurement in compared viewport
-      const firstMeasurementUid = measurements[0].uid;
-      measurementService.jumpToReadonlyMeasurement(comparedViewportId, firstMeasurementUid);
+      if (reportIndex !== 0 && !reportIndex) {
+        // no reportIndex, default load next report
+        reportIndex = comparedTimepoint.selectedReportIndex + 1;
+        if (reportIndex >= reportsList.length) {
+          reportIndex = 0;
+        }
+      }
 
+      // default load first report
+      let reportData = reportsList[reportIndex];
+      _loadComparedTimepointReport(reportData, comparedViewportId, {extensionManager, measurementService, appConfig});
+      const newComparedTimepoint = {...comparedTimepoint, selectedReportIndex: reportIndex};
       return {
-        comparedTimepoint: evt.comparedTimepoint,
+        comparedTimepoint: newComparedTimepoint,
       };
     }),
   },
@@ -775,5 +794,32 @@ const defaultOptions = {
       evt.data && evt.data.userResponse === RESPONSE.CREATE_REPORT && evt.data.successSaveReport,
   },
 };
+
+// evibased, load compared timepoint report
+function _loadComparedTimepointReport(
+  reportData,
+  comparedViewportId,
+  { extensionManager, measurementService, appConfig }
+) {
+  console.info('Load compared timepoint report: ', reportData);
+  let measurements = reportData.measurements;
+  // clear all readonly measurements
+  measurementService.clearReadonlyMeasurements();
+  // loop through all measurements, and create readonly measurements and annotations
+  for (let i = 0; i < measurements.length; i++) {
+    let measurement = measurements[i];
+    const newReadonlyMeasurementUID = reportMeasurementToReadonlyMeasurement(
+      extensionManager,
+      measurementService,
+      appConfig,
+      measurement
+    );
+    measurement.readonlyMeasurementUID = newReadonlyMeasurementUID;
+  }
+
+  // auto jump to first measurement in compared viewport
+  const firstMeasurementUid = measurements[0].uid;
+  measurementService.jumpToReadonlyMeasurement(comparedViewportId, firstMeasurementUid);
+}
 
 export { defaultOptions, machineConfiguration, RESPONSE };

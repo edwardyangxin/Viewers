@@ -277,19 +277,10 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     if (!comparedTimepoint) {
       return;
     }
-    const {
-      studyInstanceUid,
-      date,
-      description,
-      numInstances,
-      modalities,
-      displaySets,
-      trialTimePointId,
-      reports,
-    } = comparedTimepoint;
+    const { reports, selectedReportIndex } = comparedTimepoint;
     // const trialTimePointInfo = trialTimePointId ? getTimepointName(trialTimePointId) : '';
     // 现在只取第一个report，作为阅片任务的对比报告
-    const report = reports?.[0];
+    const report = reports?.[selectedReportIndex];
 
     const targetFindings = [];
     const newLesionFindings = [];
@@ -598,17 +589,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
 
   // evibased, get compared timepoint report
   // TODO: put these in a useEffect to avoid re-rendering?
-  const getComparedTimepointReport = () => {
-    const {
-      studyInstanceUid,
-      date,
-      description,
-      numInstances,
-      modalities,
-      displaySets,
-      trialTimePointId,
-      reports,
-    } = comparedTimepoint;
+  const getComparedTimepointReport = ifReviewTask => {
+    const { studyInstanceUid, trialTimePointId, reports } = comparedTimepoint;
     const { report, targetFindings, newLesionFindings, nonTargetFindings, otherFindings } =
       comparedReportInfo;
     const trialTimePointName = trialTimePointId ? getTimepointName(trialTimePointId) : '';
@@ -629,7 +611,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
           studyInstanceUid={studyInstanceUid}
           trialTimePointInfo={trialTimePointName}
           // username={userAlias ? userAlias : username}
-          username={username} // only for review task now, show username instead of userAlias
+          username={ifReviewTask ? username : userAlias} // show username for review task, userAlias for others
           SOD={SOD}
           response={response}
           isActive={extendedComparedReport}
@@ -640,6 +622,16 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             event.stopPropagation();
             getPastReportDialog(uiDialogService, trialTimePointName, report);
           }}
+          onSwitchReport={event => {
+            event.stopPropagation();
+            sendTrackedMeasurementsEvent('SWITCH_COMPARED_REPORT', {
+              extensionManager: extensionManager,
+              measurementService: measurementService,
+              comparedTimepoint: comparedTimepoint,
+              appConfig: appConfig,
+            });
+          }}
+          showSwitchButton={reports && reports.length > 1 ? true : false}
           data-cy="compared-report-list"
         />
         {extendedComparedReport && username && (
@@ -805,11 +797,11 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             />
           </div>
         )}
-        {/* evibased, only review has compared report section? */}
-        {['review', 'reading'].includes(currentTask?.type) &&
+        {/* evibased, compared report section, 右下角 */}
+        {['review', 'QC-report', 'arbitration'].includes(currentTask?.type) &&
           comparedTimepoint &&
           comparedReportInfo &&
-          getComparedTimepointReport()}
+          getComparedTimepointReport(currentTask.type === 'review')}
       </div>
     </>
   );

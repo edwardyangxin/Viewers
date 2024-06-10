@@ -18,6 +18,8 @@ const PastReportItem = ({
   isActive,
   onClick,
   onReportClick = event => {},
+  onSwitchReport = event => {},
+  showSwitchButton = false,
 }) => {
   const option = responseOptions.find(option => option.value === response);
   const responseLabel = option ? option.label : '未知';
@@ -46,16 +48,30 @@ const PastReportItem = ({
               <br />
               {`SOD:${parseFloat(SOD).toFixed(1)}mm`}
             </div>
-            <LegacyButton
-              key={studyInstanceUid + '-report-button'}
-              className={'min-w-18 p-2 text-base text-white'}
-              size="initial"
-              color={'primaryActive'}
-              bgColor={'bg-primary-main'}
-              onClick={onReportClick}
-            >
-              {'查看报告'}
-            </LegacyButton>
+            <div className="flex flex-col justify-between">
+              {showSwitchButton && (
+                <LegacyButton
+                  key={studyInstanceUid + '-report-switch-button'}
+                  className={'min-w-18 hover:bg-primary-dark p-2 mb-2 text-base text-white'}
+                  size="initial"
+                  color={'primaryActive'}
+                  bgColor={'bg-primary-main'}
+                  onClick={onSwitchReport}
+                >
+                  {'报告切换'}
+                </LegacyButton>
+              )}
+              <LegacyButton
+                key={studyInstanceUid + '-report-button'}
+                className={'min-w-18 p-2 text-base text-white hover:bg-primary-dark'}
+                size="initial"
+                color={'primaryActive'}
+                bgColor={'bg-primary-main'}
+                onClick={onReportClick}
+              >
+                {'查看报告'}
+              </LegacyButton>
+            </div>
           </div>
         ) : (
           <div className="flex flex-row items-center justify-between pt-2 pb-2">
