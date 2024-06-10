@@ -465,7 +465,6 @@ function getTargetExpandedContent(targetFindings) {
             lesionLocation: lesionLocationStr,
             diameter: `${diameter.toFixed(1)} mm`,
             comment: dm.label_info.comment ? dm.label_info.comment : '',
-            showToolTipColumnIndex: [2, 4],
           };
         })}
       />
@@ -507,7 +506,6 @@ function getTargetExpandedContent(targetFindings) {
               lesionLocation: lesionLocationStr,
               diameter: `${diameter.toFixed(1)} mm`,
               comment: dm.label_info.comment ? dm.label_info.comment : '',
-              showToolTipColumnIndex: [2, 4],
             };
           })}
         />
@@ -538,7 +536,6 @@ function getNonTargetExpandedContent(nonTargetFindings) {
             lesionLocation: lesionLocationStr,
             displayText: '',
             comment: dm.label_info.comment ? dm.label_info.comment : '',
-            showToolTipColumnIndex: [2, 4],
           };
         })}
       />
@@ -581,7 +578,6 @@ function getNewLesionExpandedContent(newLesionFindings) {
             lesionLocation: lesionLocationStr,
             displayText: '',
             comment: dm.label_info.comment ? dm.label_info.comment : '',
-            showToolTipColumnIndex: [2, 4],
           };
         })}
       />
@@ -607,7 +603,6 @@ function getNewLesionExpandedContent(newLesionFindings) {
               lesionLocation: organStr,
               displayText: '',
               comment: dm.label_info.comment ? dm.label_info.comment : '',
-              showToolTipColumnIndex: [2, 3],
             };
           })}
         />

@@ -549,7 +549,6 @@ function getTargetExpandedContent(targetFindings) {
             diameter: `${diameter.toFixed(1)} mm`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             warningInfo: dm.validationInfo?.messages,
-            showToolTipColumnIndex: [2, 4], // show tooltip for lesionLocation and comment
           };
         })}
       />
@@ -590,7 +589,6 @@ function getTargetExpandedContent(targetFindings) {
               diameter: `${diameter.toFixed(1)} mm`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
               warningInfo: dm.validationInfo?.messages,
-              showToolTipColumnIndex: [2, 4], // show tooltip for lesionLocation and comment
             };
           })}
         />
@@ -623,7 +621,6 @@ function getNonTargetExpandedContent(nonTargetFindings) {
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             warningInfo: dm.validationInfo?.messages,
-            showToolTipColumnIndex: [2, 4], // show tooltip for lesionLocation and comment
           };
         })}
       />
@@ -668,7 +665,6 @@ function getNewLesionExpandedContent(newLesionFindings) {
             displayText: `${dm.displayText.join(' ')}`,
             comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
             warningInfo: dm.validationInfo?.messages,
-            showToolTipColumnIndex: [2, 4], // show tooltip for lesionLocation and comment
           };
         })}
       />
@@ -698,7 +694,6 @@ function getNewLesionExpandedContent(newLesionFindings) {
               displayText: `${dm.displayText.join(' ')}`,
               comment: dm.measurementLabelInfo.comment ? dm.measurementLabelInfo.comment : '',
               warningInfo: dm.validationInfo?.messages,
-              showToolTipColumnIndex: [2, 3], // show tooltip for lesionLocation and comment
             };
           })}
         />

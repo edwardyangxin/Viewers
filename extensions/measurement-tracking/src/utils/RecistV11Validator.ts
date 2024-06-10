@@ -493,7 +493,7 @@ export class RecistV11Validator extends Validator {
           measurementLabelInfo.organLateral?.value !== lastMeasurementLabelInfo.organLateral?.value
         ) {
           console.error('Last measurement is not the same organ or side');
-          measurement.validationInfo.messages.push('与往期测量的器官或位置不一致');
+          measurement.validationInfo.messages.push('与往期测量的器官或位置信息存在差异');
           measurement.validationInfo.lastMeasurementNotSameOrganOrSide = true;
           groupWarningFlag = true;
           groupWarningMessage.push('与往期测量不一致的器官或位置');

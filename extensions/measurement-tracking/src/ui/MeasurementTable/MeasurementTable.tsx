@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import MeasurementItem from './MeasurementItem';
 import { organMapping } from '../../utils/mappings';
 import WarningInfoTooltip from '../WarningInfoTooltip';
+import { locationStrBuilder } from '../../utils/utils';
 
 /**
  * 
@@ -83,7 +84,7 @@ const MeasurementTable = ({
               index={parseInt(measurementItem.label.split('|')[0])}
               label={
                 measurementItem.label.split('|')[2] in organMapping
-                  ? organMapping[measurementItem.label.split('|')[2]]
+                  ? locationStrBuilder(measurementItem.measurementLabelInfo)
                   : t('Edit Measurement')
               } // 获取label的第二位organ信息
               isActive={measurementItem.isActive}
