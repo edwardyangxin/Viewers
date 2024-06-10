@@ -23,7 +23,7 @@ function PastReports({ servicesManager, extensionManager }) {
   const { measurementService, displaySetService, uiDialogService } = servicesManager.services;
   const [trackedMeasurements, sendTrackedMeasurementsEvent] = useTrackedMeasurements();
   // evibased, successSaveReport is flag after save report
-  const { allTimepoints } = trackedMeasurements.context;
+  const { allTimepoints, currentTask } = trackedMeasurements.context;
   const [extendedReportItems, setExtentedReportItems] = useState([]);
 
   async function _handlePastReportClick(StudyInstanceUID, report, reportIndex) {
@@ -105,7 +105,7 @@ function PastReports({ servicesManager, extensionManager }) {
   };
 
   // past report ui
-  function getTabContent() {
+  function getTabContent(ifReviewTask) {
     if (!Array.isArray(allTimepoints) || allTimepoints.length === 0) {
       return null;
     }
@@ -164,7 +164,7 @@ function PastReports({ servicesManager, extensionManager }) {
             <PastReportItem
               studyInstanceUid={studyInstanceUid}
               trialTimePointInfo={trialTimePointInfo}
-              username={userAlias ? userAlias : username}
+              username={ifReviewTask ? username : userAlias}
               SOD={SOD}
               response={response}
               isActive={isExpanded}
@@ -213,7 +213,7 @@ function PastReports({ servicesManager, extensionManager }) {
     <>
       <div className="ohif-scrollbar invisible-scrollbar flex flex-1 flex-col overflow-auto">
         {allTimepoints && allTimepoints.length > 0 ? (
-          getTabContent()
+          getTabContent(currentTask.type === 'review')
         ) : (
           <div className="flex h-full items-center justify-center">
             <div className="text-lg text-gray-500">无报告</div>

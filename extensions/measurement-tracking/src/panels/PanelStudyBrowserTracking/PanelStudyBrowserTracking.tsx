@@ -149,8 +149,7 @@ function PanelStudyBrowserTracking({
       // get current task based on url task type, find the first task, to ensure the task is align with mode
       const currentTask = userTasks.find(task => urlTaskType.includes(task.type));
       if (!currentTask) {
-        // TODO: no task found for user, should be manager
-        console.error('no task found for user: ', username);
+        console.warn('no task found for user: ', username);
         if (ifQC || ifManager) {
           ifReadonlyMode = true;
         }
@@ -320,7 +319,7 @@ function PanelStudyBrowserTracking({
           return false;
         }
 
-        // if not baseline timepoint, 
+        // if not baseline timepoint,
         // 1. lowestSODTimepoint is required, 2. lastTimepoint is required, 3. comparedTimepoint is required when not in readonly mode
         if (!ifCurrentTimepointBaseline) {
           if (!lowestSODTimepoint || !lastTimepoint) {
