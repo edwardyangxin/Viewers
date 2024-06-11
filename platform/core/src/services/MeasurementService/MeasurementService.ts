@@ -694,8 +694,8 @@ class MeasurementService extends PubSubService {
     });
   }
 
-  // evibased, for compared measurements
-  removeReadonlyMesurement(measurementUID, source, eventDetails) {
+  // evibased, for compared measurements, deprecated?
+  removeReadonlyMeasurement(measurementUID, source, eventDetails) {
     if (
       !measurementUID ||
       (!this.readonlyMeasurements.has(measurementUID) &&
