@@ -515,8 +515,8 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     }
     const timepoint = nextTask.timepoint;
     const studyUID = timepoint.UID;
-    const trialId = timepoint.cycle;
-    const ifBaseline = trialId === 0 || trialId === '0' || trialId === '00'; // now '00' is baseline, other form are deprecated
+    const cycle = timepoint.cycle;
+    const ifBaseline = cycle === 0 || cycle === '0' || cycle === '00'; // now '00' is baseline, other form are deprecated
     if (ifBaseline) {
       navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
     } else {
