@@ -70,6 +70,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     username,
     userRoles,
     currentTask,
+    allTimepoints,
   } = trackedMeasurements.context;
   const [displayStudySummary, setDisplayStudySummary] = useState(
     DISPLAY_STUDY_SUMMARY_INITIAL_VALUE
@@ -270,7 +271,7 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
   useEffect(() => {
     console.log('successSaveReport:', successSaveReport);
     _refreshTaskInfo(successSaveReport);
-  }, [successSaveReport, currentTask]);
+  }, [successSaveReport, currentTask, allTimepoints]);
 
   // update compared report info based on comparedTimepoint
   useEffect(() => {
@@ -354,15 +355,27 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
     // get taskInfo
     const userTasks = await _getUserTaskInfo();
     let nextTask = undefined;
+    let foundNextTaskTimepoint;
+    // get next task info, 1. 优先next timepoint task, 连续标注任务。 或者同一个subject的timepoint task; 2. next task creation time
     if (userTasks && userTasks.length > 0) {
-      // get next task info,
       for (const task of userTasks) {
-        if (task.timepoint.UID !== StudyInstanceUIDs[0]) {
-          // the next task that is not current task
-          nextTask = task;
-          break;
+        const tp = allTimepoints.find(tp => tp.timepoint.UID === task.timepoint.UID);
+        if (tp && task.timepoint.UID !== StudyInstanceUIDs[0]) {
+          if (foundNextTaskTimepoint) {
+            if (tp.timepoint.cycle < foundNextTaskTimepoint.timepoint.cycle) {
+              foundNextTaskTimepoint = tp;
+              nextTask = task;
+            }
+          } else {
+            foundNextTaskTimepoint = tp;
+            nextTask = task;
+          }
         }
       }
+    }
+    if (!foundNextTaskTimepoint) {
+      // find next task not the same studyUID
+      nextTask = userTasks.find(task => task.timepoint.UID !== StudyInstanceUIDs[0]);
     }
 
     if (navigateToNextTask) {
