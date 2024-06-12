@@ -161,13 +161,14 @@ const moreTools = [
         //   commands: setToolActiveToolbar,
         //   evaluate: 'evaluate.cornerstoneTool',
         // }),
-        createButton({
-          id: 'TagBrowser',
-          icon: 'dicom-tag-browser',
-          label: 'Dicom Tag Browser',
-          tooltip: 'Dicom Tag Browser',
-          commands: 'openDICOMTagViewer',
-        }),
+        // no tag browser in longitudinal
+        // createButton({
+        //   id: 'TagBrowser',
+        //   icon: 'dicom-tag-browser',
+        //   label: 'Dicom Tag Browser',
+        //   tooltip: 'Dicom Tag Browser',
+        //   commands: 'openDICOMTagViewer',
+        // }),
         createButton({
           id: 'AdvancedMagnify',
           icon: 'icon-tool-loupe',
