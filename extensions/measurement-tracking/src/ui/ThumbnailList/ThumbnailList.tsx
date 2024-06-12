@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import ThumbnailTracked from '../ThumbnailTracked';
@@ -11,33 +11,83 @@ const ThumbnailList = ({
   onThumbnailDoubleClick,
   onClickUntrack,
   activeDisplaySetInstanceUIDs = [],
+  onClickStar = (StudyInstanceUID: string, SeriesInstanceUID: string, star: boolean) => {
+    console.log('onClickStar', StudyInstanceUID, SeriesInstanceUID, star);
+  },
 }) => {
+  // keep a list of star thumbnails
+  const initialStarList = [];
+  const initialNonStarList = [];
+  thumbnails.forEach(thumbnail => {
+    if (thumbnail.star) {
+      initialStarList.push(thumbnail);
+    } else {
+      initialNonStarList.push(thumbnail);
+    }
+  });
+  const [starList, setStarList] = useState(initialStarList);
+  const [nonStarList, setNonStarList] = useState(initialNonStarList);
+
+  const onClickStarList = (StudyInstanceUID, SeriesInstanceUID, index) => {
+    const tn = starList[index];
+    starList.splice(index, 1);
+    setStarList([...starList]);
+    nonStarList.push(tn);
+    // sort for the inserted thumbnail
+    nonStarList.sort((a, b) => {
+      const seriesTimestampA = a.seriesTimestamp;
+      const seriesTimestampB = b.seriesTimestamp;
+
+      return seriesTimestampA - seriesTimestampB;
+    });
+    setNonStarList([...nonStarList]);
+    onClickStar(StudyInstanceUID, SeriesInstanceUID, false);
+  };
+  const onClickNonStarList = (StudyInstanceUID, SeriesInstanceUID, index) => {
+    const tn = nonStarList[index];
+    nonStarList.splice(index, 1);
+    setNonStarList([...nonStarList]);
+    starList.push(tn);
+    starList.sort((a, b) => {
+      const seriesTimestampA = a.seriesTimestamp;
+      const seriesTimestampB = b.seriesTimestamp;
+
+      return seriesTimestampA - seriesTimestampB;
+    });
+    setStarList([...starList]);
+    onClickStar(StudyInstanceUID, SeriesInstanceUID, true);
+  };
   return (
     <div
       id="ohif-thumbnail-list"
       className="ohif-scrollbar study-min-height overflow-y-hidden bg-black py-3"
     >
-      {thumbnails.map(
-        ({
-          displaySetInstanceUID,
-          description,
-          dragData,
-          seriesNumber,
-          numInstances,
-          modality,
-          componentType,
-          seriesDate,
-          countIcon,
-          isTracked,
-          canReject,
-          onReject,
-          imageSrc,
-          messages,
-          imageAltText,
-          isHydratedForDerivedDisplaySet,
-          bodyPart, // evibased, body part examined
-          studyDescription, // evibased, study description
-        }) => {
+      {starList.map(
+        (
+          {
+            displaySetInstanceUID,
+            description,
+            dragData,
+            seriesNumber,
+            numInstances,
+            modality,
+            componentType,
+            seriesDate,
+            countIcon,
+            isTracked,
+            canReject,
+            onReject,
+            imageSrc,
+            messages,
+            imageAltText,
+            isHydratedForDerivedDisplaySet,
+            bodyPart, // evibased, body part examined
+            studyDescription, // evibased, study description
+            StudyInstanceUID, // evibased
+            SeriesInstanceUID, // evibased
+          },
+          index
+        ) => {
           const isActive = activeDisplaySetInstanceUIDs.includes(displaySetInstanceUID);
           switch (componentType) {
             case 'thumbnail':
@@ -78,6 +128,102 @@ const ThumbnailList = ({
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
                   onClickUntrack={() => onClickUntrack(displaySetInstanceUID)}
                   studyDescription={studyDescription}
+                  star={true}
+                  onClickStar={() => onClickStarList(StudyInstanceUID, SeriesInstanceUID, index)}                  />
+              );
+            case 'thumbnailNoImage':
+              return (
+                <ThumbnailNoImage
+                  isActive={isActive}
+                  key={displaySetInstanceUID}
+                  displaySetInstanceUID={displaySetInstanceUID}
+                  dragData={dragData}
+                  modality={modality}
+                  modalityTooltip={_getModalityTooltip(modality)}
+                  messages={messages}
+                  seriesDate={seriesDate}
+                  description={description}
+                  canReject={canReject}
+                  onReject={onReject}
+                  onClick={() => onThumbnailClick(displaySetInstanceUID)}
+                  onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
+                  isHydratedForDerivedDisplaySet={isHydratedForDerivedDisplaySet}
+                  studyDescription={studyDescription}
+                />
+              );
+            default:
+              return <></>;
+          }
+        }
+      )}
+      {nonStarList.map(
+        (
+          {
+            displaySetInstanceUID,
+            description,
+            dragData,
+            seriesNumber,
+            numInstances,
+            modality,
+            componentType,
+            seriesDate,
+            countIcon,
+            isTracked,
+            canReject,
+            onReject,
+            imageSrc,
+            messages,
+            imageAltText,
+            isHydratedForDerivedDisplaySet,
+            bodyPart, // evibased, body part examined
+            studyDescription, // evibased, study description
+            StudyInstanceUID, // evibased
+            SeriesInstanceUID, // evibased
+          },
+          index
+        ) => {
+          const isActive = activeDisplaySetInstanceUIDs.includes(displaySetInstanceUID);
+          switch (componentType) {
+            case 'thumbnail':
+              return (
+                <Thumbnail
+                  key={displaySetInstanceUID}
+                  displaySetInstanceUID={displaySetInstanceUID}
+                  dragData={dragData}
+                  description={description}
+                  seriesNumber={seriesNumber}
+                  numInstances={numInstances}
+                  countIcon={countIcon}
+                  imageSrc={imageSrc}
+                  imageAltText={imageAltText}
+                  messages={messages}
+                  isActive={isActive}
+                  onClick={() => onThumbnailClick(displaySetInstanceUID)}
+                  onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
+                  studyDescription={studyDescription}
+                />
+              );
+            case 'thumbnailTracked':
+              return (
+                <ThumbnailTracked
+                  key={displaySetInstanceUID}
+                  displaySetInstanceUID={displaySetInstanceUID}
+                  dragData={dragData}
+                  description={description}
+                  seriesNumber={seriesNumber}
+                  numInstances={numInstances}
+                  countIcon={countIcon}
+                  imageSrc={imageSrc}
+                  imageAltText={imageAltText}
+                  messages={messages}
+                  isTracked={isTracked}
+                  isActive={isActive}
+                  onClick={() => onThumbnailClick(displaySetInstanceUID)}
+                  onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
+                  onClickUntrack={() => onClickUntrack(displaySetInstanceUID)}
+                  studyDescription={studyDescription}
+                  star={false}
+                  onClickStar={() => onClickNonStarList(StudyInstanceUID, SeriesInstanceUID, index)}
                 />
               );
             case 'thumbnailNoImage':
@@ -138,6 +284,7 @@ ThumbnailList.propTypes = {
   onThumbnailClick: PropTypes.func.isRequired,
   onThumbnailDoubleClick: PropTypes.func.isRequired,
   onClickUntrack: PropTypes.func.isRequired,
+  onClickStar: PropTypes.func,
 };
 
 // TODO: Support "Viewport Identificator"?

@@ -23,6 +23,7 @@ async function getTaskByUserAndUID(
           comment
           id
           status
+          series
           subject {
             subjectId
             disease
@@ -32,6 +33,7 @@ async function getTaskByUserAndUID(
               UID
               cycle
               status
+              series
             }
           }
         }
@@ -196,4 +198,30 @@ async function getUserSubjectData(graphqlURL, Authorization, username, subjectId
   return subjectData;
 }
 
-export { getTaskByUserAndUID, getTimepointByUID, getUserSubjectData };
+async function modifySeriesTag(
+  apiv2TimepointsURL,
+  Authorization,
+  StudyInstanceUID,
+  SeriesInstanceUID,
+  tag
+) {
+  const modifySeriesUrl = new URL(apiv2TimepointsURL + `/${StudyInstanceUID}/modifySeries`);
+  const reportResponse = await fetch(modifySeriesUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      // Authorization: authHeader?.Authorization,
+    },
+    body: JSON.stringify({
+      [SeriesInstanceUID]: tag,
+    }),
+  });
+  if (!reportResponse.ok) {
+    const body = await reportResponse.text();
+    throw new Error(`HTTP error! status: ${reportResponse.status} body: ${body}`);
+  }
+  const timepoint = await reportResponse.json();
+  return timepoint;
+}
+
+export { getTaskByUserAndUID, getTimepointByUID, getUserSubjectData, modifySeriesTag };

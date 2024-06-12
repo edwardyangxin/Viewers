@@ -8,7 +8,12 @@ import StudyBrowser from '../../ui/StudyBrowser';
 import { useTrackedMeasurements } from '../../getContextModule';
 import i18n from '@ohif/i18n';
 import { getUserName, getUserRoles, getViewportId } from '../../utils/utils';
-import { getTaskByUserAndUID, getTimepointByUID, getUserSubjectData } from '../../utils/apiCall';
+import {
+  getTaskByUserAndUID,
+  getTimepointByUID,
+  getUserSubjectData,
+  modifySeriesTag,
+} from '../../utils/apiCall';
 
 const { formatDate } = utils;
 
@@ -767,6 +772,34 @@ function PanelStudyBrowserTracking({
       onDoubleClickThumbnail={onDoubleClickThumbnailHandler}
       onDoubleClickReportThumbnail={onLoadReportHandler}
       activeDisplaySetInstanceUIDs={activeViewportDisplaySetInstanceUIDs}
+      onClickStar={(StudyInstanceUID, SeriesInstanceUID, star) => {
+        console.log('onClickStar', StudyInstanceUID, SeriesInstanceUID, star);
+        modifySeriesTag(
+          appConfig['evibased']['apiv2_timepoints_url'],
+          userAuthenticationService.getAuthorizationHeader()?.Authorization,
+          StudyInstanceUID,
+          SeriesInstanceUID,
+          { star: star }
+        )
+          .then(response => {
+            // Handle success
+            console.log('Success update star series:', response);
+            uiNotificationService.show({
+              title: '更新序列',
+              message: '更新序列成功',
+              type: 'success',
+            });
+          })
+          .catch(error => {
+            // Handle error
+            console.error('Error:', error);
+            uiNotificationService.show({
+              title: '更新序列',
+              message: '更新序列失败',
+              type: 'error',
+            });
+          });
+      }}
     />
   );
 }
@@ -947,6 +980,7 @@ function _mapDisplaySets(
         countIcon: ds.countIcon,
         messages: ds.messages,
         StudyInstanceUID: ds.StudyInstanceUID,
+        SeriesInstanceUID: ds.SeriesInstanceUID,
         componentType,
         imageSrc,
         dragData: {
@@ -1109,7 +1143,6 @@ function _createStudyBrowserTabs(
     // const dsSortFn = hangingProtocolService.getDisplaySetSortFunction();
     // displaySetsForStudy.sort(dsSortFn);
 
-    /* Sort by series number, then by series date */
     // evibased, sort by series timestamp(date&time calculated), 不使用默认的series number排序
     displaySetsForStudy.sort((a, b) => {
       // if (a.seriesNumber !== b.seriesNumber) {
@@ -1120,6 +1153,15 @@ function _createStudyBrowserTabs(
       const seriesTimestampB = b.seriesTimestamp;
 
       return seriesTimestampA - seriesTimestampB;
+    });
+
+    // evibased, assign timepoint series data from db to displaySets
+    const seriesTags = study.timepoint?.series ? study.timepoint.series : {};
+    displaySetsForStudy.forEach(ds => {
+      const SeriesInstanceUID = ds.SeriesInstanceUID;
+      if (seriesTags[SeriesInstanceUID]) {
+        ds = Object.assign(ds, seriesTags[SeriesInstanceUID]);
+      }
     });
 
     // Map the study to it's tab/view representation

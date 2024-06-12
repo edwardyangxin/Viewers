@@ -36,6 +36,7 @@ const StudyBrowser = ({
   onDoubleClickThumbnail,
   onDoubleClickReportThumbnail,
   onClickUntrack,
+  onClickStar, // evibased
   activeDisplaySetInstanceUIDs,
   servicesManager,
 }) => {
@@ -98,6 +99,7 @@ const StudyBrowser = ({
                 onThumbnailClick={onClickThumbnail}
                 onThumbnailDoubleClick={onDoubleClickThumbnail}
                 onClickUntrack={onClickUntrack}
+                onClickStar={onClickStar} // evibased
               />
             )}
           </React.Fragment>

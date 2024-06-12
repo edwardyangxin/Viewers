@@ -26,12 +26,12 @@ function ThumbnailTracked({
   isTracked,
   isActive,
   studyDescription, // evibased
-  isStared = false, // evibased
-  onClickStar = isStared => {}, // evibased
+  star = false, // evibased
+  onClickStar = star => {}, // evibased
 }) {
   const { t } = useTranslation('ThumbnailTracked');
   const trackedIcon = isTracked ? 'circled-checkmark' : 'dotted-circle';
-  const staredIcon = isStared ? 'star-empty' : 'dotted-star';
+  const staredIcon = star ? 'star-empty' : 'dotted-star';
 
   return (
     <div
@@ -86,13 +86,13 @@ function ThumbnailTracked({
                 </div>
                 <div className="flex flex-1 flex-col">
                   <span>
-                    <span className="text-white">{isStared ? '已加星' : '加星置顶'}</span>
+                    <span className="text-white">{star ? '已加星' : '加星置顶'}</span>
                   </span>
                 </div>
               </div>
             }
           >
-            <div onClick={onClickStar(isStared)}>
+            <div onClick={() => onClickStar(star)}>
               <Icon
                 name={staredIcon}
                 className="text-primary-light mb-2 w-4"
