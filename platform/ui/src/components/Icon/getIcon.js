@@ -90,6 +90,9 @@ import notificationsSuccess from './../../assets/icons/notifications-success.svg
 import nextArrow from './../../assets/icons/next-arrow.svg';
 import prevArrow from './../../assets/icons/prev-arrow.svg';
 import viewportStatusTracked from './../../assets/icons/viewport-status-tracked.svg';
+// evibased
+import starEmpty from './../../assets/icons/status-star-empty.svg';
+import dottedStar from './../../assets/icons/dotted-star.svg';
 
 /** Tools */
 import toggleDicomOverlay from './../../assets/icons/tool-toggle-dicom-overlay.svg';
@@ -302,6 +305,9 @@ const ICONS = {
   'notifications-error': notificationsError,
   'notifications-success': notificationsSuccess,
   'notifications-warning': notificationsWarning,
+  // evibased
+  'star-empty': starEmpty,
+  'dotted-star': dottedStar,
 
   /** Tools */
   'toggle-dicom-overlay': toggleDicomOverlay,

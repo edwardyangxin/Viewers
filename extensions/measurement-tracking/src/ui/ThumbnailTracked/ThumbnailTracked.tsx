@@ -23,13 +23,15 @@ function ThumbnailTracked({
   onClick,
   onDoubleClick,
   onClickUntrack,
-  // viewportIdentificator,
   isTracked,
   isActive,
   studyDescription, // evibased
+  isStared = false, // evibased
+  onClickStar = isStared => {}, // evibased
 }) {
   const { t } = useTranslation('ThumbnailTracked');
   const trackedIcon = isTracked ? 'circled-checkmark' : 'dotted-circle';
+  const staredIcon = isStared ? 'star-empty' : 'dotted-star';
 
   return (
     <div
@@ -46,6 +48,7 @@ function ThumbnailTracked({
             isTracked && 'rounded-sm hover:bg-gray-900'
           )}
         >
+          {/* evibased, tracking icon */}
           <Tooltip
             position="right"
             content={
@@ -70,6 +73,31 @@ function ThumbnailTracked({
               name={trackedIcon}
               className="text-primary-light mb-2 w-4"
             />
+          </Tooltip>
+          <Tooltip
+            position="right"
+            content={
+              <div className="flex flex-1 flex-row">
+                <div className="flex-2 flex items-center justify-center pr-4">
+                  <Icon
+                    name="info-link"
+                    className="text-primary-active"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col">
+                  <span>
+                    <span className="text-white">{isStared ? '已加星' : '加星置顶'}</span>
+                  </span>
+                </div>
+              </div>
+            }
+          >
+            <div onClick={onClickStar(isStared)}>
+              <Icon
+                name={staredIcon}
+                className="text-primary-light mb-2 w-4"
+              />
+            </div>
           </Tooltip>
         </div>
         {/* evibased, disable untrack button */}
