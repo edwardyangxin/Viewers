@@ -9,7 +9,7 @@ window.config = {
         Link,
         { to: "/", className: "text-2xl text-common-light" },
         React.createElement('img', {
-          src: './xunzheng-logo.svg',
+          src: '/xunzheng-logo.svg',
           className: 'inline',
           alt: 'Logo',
         }),
