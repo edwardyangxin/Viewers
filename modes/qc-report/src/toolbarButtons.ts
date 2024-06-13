@@ -33,6 +33,33 @@ export const setToolActiveToolbar = {
 
 const toolbarButtons: Button[] = [
   {
+    id: 'Bidirectional',
+    uiType: 'ohif.radioGroup',
+    props: {
+      type: 'tool',
+      icon: 'tool-bidirectional',
+      label: '可测量病灶(双径)',
+      commands: [
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'Bidirectional',
+          },
+          context: 'CORNERSTONE',
+        },
+        {
+          commandName: 'setToolActive',
+          commandOptions: {
+            toolName: 'SRBidirectional',
+            toolGroupId: 'SRToolGroup',
+          },
+          context: 'CORNERSTONE',
+        },
+      ],
+      evaluate: 'evaluate.cornerstoneTool',
+    },
+  },
+  {
     id: 'ArrowAnnotate',
     uiType: 'ohif.radioGroup',
     props: {

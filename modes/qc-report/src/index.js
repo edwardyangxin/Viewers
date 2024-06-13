@@ -103,7 +103,7 @@ function modeFactory({ modeConfiguration }) {
         // 'MeasurementTools',
         // annotation tools
         // 'Length',
-        // 'Bidirectional',
+        'Bidirectional',
         'ArrowAnnotate',
         'Rectangle',
         // other tools
