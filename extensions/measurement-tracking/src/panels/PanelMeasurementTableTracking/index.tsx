@@ -4,7 +4,6 @@ import { useImageViewer, Select, useViewportGrid, Input } from '@ohif/ui';
 import TimePointSummary from '../../ui/TimePointSummary';
 import MeasurementTable from '../../ui/MeasurementTable';
 import ActionButtons from './ActionButtons';
-import { DicomMetadataStore, utils } from '@ohif/core';
 import { useDebounce } from '@hooks';
 import { useAppConfig } from '@state';
 import { useTrackedMeasurements } from '../../getContextModule';
@@ -21,11 +20,14 @@ import {
   newLesionKeyGroup,
 } from '../../utils/mappings';
 import PastReportItem from '../../ui/PastReportItem';
-import { getPastReportDialog, getTimepointName, getViewportId, mapMeasurementToDisplay } from '../../utils/utils';
+import {
+  getPastReportDialog,
+  getTimepointName,
+  getViewportId,
+  mapMeasurementToDisplay,
+} from '../../utils/utils';
 import callInputDialog from '../../utils/callInputDialog';
 import { RecistV11Validator } from '../../utils/RecistV11Validator';
-
-const { downloadCSVReport } = utils;
 
 // evibased, 右边栏上部显示的信息
 const DISPLAY_STUDY_SUMMARY_INITIAL_VALUE = {
@@ -153,24 +155,18 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
             debounce(() => {
               measurementsPanelRef.current.scrollTop = measurementsPanelRef.current.scrollHeight;
             }, 300)();
-            // evibased, 4种测量工具, call command setMeasurementLabel for newly added measurement(label is '' or 'no label')
-            if (
-              ['Length', 'Bidirectional', 'ArrowAnnotate', 'RectangleROI'].includes(
-                data.measurement.toolName
-              )
-            ) {
-              if (data.measurement.label === '' || data.measurement.label === 'no label') {
-                _editMeasurementLabel(
-                  commandsManager,
-                  readonlyMode,
-                  userAuthenticationService,
-                  uiDialogService,
-                  measurementService,
-                  logSinkService,
-                  data.measurement.uid,
-                  comparedReportInfo
-                );
-              }
+            // evibased, call command setMeasurementLabel for newly added measurement(label is '' or 'no label')
+            if (data.measurement.label === '' || data.measurement.label === 'no label') {
+              _editMeasurementLabel(
+                commandsManager,
+                readonlyMode,
+                userAuthenticationService,
+                uiDialogService,
+                measurementService,
+                logSinkService,
+                data.measurement.uid,
+                comparedReportInfo
+              );
             }
           }
         }).unsubscribe
@@ -839,22 +835,24 @@ function _editMeasurementLabel(
   uiDialogService,
   measurementService,
   logSinkService,
-  uid,
+  measurementUid,
   comparedReportInfo
 ) {
-  const measurement = measurementService.getMeasurement(uid);
-  const isNonMeasurementTool = measurement && NonMeasurementTools.includes(measurement.toolName);
-
-  // if readonly mode, no editing
+  const availableTools = ['Bidirectional', 'ArrowAnnotate', 'RectangleROI'];
+  const measurement = measurementService.getMeasurement(measurementUid);
+  if (!measurement) {
+    return;
+  }
+  // check toolName in availableTools, switch non aviailable tool to readonly measurement
+  if (!availableTools.includes(measurement.toolName)) {
+    measurementService.switchToReadonlyMeasurement(measurementUid);
+    return;
+  }
+  // if viewer readonly mode, no editing
   if (readonlyMode) {
     return;
   }
-  // deprecated, readonly mode
-  // if (commandsManager.getContext('CORNERSTONE').measurementReadonly) {
-  //   measurement.readonly = true;
-  //   return;
-  // }
-
+  const isNonMeasurementTool = measurement && NonMeasurementTools.includes(measurement.toolName);
   callInputDialog(
     uiDialogService,
     measurement,
@@ -866,7 +864,7 @@ function _editMeasurementLabel(
 
       // copy measurement, get measurement again in case it has been updated。
       // 在创建annotation时，会不断更新长度。会导致update measurement为旧的长度错误。
-      const currentMeasurement = measurementService.getMeasurement(uid);
+      const currentMeasurement = measurementService.getMeasurement(measurementUid);
       const updatedMeasurement = { ...currentMeasurement };
       // update label data
       updatedMeasurement['measurementLabelInfo'] = label['measurementLabelInfo'];

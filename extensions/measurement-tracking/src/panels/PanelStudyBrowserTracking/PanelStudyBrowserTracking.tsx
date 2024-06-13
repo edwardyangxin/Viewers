@@ -165,21 +165,24 @@ function PanelStudyBrowserTracking({
       }
 
       let currentTimepoint;
-      if (ifReadonlyMode) {
-        // get current timepoint for readonly mode
+      if (!currentTask) {
+        // get current timepoint for non task page
         currentTimepoint = await getTimepointByUID(
           appConfig['evibased']['graphqlDR'],
           authHeader?.Authorization,
           currentStudyInstanceUID
         );
-        // commandsManager.getContext('CORNERSTONE').measurementReadonly = true;
-        sendTrackedMeasurementsEvent('UPDATE_READONLY_MODE', {
-          readonlyMode: ifReadonlyMode,
-        });
       } else {
         currentTimepoint = currentTask?.timepoint;
       }
 
+      // update readonly mode, if task QC, QC-report, arbitration, set readonly mode
+      if (['QC-report', 'arbitration'].includes(currentTask?.type)) {
+        ifReadonlyMode = true;
+      }
+      sendTrackedMeasurementsEvent('UPDATE_READONLY_MODE', {
+        readonlyMode: ifReadonlyMode,
+      });
       // deprecated
       // set ifReadonlyMode to commandsManager CORNERSTONE context
       // commandsManager.getContext('CORNERSTONE').measurementReadonly = ['QC', 'QC-report', 'arbitration', undefined, null].includes(currentTask?.type);

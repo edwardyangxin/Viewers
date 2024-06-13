@@ -559,6 +559,15 @@ class MeasurementService extends PubSubService {
     return this.readonlyMeasurements.get(measurementUID);
   }
 
+  public switchToReadonlyMeasurement(measurementUID: string) {
+    const measurement = this.getMeasurement(measurementUID);
+    if (!measurement) {
+      return;
+    }
+    this.readonlyMeasurements.set(measurementUID, measurement);
+    this.measurements.delete(measurementUID);
+  }
+
   /**
    * Adds or update persisted measurements.
    *
