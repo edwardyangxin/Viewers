@@ -89,6 +89,9 @@
     },
     {
       "packageName": "@ohif/mode-qc-report"
+    },
+    {
+      "packageName": "@ohif/mode-arbitration"
     }
   ],
   "public": [

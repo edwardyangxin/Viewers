@@ -73,6 +73,7 @@
     "@ohif/mode-test": "3.9.0-beta.0",
     "@ohif/mode-qc-data": "3.9.0-beta.0",
     "@ohif/mode-qc-report": "3.9.0-beta.0",
+    "@ohif/mode-arbitration": "3.9.0-beta.0",
     "@ohif/ui": "3.9.0-beta.0",
     "@types/react": "^17.0.38",
     "classnames": "^2.3.2",

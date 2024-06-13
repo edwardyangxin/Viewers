@@ -49,13 +49,15 @@ function PanelStudyBrowserTracking({
   const { StudyInstanceUIDs } = useImageViewer();
   // get task type based on URL
   const pathname = window.location.pathname;
-  let urlTaskType;
+  let urlTaskType; // for current task tpye match
   if (pathname.includes('qc-data')) {
     urlTaskType = ['QC-data'];
   } else if (pathname.includes('qc-report')) {
     urlTaskType = ['QC-report'];
+  } else if (pathname.includes('arbitration')) {
+    urlTaskType = ['arbitration'];
   } else {
-    urlTaskType = ['review', 'arbitration'];
+    urlTaskType = ['review'];
   }
 
   // evibased, assume the 1st study for current timepoint study, and the 2nd study for compared study
