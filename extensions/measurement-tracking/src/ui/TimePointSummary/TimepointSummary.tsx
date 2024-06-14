@@ -1,10 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
-import PropTypes from 'prop-types';
 
 import { targetKeyGroup, nonTargetKeyGroup, TaskMapping } from '../../utils/mappings';
-import { Icon } from '@ohif/ui';
 
 const TimePointSummary = ({
   extensionManager,

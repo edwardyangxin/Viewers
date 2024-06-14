@@ -163,10 +163,10 @@ export default function CreateReportDialogPrompt(
               reviewComment: value.reviewComment,
             },
           };
-          if (taskType === 'arbitration') {
+          if (ifArbitrationTask) {
             // 仲裁
             returnVal.reportInfo.arbitrationComment = value.arbitrationComment;
-            returnVal.reportInfo.reportRef = { id: currentReportInfo._id };
+            returnVal.reportInfo.reportRef = { id: currentReportInfo.id };
           }
           resolve({
             action: CREATE_REPORT_DIALOG_RESPONSE.CREATE_REPORT,
@@ -184,7 +184,7 @@ export default function CreateReportDialogPrompt(
       }
     };
 
-    // actions, if user is QC, no save button
+    // 报告页, 右下角按钮
     const dialogActions = [
       {
         id: 'cancel',
@@ -192,20 +192,21 @@ export default function CreateReportDialogPrompt(
         type: ButtonEnums.type.secondary,
       },
     ];
-    if (userRoles && userRoles.length > 0) {
-      if (!userRoles.includes('QC')) {
-        let buttonText;
-        if (taskType === 'arbitration') {
-          buttonText = `${i18n.t('MeasurementTable:Save')} 仲裁选择报告(${currentReportInfo.username})`;
-        } else {
-          buttonText = `${i18n.t('MeasurementTable:Save')}`;
-        }
-        dialogActions.push({
-          id: 'save',
-          text: buttonText,
-          type: ButtonEnums.type.primary,
-        });
-      }
+    // 报告提交按钮，1. 仲裁任务，2. 评估任务
+    if (ifArbitrationTask && currentReportInfo) {
+      const buttonText = `仲裁选择报告(${currentReportInfo?.task?.userAlias})`;
+      dialogActions.push({
+        id: 'save',
+        text: buttonText,
+        type: ButtonEnums.type.primary,
+      });
+    } else if (ifReviewTask) {
+      const buttonText = `${i18n.t('MeasurementTable:Save')}`;
+      dialogActions.push({
+        id: 'save',
+        text: buttonText,
+        type: ButtonEnums.type.primary,
+      });
     }
 
     dialogId = uiDialogService.create({
@@ -451,7 +452,7 @@ export default function CreateReportDialogPrompt(
                   </div>
                   {
                     // 如果是仲裁任务，或者读取到了仲裁备注，显示仲裁备注输入框
-                    (taskType === 'arbitration' || value.arbitrationComment) && (
+                    (ifArbitrationTask || value.arbitrationComment) && (
                       <div className="flex grow flex-row justify-evenly">
                         <div className="w-1/2">
                           <Input

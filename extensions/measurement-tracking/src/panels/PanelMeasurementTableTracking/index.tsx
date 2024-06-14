@@ -510,11 +510,18 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
       return;
     }
     const timepoint = nextTask.timepoint;
+    const taskType = nextTask.type;
+    const taskPathMapping = {
+      review: '/viewer',
+      arbitration: '/arbitration',
+      'QC-data': '/qc-data',
+      'QC-report': '/qc-report',
+    };
     const studyUID = timepoint.UID;
     const cycle = timepoint.cycle;
     const ifBaseline = cycle === 0 || cycle === '0' || cycle === '00'; // now '00' is baseline, other form are deprecated
     if (ifBaseline) {
-      navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
+      navigate(`/${taskPathMapping[taskType]}?StudyInstanceUIDs=${studyUID}`);
     } else {
       // get compared timepoint UID
       const timepoints = timepoint.subject.timepoints;
@@ -526,11 +533,11 @@ function PanelMeasurementTableTracking({ servicesManager, extensionManager, comm
         navigate('/');
       } else if (index === 0) {
         // first timepoint?? should not happen
-        navigate(`/viewer?StudyInstanceUIDs=${studyUID}`);
+        navigate(`/${taskPathMapping[taskType]}?StudyInstanceUIDs=${studyUID}`);
       }
       const comparedUID = timepoints[index - 1].UID;
       navigate(
-        `/viewer?StudyInstanceUIDs=${studyUID},${comparedUID}&hangingprotocolId=@ohif/timepointCompare`
+        `/${taskPathMapping[taskType]}?StudyInstanceUIDs=${studyUID},${comparedUID}&hangingprotocolId=@ohif/timepointCompare`
       );
     }
   }
