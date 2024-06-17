@@ -22,7 +22,7 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
         let reportName = '';
         if (isArbitration) {
           reportName = `仲裁人:${userAlias ? userAlias : username}(选择阅片人:${
-            reportRef?.task?.userAlias ? reportRef?.task?.userAlias : reportRef?.username
+            reportRef?.task?.userAlias ? reportRef?.task?.userAlias : reportRef?.task?.username
           })`;
         } else {
           reportName = `阅片人:${userAlias ? userAlias : username}`;
@@ -49,7 +49,7 @@ const ReportThumbnailList = ({ reports, onReportThumbnailClick, onReportThumbnai
                 canReject={false}
                 onReject={undefined}
                 onClick={() => onReportThumbnailClick(key)}
-                onDoubleClick={() => onReportThumbnailDoubleClick(reports[index])}
+                onDoubleClick={() => !isArbitration && onReportThumbnailDoubleClick(reports[index])} // 仲裁报告不允许双击
               />
             );
           default:

@@ -26,6 +26,7 @@ function ThumbnailTracked({
   isTracked,
   isActive,
   studyDescription, // evibased
+  canStar = false, // evibased
   star = false, // evibased
   onClickStar = star => {}, // evibased
 }) {
@@ -92,7 +93,7 @@ function ThumbnailTracked({
               </div>
             }
           >
-            <div onClick={() => onClickStar(star)}>
+            <div onClick={() => canStar && onClickStar(star)}>
               <Icon
                 name={staredIcon}
                 className="text-primary-light mb-2 w-4"

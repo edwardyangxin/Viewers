@@ -170,6 +170,14 @@ async function getUserSubjectData(graphqlURL, Authorization, username, subjectId
               arbitrationComment
               reviewComment
               QCDataComment
+              reportRef {
+                task {
+                  userAlias
+                  username
+                  status
+                  type
+                }
+              }
             }
           }
         }
@@ -200,12 +208,15 @@ async function getUserSubjectData(graphqlURL, Authorization, username, subjectId
 
 async function modifySeriesTag(
   apiv2TimepointsURL,
+  username,
   Authorization,
   StudyInstanceUID,
   SeriesInstanceUID,
   tag
 ) {
-  const modifySeriesUrl = new URL(apiv2TimepointsURL + `/${StudyInstanceUID}/modifySeries`);
+  const modifySeriesUrl = new URL(
+    apiv2TimepointsURL + `/${StudyInstanceUID}/modifySeries/${username}`
+  );
   const reportResponse = await fetch(modifySeriesUrl, {
     method: 'PUT',
     headers: {

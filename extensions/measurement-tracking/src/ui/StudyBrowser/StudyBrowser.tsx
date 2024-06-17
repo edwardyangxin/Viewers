@@ -36,9 +36,10 @@ const StudyBrowser = ({
   onDoubleClickThumbnail,
   onDoubleClickReportThumbnail,
   onClickUntrack,
-  onClickStar, // evibased
   activeDisplaySetInstanceUIDs,
   servicesManager,
+  canStar, // evibased
+  onClickStar, // evibased
 }) => {
   const { t } = useTranslation('StudyBrowser');
   const { customizationService } = servicesManager?.services || {};
@@ -99,6 +100,7 @@ const StudyBrowser = ({
                 onThumbnailClick={onClickThumbnail}
                 onThumbnailDoubleClick={onDoubleClickThumbnail}
                 onClickUntrack={onClickUntrack}
+                canStar={canStar} // evibased
                 onClickStar={onClickStar} // evibased
               />
             )}

@@ -230,7 +230,7 @@ function modeFactory({ modeConfiguration }) {
       let valid = false;
       if (!ifManager) {
         for (const taskType of taskTypes) {
-          if (!['QC-data', 'QC-report'].includes(taskType)) {
+          if (taskType === 'review') {
             valid = true;
             break;
           }

@@ -397,7 +397,7 @@ function PanelStudyBrowserTracking({
       comparedStudyInstanceUID,
       studyDisplayList,
       displaySets,
-      hangingProtocolService
+      { hangingProtocolService, userAuthenticationService }
     );
 
     // update past timepoints only once, displaySets is updated due to lazy loading
@@ -777,10 +777,12 @@ function PanelStudyBrowserTracking({
       onDoubleClickThumbnail={onDoubleClickThumbnailHandler}
       onDoubleClickReportThumbnail={onLoadReportHandler}
       activeDisplaySetInstanceUIDs={activeViewportDisplaySetInstanceUIDs}
+      canStar={currentTask && currentTask.type === 'review'}
       onClickStar={(StudyInstanceUID, SeriesInstanceUID, star) => {
         console.log('onClickStar', StudyInstanceUID, SeriesInstanceUID, star);
         modifySeriesTag(
           appConfig['evibased']['apiv2_timepoints_url'],
+          getUserName(userAuthenticationService),
           userAuthenticationService.getAuthorizationHeader()?.Authorization,
           StudyInstanceUID,
           SeriesInstanceUID,
@@ -1130,7 +1132,7 @@ function _createStudyBrowserTabs(
   comparedStudyInstanceUID,
   studyDisplayList,
   displaySets,
-  hangingProtocolService
+  { userAuthenticationService, hangingProtocolService }
 ) {
   // 3 tabs list
   const primaryStudies = [];
@@ -1161,7 +1163,11 @@ function _createStudyBrowserTabs(
     });
 
     // evibased, assign timepoint series data from db to displaySets
-    const seriesTags = study.timepoint?.series ? study.timepoint.series : {};
+    const username = getUserName(userAuthenticationService);
+    let seriesTags = study.timepoint?.series ? study.timepoint.series : {};
+    // get seriesTags for username
+    seriesTags = seriesTags[username] ? seriesTags[username] : {};
+
     displaySetsForStudy.forEach(ds => {
       const SeriesInstanceUID = ds.SeriesInstanceUID;
       if (seriesTags[SeriesInstanceUID]) {

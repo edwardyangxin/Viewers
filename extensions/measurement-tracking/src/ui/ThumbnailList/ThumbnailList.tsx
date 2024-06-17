@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import ThumbnailTracked from '../ThumbnailTracked';
@@ -11,22 +11,28 @@ const ThumbnailList = ({
   onThumbnailDoubleClick,
   onClickUntrack,
   activeDisplaySetInstanceUIDs = [],
+  canStar, // evibased
   onClickStar = (StudyInstanceUID: string, SeriesInstanceUID: string, star: boolean) => {
     console.log('onClickStar', StudyInstanceUID, SeriesInstanceUID, star);
   },
 }) => {
-  // keep a list of star thumbnails
-  const initialStarList = [];
-  const initialNonStarList = [];
-  thumbnails.forEach(thumbnail => {
-    if (thumbnail.star) {
-      initialStarList.push(thumbnail);
-    } else {
-      initialNonStarList.push(thumbnail);
-    }
-  });
-  const [starList, setStarList] = useState(initialStarList);
-  const [nonStarList, setNonStarList] = useState(initialNonStarList);
+  const [starList, setStarList] = useState([]);
+  const [nonStarList, setNonStarList] = useState([]);
+
+  // update starList and nonStarList when thumbnails change
+  useEffect(() => {
+    const initialStarList = [];
+    const initialNonStarList = [];
+    thumbnails.forEach(thumbnail => {
+      if (thumbnail.star || thumbnail.isTracked) {
+        initialStarList.push(thumbnail);
+      } else {
+        initialNonStarList.push(thumbnail);
+      }
+    });
+    setStarList(initialStarList);
+    setNonStarList(initialNonStarList);
+  }, [thumbnails]);
 
   const onClickStarList = (StudyInstanceUID, SeriesInstanceUID, index) => {
     const tn = starList[index];
@@ -81,6 +87,7 @@ const ThumbnailList = ({
             messages,
             imageAltText,
             isHydratedForDerivedDisplaySet,
+            star, // evibased, star status
             bodyPart, // evibased, body part examined
             studyDescription, // evibased, study description
             StudyInstanceUID, // evibased
@@ -128,8 +135,10 @@ const ThumbnailList = ({
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
                   onClickUntrack={() => onClickUntrack(displaySetInstanceUID)}
                   studyDescription={studyDescription}
+                  canStar={isTracked ? false : canStar} // evibased, disable star button if tracked
                   star={true}
-                  onClickStar={() => onClickStarList(StudyInstanceUID, SeriesInstanceUID, index)}                  />
+                  onClickStar={() => onClickStarList(StudyInstanceUID, SeriesInstanceUID, index)}
+                />
               );
             case 'thumbnailNoImage':
               return (
@@ -222,6 +231,7 @@ const ThumbnailList = ({
                   onDoubleClick={() => onThumbnailDoubleClick(displaySetInstanceUID)}
                   onClickUntrack={() => onClickUntrack(displaySetInstanceUID)}
                   studyDescription={studyDescription}
+                  canStar={isTracked ? false : canStar} // evibased, disable star button if tracked
                   star={false}
                   onClickStar={() => onClickNonStarList(StudyInstanceUID, SeriesInstanceUID, index)}
                 />
